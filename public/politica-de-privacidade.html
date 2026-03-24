@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade · Daniel Ferreira</title>
+  <meta name="description" content="Política de Privacidade do site de Daniel Oliveira Ferreira, com informações sobre tratamento de dados pessoais, bases legais, compartilhamento, retenção, direitos dos titulares e canais de contato." />
+  <link rel="canonical" href="https://daferinvest.com.br/politica-de-privacidade" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:#0c0e13; --ink-2:#181b24; --ink-soft:#2a2f42; --muted:#58607a;
+      --line:#d4d1cb; --bg:#f7f6f3; --bg-warm:#edeae3; --gold:#a07c30; --gold-lt:#c09a50; --white:#ffffff;
+      --ff-head:'Barlow Condensed', sans-serif; --ff-body:'Barlow', sans-serif; --ff-sans:'DM Sans', sans-serif;
+      --max-w:1100px;
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:var(--ff-sans); background:var(--bg); color:var(--ink); font-size:17px; line-height:1.8; -webkit-font-smoothing:antialiased; }
+    .container { max-width:var(--max-w); margin:0 auto; padding:0 clamp(1.25rem, 5vw, 3rem); }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(247,246,243,.96); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .nav-logo { font-family:var(--ff-head); font-size:1.15rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); text-decoration:none; }
+    .nav-logo span { color:var(--gold); }
+    .nav-links { display:flex; gap:2.25rem; list-style:none; }
+    .nav-links a { font-family:var(--ff-body); font-size:.75rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover { color:var(--gold); }
+    .nav-cta { font-family:var(--ff-body); font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.5rem 1.4rem; background:var(--gold); color:var(--white); text-decoration:none; transition:background .2s; }
+    .nav-cta:hover { background:var(--gold-lt); }
+
+    .legal-hero { position:relative; padding:calc(64px + 5rem) 0 4rem; background:var(--ink); overflow:hidden; }
+    .legal-hero::before {
+      content:''; position:absolute; inset:0;
+      background-image:linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size:60px 60px;
+    }
+    .legal-hero-inner { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr); gap:3rem; align-items:end; }
+    .hero-eyebrow { display:inline-flex; align-items:center; gap:.65rem; font-family:var(--ff-body); font-size:.68rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:1.25rem; }
+    .hero-eyebrow::before { content:''; display:block; width:22px; height:2px; background:var(--gold); }
+    h1 { font-family:var(--ff-head); font-size:clamp(3rem,5.5vw,4.8rem); font-weight:700; line-height:1.02; letter-spacing:.02em; text-transform:uppercase; color:var(--white); margin-bottom:1.25rem; }
+    h1 em { font-style:normal; color:var(--gold); }
+    .hero-sub { max-width:720px; font-family:var(--ff-sans); font-size:1rem; color:rgba(255,255,255,.65); line-height:1.9; }
+    .hero-meta { display:grid; gap:1rem; }
+    .hero-meta-card { border:1px solid rgba(160,124,48,.28); background:rgba(255,255,255,.03); padding:1.2rem 1.25rem; }
+    .hero-meta-label { font-family:var(--ff-body); font-size:.62rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-lt); margin-bottom:.45rem; }
+    .hero-meta-text { font-family:var(--ff-sans); font-size:.9rem; color:rgba(255,255,255,.74); line-height:1.7; }
+
+    .legal-main { padding:4rem 0 5rem; }
+    .legal-layout { display:grid; grid-template-columns:280px minmax(0,1fr); gap:2rem; align-items:start; }
+    .legal-aside { position:sticky; top:88px; border:1px solid var(--line); background:var(--white); padding:1.35rem 1.2rem; }
+    .legal-aside-title { font-family:var(--ff-body); font-size:.68rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:.85rem; }
+    .legal-aside ul { list-style:none; display:grid; gap:.55rem; }
+    .legal-aside a { text-decoration:none; color:var(--ink-soft); font-family:var(--ff-body); font-size:.78rem; line-height:1.45; }
+    .legal-aside a:hover { color:var(--gold); }
+
+    .legal-card { background:var(--white); border:1px solid var(--line); padding:clamp(1.5rem,3vw,2.6rem); }
+    .legal-kicker { font-family:var(--ff-body); font-size:.68rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:.9rem; }
+    h2 { font-family:var(--ff-head); font-size:clamp(1.8rem,3vw,2.5rem); font-weight:700; line-height:1.05; letter-spacing:.03em; text-transform:uppercase; margin:2.35rem 0 1rem; scroll-margin-top:92px; }
+    h3 { font-family:var(--ff-body); font-size:.98rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:1.55rem 0 .6rem; }
+    p + p { margin-top:1rem; }
+    ul, ol { margin:.8rem 0 1rem 1.2rem; }
+    li + li { margin-top:.45rem; }
+    strong { font-weight:700; color:var(--ink); }
+    a { color:var(--gold); }
+    .notice, .data-table-wrap { margin-top:1.2rem; border:1px solid var(--line); background:linear-gradient(180deg, #fff 0%, #faf8f4 100%); }
+    .notice { padding:1rem 1.15rem; }
+    .notice strong { display:block; font-family:var(--ff-body); font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-bottom:.35rem; }
+    .data-table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:720px; font-size:.94rem; }
+    th, td { border-bottom:1px solid var(--line); padding:.9rem .85rem; text-align:left; vertical-align:top; }
+    th { font-family:var(--ff-body); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); background:#fbfaf7; }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      background: var(--ink-2); color: rgba(255,255,255,.55);
+      padding: 2.5rem 0;
+      font-family: var(--ff-sans); font-size: .78rem;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .footer-logo {
+      font-family: var(--ff-head); font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.9);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-links a {
+      font-family: var(--ff-body); font-size: .68rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(255,255,255,.55); text-decoration: none; transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-legal {
+      display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: .5rem;
+    }
+    .footer-legal a {
+      font-family: var(--ff-body); font-size: .65rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.38); text-decoration: underline;
+      text-underline-offset: 3px; transition: color .2s;
+    }
+    .footer-legal a:hover { color: var(--gold); }
+    .footer-reg {
+      padding-top: 1.5rem; margin-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .7rem; color: rgba(255,255,255,.38); line-height: 1.9;
+    }
+
+    @media (max-width:980px) {
+      .legal-hero-inner, .legal-layout { grid-template-columns:1fr; }
+      .legal-aside { position:static; }
+      .footer-links { justify-content:flex-start; }
+    }
+    @media (max-width:720px) {
+      .nav-links { display:none; }
+      .nav-inner { gap:1rem; }
+      .nav-cta { padding-inline:1rem; }
+      body { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">Daniel<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/#ebook">Ebook</a></li>
+        <li><a href="/#pacotes">Planos</a></li>
+        <li><a href="/#consultoria-info">Consultoria</a></li>
+        <li><a href="/#sobre">Sobre</a></li>
+        <li><a href="/#contato">Contato</a></li>
+      </ul>
+    <a href="/#pacotes" class="nav-cta">Ver planos</a>
+  </div>
+</nav>
+
+  <header class="legal-hero">
+    <div class="container legal-hero-inner">
+      <div>
+        <div class="hero-eyebrow">Documento de transparência</div>
+        <h1>Política de <em>Privacidade</em></h1>
+        <p class="hero-sub">
+          Esta Política de Privacidade explica como os seus dados pessoais podem ser tratados
+          no contexto do site, dos formulários, dos contatos, da venda do ebook, da contratação
+          de consultoria, do processamento de pagamentos e do relacionamento com o titular.
+        </p>
+      </div>
+
+      <div class="hero-meta">
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Última atualização</div>
+          <div class="hero-meta-text">24 de março de 2026</div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Controlador</div>
+          <div class="hero-meta-text">
+            Daniel Oliveira Ferreira<br>
+            Registro CVM nº 003838-5<br>
+            Avenida Coronel Jorge Vieira, 535, Sala 02<br>
+            Centro · Areado - MG · 37140-000
+          </div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Canal de privacidade</div>
+          <div class="hero-meta-text">daniel@daferinvest.com.br</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal-main">
+    <div class="container legal-layout">
+      <aside class="legal-aside">
+        <div class="legal-aside-title">Nesta página</div>
+        <ul>
+          <li><a href="#visao-geral">1. Visão geral</a></li>
+          <li><a href="#quem-controla">2. Quem controla os dados</a></li>
+          <li><a href="#dados-coletados">3. Dados pessoais tratados</a></li>
+          <li><a href="#finalidades">4. Finalidades do tratamento</a></li>
+          <li><a href="#bases-legais">5. Bases legais</a></li>
+          <li><a href="#compartilhamento">6. Compartilhamento</a></li>
+          <li><a href="#cookies">7. Cookies e tecnologias</a></li>
+          <li><a href="#retencao">8. Retenção e descarte</a></li>
+          <li><a href="#seguranca">9. Segurança e incidentes</a></li>
+          <li><a href="#direitos">10. Direitos do titular</a></li>
+          <li><a href="#encarregado">11. Encarregado / canal</a></li>
+          <li><a href="#transferencias">12. Transferências</a></li>
+          <li><a href="#menores">13. Menores de idade</a></li>
+          <li><a href="#alteracoes">14. Alterações</a></li>
+          <li><a href="#contato">15. Contato</a></li>
+        </ul>
+      </aside>
+
+      <section class="legal-card">
+        <div class="legal-kicker">Tratamento de dados pessoais</div>
+
+        <h2 id="visao-geral">1. Visão geral</h2>
+        <p>
+          Esta Política de Privacidade descreve como dados pessoais podem ser coletados, usados,
+          armazenados, compartilhados, protegidos e eliminados no contexto do site
+          <strong>daferinvest.com.br</strong> e de serviços relacionados, incluindo páginas de venda,
+          formulários, atendimento, contratação de serviços, processamento de pagamento, agenda,
+          suporte e relacionamento com o titular.
+        </p>
+        <p>
+          Esta Política deve ser interpretada em conjunto com os Termos de Uso e com a Política de Cookies do site.
+          Ela busca atender aos deveres de transparência previstos na Lei nº 13.709/2018
+          (Lei Geral de Proteção de Dados Pessoais – LGPD), bem como às normas aplicáveis ao ambiente digital,
+          incluindo, quando pertinente, a Lei nº 12.965/2014 (Marco Civil da Internet).
+        </p>
+
+        <div class="notice">
+          <strong>Resumo rápido</strong>
+          O site trata dados para viabilizar a navegação, responder contatos, processar pagamentos,
+          disponibilizar o ebook, prestar consultoria, cumprir obrigações legais, manter registros de segurança
+          e exercer direitos em procedimentos administrativos, regulatórios e judiciais.
+        </div>
+
+        <h2 id="quem-controla">2. Quem controla os dados</h2>
+        <p>O controlador dos dados pessoais tratados no âmbito deste site é:</p>
+        <ul>
+          <li><strong>Nome:</strong> Daniel Oliveira Ferreira</li>
+          <li><strong>CPF:</strong> 104.217.166-14</li>
+          <li><strong>Endereço profissional:</strong> Avenida Coronel Jorge Vieira, 535, Sala 02, Centro, Areado - MG, 37140-000</li>
+          <li><strong>E-mail para assuntos de privacidade:</strong> daniel@daferinvest.com.br</li>
+        </ul>
+        <p>
+          Sempre que esta Política mencionar “controlador”, “nós” ou “site”, está se referindo ao tratamento de dados
+          realizado nesse contexto.
+        </p>
+
+        <h2 id="dados-coletados">3. Dados pessoais tratados</h2>
+        <p>
+          Os dados tratados podem variar conforme a forma de interação do titular com o site e com os serviços.
+          Em geral, as seguintes categorias de dados podem ser tratadas:
+        </p>
+
+        <div class="data-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Exemplos</th>
+                <th>Quando pode ocorrer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Identificação e contato</strong></td>
+                <td>Nome, e-mail, telefone, cidade, mensagens enviadas pelo titular.</td>
+                <td>Formulários, WhatsApp, e-mail, agenda, suporte e contratação.</td>
+              </tr>
+              <tr>
+                <td><strong>Dados de navegação e dispositivos</strong></td>
+                <td>IP, tipo de navegador, sistema operacional, páginas acessadas, data e hora, origem de tráfego e registros técnicos.</td>
+                <td>Navegação no site, analytics, cookies, logs e segurança.</td>
+              </tr>
+              <tr>
+                <td><strong>Dados de pagamento e transação</strong></td>
+                <td>Identificadores de transação, status do pagamento, produto contratado, e-mail cadastrado na compra, dados de faturamento.</td>
+                <td>Checkout, cobrança, assinatura e gestão da compra.</td>
+              </tr>
+              <tr>
+                <td><strong>Dados para prestação do serviço</strong></td>
+                <td>Informações fornecidas em reuniões, formulário de perfil, carteira atual, objetivos, horizonte de investimento e contexto financeiro informado pelo cliente.</td>
+                <td>Consultoria individual e acompanhamento. Esses dados podem ser armazenados em ambiente digital de uso profissional, com acesso restrito ao controlador e a operadores estritamente necessários, observadas medidas razoáveis de segurança.</td>
+              </tr>
+              <tr>
+                <td><strong>Dados de marketing e relacionamento</strong></td>
+                <td>Preferências de comunicação, registro de consentimento, interação com campanhas, abertura de mensagens e resposta a materiais.</td>
+                <td>Captação de leads, newsletters, campanhas e follow-up.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Em regra, o titular decide quais dados fornece em formulários e contatos. Contudo, a ausência de certas informações
+          pode impedir o atendimento, a contratação, a emissão de comunicações, o agendamento ou a prestação adequada do serviço.
+        </p>
+
+        <h2 id="finalidades">4. Finalidades do tratamento</h2>
+        <p>Os dados pessoais podem ser tratados, conforme o caso, para as seguintes finalidades:</p>
+        <ul>
+          <li>viabilizar a navegação, o funcionamento técnico, a estabilidade e a segurança do site;</li>
+          <li>responder solicitações, dúvidas, mensagens e contatos do titular;</li>
+          <li>processar a compra do ebook e de serviços de consultoria;</li>
+          <li>emitir confirmações, comunicações transacionais e instruções de contratação;</li>
+          <li>disponibilizar o ebook e demais materiais contratados;</li>
+          <li>realizar o agendamento e a prestação da consultoria;</li>
+          <li>manter registros internos, comprovação da contratação, evidências operacionais, logs de segurança e registros técnicos do ambiente digital, quando aplicável;</li>
+          <li>cumprir obrigações legais, regulatórias, fiscais, contábeis e consumeristas;</li>
+          <li>prevenir fraude, abuso, chargeback indevido, acesso irregular e incidentes de segurança;</li>
+          <li>exercer direitos em processos administrativos, arbitrais ou judiciais;</li>
+          <li>enviar comunicações de marketing, conteúdo, atualizações e ofertas, quando houver base legal adequada e, quando necessário, consentimento do titular;</li>
+          <li>realizar métricas, analytics, medição de campanhas e melhoria do serviço, respeitada a Política de Cookies.</li>
+        </ul>
+
+        <h2 id="bases-legais">5. Bases legais</h2>
+        <p>
+          O tratamento de dados pessoais pode se apoiar em diferentes bases legais previstas na LGPD, a depender da finalidade.
+          Entre as bases legais que podem ser aplicáveis estão:
+        </p>
+        <ul>
+          <li><strong>execução de contrato ou de procedimentos preliminares relacionados a contrato</strong>, por exemplo para compra, agenda, entrega do ebook e prestação da consultoria;</li>
+          <li><strong>cumprimento de obrigação legal ou regulatória</strong>, por exemplo para registros fiscais, consumeristas, contábeis e atendimento a deveres regulatórios;</li>
+          <li><strong>legítimo interesse</strong>, quando aplicável e observados os direitos e expectativas do titular, por exemplo em segurança, prevenção a fraude, proteção do site, registros internos e melhoria operacional;</li>
+          <li><strong>exercício regular de direitos</strong>, inclusive em contrato, processo judicial, administrativo ou arbitral;</li>
+          <li><strong>consentimento</strong>, quando exigido, especialmente em determinadas hipóteses de cookies não necessários e comunicações promocionais.</li>
+        </ul>
+
+        <div class="notice">
+          <strong>Marketing e consentimento</strong>
+          Quando o envio de comunicações promocionais ou o uso de cookies não necessários depender de consentimento, o titular
+          poderá recusar, retirar ou revisar essa escolha, observados os limites técnicos e legais aplicáveis.
+        </div>
+
+        <h2 id="compartilhamento">6. Compartilhamento de dados</h2>
+        <p>
+          Os dados pessoais podem ser compartilhados, na medida do necessário, com operadores e terceiros que apoiam a operação do site e dos serviços.
+          Entre eles, conforme a configuração efetivamente adotada, podem estar:
+        </p>
+        <ul>
+          <li><strong>Stripe</strong>, para processamento de pagamentos, segurança da transação e prevenção a fraude;</li>
+          <li><strong>Cloudflare</strong>, para CDN, proteção, estabilidade, segurança e mitigação de abuso;</li>
+          <li><strong>Google Analytics</strong>, para métricas e desempenho, quando habilitado pelo consentimento;</li>
+          <li><strong>Google Ads / Google Tag</strong>, para medição de campanhas, conversões e publicidade, quando habilitado pelo consentimento;</li>
+          <li><strong>WhatsApp / Meta</strong>, quando o titular opta por contato, atendimento ou troca de mensagens por esse canal;</li>
+          <li><strong>Plataformas de videoconferência</strong>, como Google Meet ou ferramentas equivalentes utilizadas para a realização das sessões de consultoria;</li>
+          <li>prestadores de e-mail, hospedagem, formulários, agenda, suporte, proteção e infraestrutura técnica;</li>
+          <li>autoridades públicas, órgãos reguladores, autoridades fiscais, autoridades de proteção de dados e Poder Judiciário, quando houver obrigação legal, regulatória ou necessidade de exercício regular de direitos.</li>
+        </ul>
+        <p>
+          O compartilhamento é feito com base no princípio da necessidade e na finalidade correspondente, sempre que possível com limitação de acesso,
+          medidas contratuais e medidas técnicas compatíveis com o contexto do tratamento.
+        </p>
+
+        <h2 id="cookies">7. Cookies e tecnologias semelhantes</h2>
+        <p>
+          O site utiliza cookies e tecnologias semelhantes para funcionamento, segurança, medição de desempenho e, quando houver consentimento,
+          analytics e marketing. As regras específicas sobre essas tecnologias, categorias, durações típicas e preferências do titular
+          estão descritas na <strong>Política de Cookies</strong>.
+        </p>
+        <p>
+          A preferência de cookies do usuário pode ser registrada por meio de cookie próprio do site ou armazenamento local do navegador,
+          para que a escolha de consentimento seja respeitada nas visitas posteriores.
+        </p>
+
+        <h2 id="retencao">8. Retenção, conservação e descarte</h2>
+        <p>
+          Os dados pessoais são mantidos pelo tempo necessário para cumprir as finalidades para as quais foram coletados, bem como para atender
+          obrigações legais, regulatórias, contratuais, fiscais, contábeis, de segurança e de exercício regular de direitos.
+        </p>
+        <p>Em linhas gerais:</p>
+        <ul>
+          <li>dados de contato e atendimento podem ser mantidos pelo período necessário ao relacionamento e ao histórico mínimo do serviço;</li>
+          <li>dados de contratação, pagamento e registros correlatos podem ser conservados pelos prazos exigidos por legislação fiscal, contábil e consumerista, podendo alcançar 5 anos ou mais, conforme a obrigação aplicável;</li>
+          <li>registros de acesso a aplicações e logs técnicos relevantes ao ambiente digital podem ser mantidos pelo prazo legal aplicável, inclusive referências do Marco Civil da Internet, quando cabível;</li>
+          <li>logs de segurança e registros de prevenção a fraude podem ser mantidos pelo período necessário à proteção do ambiente, à apuração de incidentes e ao resguardo probatório;</li>
+          <li>dados tratados com base em consentimento poderão ser eliminados ou anonimizados após a revogação, salvo se houver outra base legal que justifique a conservação.</li>
+        </ul>
+        <p>
+          Após o término da necessidade, os dados poderão ser eliminados, anonimizados ou mantidos em bases legalmente permitidas pela LGPD.
+        </p>
+
+        <h2 id="seguranca">9. Segurança da informação e incidentes</h2>
+        <p>
+          São adotadas medidas técnicas, administrativas e organizacionais razoáveis para reduzir riscos de acesso não autorizado,
+          perda, alteração, destruição, vazamento, uso indevido ou tratamento incompatível com as finalidades informadas.
+        </p>
+        <p>
+          Nenhum ambiente é absolutamente invulnerável. Ainda assim, caso seja identificado incidente de segurança que possa acarretar
+          risco ou dano relevante aos titulares, serão adotadas as medidas cabíveis, inclusive comunicações legalmente exigidas à ANPD
+          e aos titulares, quando aplicável.
+        </p>
+
+        <h2 id="direitos">10. Direitos do titular</h2>
+        <p>
+          O titular de dados pessoais poderá exercer, nos termos da LGPD e conforme aplicável ao caso concreto, direitos como:
+        </p>
+        <ul>
+          <li>confirmação da existência de tratamento;</li>
+          <li>acesso aos dados;</li>
+          <li>correção de dados incompletos, inexatos ou desatualizados;</li>
+          <li>anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade;</li>
+          <li>portabilidade, quando aplicável e observados segredos comercial e industrial;</li>
+          <li>eliminação de dados tratados com base no consentimento, ressalvadas as hipóteses legais de conservação;</li>
+          <li>informação sobre entidades públicas e privadas com as quais houve uso compartilhado;</li>
+          <li>informação sobre a possibilidade de não fornecer consentimento e sobre as consequências da negativa;</li>
+          <li>revogação do consentimento;</li>
+          <li>oposição ao tratamento realizado com base em hipóteses legais específicas, quando cabível;</li>
+          <li>solicitação de revisão de decisões automatizadas, quando aplicável.</li>
+        </ul>
+        <p>
+          Para proteção do titular e do próprio ambiente, poderá ser solicitada comprovação razoável de identidade antes do atendimento de determinados pedidos.
+        </p>
+        <p>
+          As solicitações serão analisadas e respondidas nos prazos aplicáveis previstos em lei e, quando cabível, em até 15 (quinze) dias, observada a natureza do pedido, a necessidade de validação de identidade e as hipóteses legais de conservação ou restrição de atendimento.
+        </p>
+
+        <h2 id="encarregado">11. Encarregado e canal de comunicação</h2>
+        <p>
+          Para fins de comunicação sobre privacidade e exercício de direitos do titular, o próprio controlador disponibiliza o canal
+          <strong>daniel@daferinvest.com.br</strong>, que deverá ser utilizado para solicitações relacionadas a dados pessoais.
+        </p>
+        <p>
+          Esse canal funciona como ponto oficial de contato para assuntos de privacidade no contexto deste site, sem prejuízo de eventual atualização futura da governança interna.
+        </p>
+
+        <h2 id="transferencias">12. Transferências nacionais e internacionais</h2>
+        <p>
+          Alguns fornecedores de tecnologia, infraestrutura, analytics, publicidade, proteção, mensageria, videoconferência e pagamento podem operar em diferentes
+          localidades e, conforme a configuração do serviço, poderão tratar dados em servidores no Brasil ou no exterior.
+        </p>
+        <p>
+          Quando houver transferência internacional de dados pessoais, ela buscará observar as hipóteses, salvaguardas e mecanismos permitidos pela LGPD e pela regulamentação aplicável da ANPD, o que pode incluir, conforme o caso concreto, cláusulas contratuais, decisões de adequação, garantias compatíveis ou outras bases legalmente admitidas.
+        </p>
+        <p>
+          A existência de transferência internacional não significa, por si só, uso irrestrito dos dados, mas sim tratamento vinculado às finalidades informadas nesta Política e aos serviços efetivamente utilizados pelo site.
+        </p>
+
+        <h2 id="menores">13. Dados de menores de idade</h2>
+        <p>
+          O site e os serviços são voltados, em regra, a pessoas maiores de 18 anos. Não há direcionamento intencional de serviços
+          para crianças. Caso seja identificado tratamento indevido de dados de criança ou adolescente em desconformidade com a legislação,
+          poderão ser adotadas medidas para interromper o tratamento e adequar a situação.
+        </p>
+
+        <h2 id="alteracoes">14. Alterações desta Política</h2>
+        <p>
+          Esta Política de Privacidade poderá ser alterada a qualquer momento para refletir mudanças legais, regulatórias, operacionais,
+          tecnológicas ou comerciais. A versão vigente será sempre a publicada nesta página, com indicação da data de atualização.
+        </p>
+        <p>
+          Quando houver alteração relevante, poderão ser adotadas medidas adicionais de transparência, como aviso no site ou atualização dos mecanismos de consentimento.
+        </p>
+
+        <h2 id="contato">15. Contato</h2>
+        <p>Para dúvidas, solicitações relacionadas a dados pessoais ou exercício de direitos previstos na LGPD, utilize:</p>
+        <ul>
+          <li><strong>E-mail de privacidade:</strong> daniel@daferinvest.com.br</li>
+          <li><strong>Endereço profissional:</strong> Avenida Coronel Jorge Vieira, 535, Sala 02, Centro, Areado - MG, 37140-000</li>
+          <li><strong>Documentos relacionados:</strong> Termos de Uso e Política de Cookies</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">Daniel<span>.</span></span>
+      <div class="footer-links">
+        <a href="/">Início</a>
+        <a href="/termos-de-uso">Termos</a>
+        <a href="/politica-de-privacidade">Privacidade</a>
+        <a href="/politica-de-cookies">Cookies</a>
+        <a href="mailto:daniel@daferinvest.com.br">Contato</a>
+      </div>
+      <span>© 2025 · Todos os direitos reservados</span>
+    </div>
+    <div class="footer-reg">
+      Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo registrado na Comissão de Valores Mobiliários (CVM) sob o nº 003838-5 · CEA certificado pela ANBIMA.<br>
+      As informações contidas neste site têm caráter meramente informativo e educacional, não constituindo oferta, solicitação, recomendação ou assessoria de investimento.
+      Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura. Leia atentamente as informações antes de investir.
+    </div>
+  </div>
+</footer>
+</body>
+</html>

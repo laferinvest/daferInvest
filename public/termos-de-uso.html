@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termos de Uso · Daniel Ferreira</title>
+  <meta name="description" content="Termos e Condições de Uso dos produtos e serviços oferecidos por Daniel Oliveira Ferreira, incluindo ebook e consultoria de valores mobiliários." />
+  <link rel="canonical" href="https://daferinvest.com.br/termos-de-uso" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0c0e13;
+      --ink-2:    #181b24;
+      --ink-soft: #2a2f42;
+      --muted:    #58607a;
+      --line:     #d4d1cb;
+      --bg:       #f7f6f3;
+      --bg-warm:  #edeae3;
+      --gold:     #a07c30;
+      --gold-lt:  #c09a50;
+      --white:    #ffffff;
+
+      --ff-head:  'Barlow Condensed', sans-serif;
+      --ff-body:  'Barlow', sans-serif;
+      --ff-sans:  'DM Sans', sans-serif;
+
+      --max-w: 1100px;
+      --gap: clamp(3.5rem, 7vw, 6.5rem);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-sans);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247, 246, 243, 0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: var(--ff-head);
+      font-size: 1.15rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink); text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 2.25rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--ff-body);
+      font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-soft); text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      font-family: var(--ff-body);
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1.4rem;
+      background: var(--gold);
+      color: var(--white);
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--gold-lt); }
+
+    .legal-hero {
+      position: relative;
+      padding: calc(64px + 5rem) 0 4rem;
+      background: var(--ink);
+      overflow: hidden;
+    }
+    .legal-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .legal-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 3rem;
+      align-items: end;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .65rem;
+      font-family: var(--ff-body);
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.25rem;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: block;
+      width: 22px; height: 2px; background: var(--gold);
+    }
+    h1 {
+      font-family: var(--ff-head);
+      font-size: clamp(3rem, 5.5vw, 4.8rem);
+      font-weight: 700; line-height: 1.02;
+      letter-spacing: 0.02em; text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 1.25rem;
+    }
+    h1 em { font-style: normal; color: var(--gold); }
+    .hero-sub {
+      max-width: 720px;
+      font-family: var(--ff-sans);
+      font-size: 1rem;
+      color: rgba(255,255,255,.65);
+      line-height: 1.9;
+    }
+    .hero-meta {
+      display: grid;
+      gap: 1rem;
+    }
+    .hero-meta-card {
+      border: 1px solid rgba(160,124,48,.28);
+      background: rgba(255,255,255,.03);
+      padding: 1.2rem 1.25rem;
+    }
+    .hero-meta-label {
+      font-family: var(--ff-body);
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold-lt);
+      margin-bottom: .45rem;
+    }
+    .hero-meta-text {
+      font-family: var(--ff-sans);
+      font-size: .9rem;
+      color: rgba(255,255,255,.74);
+      line-height: 1.7;
+    }
+
+    .legal-main {
+      padding: 4rem 0 5rem;
+    }
+    .legal-layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+    .legal-aside {
+      position: sticky;
+      top: 88px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      padding: 1.35rem 1.2rem;
+    }
+    .legal-aside-title {
+      font-family: var(--ff-body);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .85rem;
+    }
+    .legal-aside ul {
+      list-style: none;
+      display: grid;
+      gap: .55rem;
+    }
+    .legal-aside a {
+      text-decoration: none;
+      color: var(--ink-soft);
+      font-family: var(--ff-body);
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+    .legal-aside a:hover { color: var(--gold); }
+
+    .legal-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: clamp(1.5rem, 3vw, 2.6rem);
+    }
+    .legal-kicker {
+      font-family: var(--ff-body);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .9rem;
+    }
+    h2 {
+      font-family: var(--ff-head);
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin: 2.6rem 0 1rem;
+      scroll-margin-top: 95px;
+    }
+    h2:first-of-type { margin-top: 0; }
+    h3 {
+      font-family: var(--ff-head);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin: 1.5rem 0 .7rem;
+      scroll-margin-top: 95px;
+    }
+    p {
+      font-family: var(--ff-sans);
+      font-size: .98rem;
+      color: var(--ink-soft);
+      line-height: 1.9;
+      margin-bottom: 1rem;
+    }
+    ul {
+      margin: .6rem 0 1.15rem 0;
+      padding-left: 0;
+      list-style: none;
+      display: grid;
+      gap: .7rem;
+    }
+    li {
+      position: relative;
+      padding-left: 1.15rem;
+      font-family: var(--ff-sans);
+      font-size: .96rem;
+      color: var(--ink-soft);
+      line-height: 1.8;
+    }
+    li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--gold);
+      font-size: 1rem;
+    }
+    strong { color: var(--ink); font-weight: 600; }
+    .legal-note {
+      margin: 1.35rem 0 1.5rem;
+      padding: 1rem 1.1rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--gold);
+    }
+    .legal-note p:last-child { margin-bottom: 0; }
+    .legal-warning {
+      margin-top: 1.5rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(160,124,48,.25);
+      background: rgba(160,124,48,.06);
+    }
+    .legal-warning p { margin-bottom: 0; }
+
+    footer {
+      background: var(--ink-2); color: rgba(255,255,255,.55);
+      padding: 2.5rem 0;
+      font-family: var(--ff-sans); font-size: .78rem;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .footer-logo {
+      font-family: var(--ff-head); font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.9);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-links a {
+      font-family: var(--ff-body); font-size: .68rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(255,255,255,.55); text-decoration: none; transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-legal {
+      display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: .5rem;
+    }
+    .footer-legal a {
+      font-family: var(--ff-body); font-size: .65rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.38); text-decoration: underline;
+      text-underline-offset: 3px; transition: color .2s;
+    }
+    .footer-legal a:hover { color: var(--gold); }
+    .footer-reg {
+      padding-top: 1.5rem; margin-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .7rem; color: rgba(255,255,255,.38); line-height: 1.9;
+    }
+    .footer-meta {
+      margin-top: .85rem;
+      font-size: .7rem;
+      color: rgba(255,255,255,.42);
+      line-height: 1.9;
+    }
+
+    @media (max-width: 960px) {
+      .legal-hero-inner,
+      .legal-layout {
+        grid-template-columns: 1fr;
+      }
+      .legal-aside {
+        position: static;
+      }
+    }
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .legal-hero {
+        padding: calc(64px + 3.2rem) 0 3rem;
+      }
+      .nav-cta {
+        padding: .45rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo">Daniel<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#identificacao">Identificação</a></li>
+        <li><a href="#servicos">Serviços</a></li>
+        <li><a href="#pagamentos">Preços</a></li>
+        <li><a href="#conflitos">Conflitos</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+      <a href="/" class="nav-cta">Voltar ao site</a>
+    </div>
+  </nav>
+
+  <section class="legal-hero">
+    <div class="container legal-hero-inner">
+      <div>
+        <span class="hero-eyebrow">Termos e Condições de Uso</span>
+        <h1>Transparência <em>antes</em> da contratação</h1>
+        <p class="hero-sub">
+          Estes Termos regulam o acesso ao site, a aquisição do ebook e a contratação dos serviços de consultoria oferecidos por Daniel Oliveira Ferreira. Ao utilizar este site ou contratar qualquer plano, você concorda com as condições abaixo.
+        </p>
+      </div>
+
+      <div class="hero-meta">
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Última atualização</div>
+          <div class="hero-meta-text">23 de março de 2026</div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Responsável</div>
+          <div class="hero-meta-text">Daniel Oliveira Ferreira · Consultor de Valores Mobiliários · CVM nº 003838-5</div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Domínio</div>
+          <div class="hero-meta-text">daferinvest.com.br</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="legal-main">
+    <div class="container legal-layout">
+      <aside class="legal-aside">
+        <div class="legal-aside-title">Navegação rápida</div>
+        <ul>
+          <li><a href="#identificacao">1. Identificação do prestador</a></li>
+          <li><a href="#objeto">2. Objeto</a></li>
+          <li><a href="#elegibilidade">3. Elegibilidade e capacidade</a></li>
+          <li><a href="#servicos">4. Natureza dos produtos e serviços</a></li>
+          <li><a href="#planos">5. Planos, entregáveis e escopo</a></li>
+          <li><a href="#informacoes">6. Informações prestadas pelo cliente</a></li>
+          <li><a href="#riscos">7. Riscos e ausência de garantia</a></li>
+          <li><a href="#pagamentos">8. Preços e remuneração</a></li>
+          <li><a href="#arrependimento">9. Direito de arrependimento</a></li>
+          <li><a href="#cancelamento">10. Cancelamento da assinatura</a></li>
+          <li><a href="#agendamento">11. Agendamento e no-show</a></li>
+          <li><a href="#propriedade">12. Propriedade intelectual</a></li>
+          <li><a href="#privacidade">13. Privacidade e cookies</a></li>
+          <li><a href="#conflitos">14. Conflitos de interesse</a></li>
+          <li><a href="#conduta">15. Condutas vedadas</a></li>
+          <li><a href="#responsabilidade">16. Limitação de responsabilidade</a></li>
+          <li><a href="#atualizacoes">17. Alterações dos termos</a></li>
+          <li><a href="#foro">18. Lei aplicável e foro</a></li>
+          <li><a href="#contato">19. Contato</a></li>
+        </ul>
+      </aside>
+
+      <section class="legal-card">
+        <p class="legal-kicker">Leitura recomendada antes da compra</p>
+        <p>
+          Estes Termos e Condições de Uso (“<strong>Termos</strong>”) regulam o acesso, a navegação e a contratação dos produtos e serviços disponibilizados por <strong>Daniel Oliveira Ferreira</strong>, consultor de valores mobiliários registrado na Comissão de Valores Mobiliários (“<strong>CVM</strong>”) sob o nº <strong>003838-5</strong>, por meio do site <strong>https://daferinvest.com.br</strong>, bem como de suas páginas, formulários, materiais, áreas de atendimento e canais relacionados.
+        </p>
+        <p>
+          Ao acessar este site, adquirir o ebook, contratar a consultoria individual, aderir ao plano de acompanhamento mensal ou utilizar qualquer funcionalidade disponibilizada, você declara ter lido, compreendido e concordado com estes Termos, com a Política de Privacidade e com a Política de Cookies.
+        </p>
+        <p>
+          Caso você não concorde com qualquer disposição destes Termos, deverá interromper a navegação e não contratar os produtos ou serviços oferecidos.
+        </p>
+
+        <h2 id="identificacao">1. Identificação do Prestador</h2>
+        <p>Os serviços e produtos disponibilizados neste site são oferecidos por:</p>
+        <ul>
+          <li><strong>Nome:</strong> Daniel Oliveira Ferreira</li>
+          <li><strong>CPF:</strong> 104.217.166-14</li>
+          <li><strong>Atividade:</strong> Consultoria de valores mobiliários</li>
+          <li><strong>Registro CVM:</strong> 003838-5</li>
+          <li><strong>Certificação:</strong> CEA – ANBIMA</li>
+          <li><strong>Site:</strong> https://daferinvest.com.br</li>
+          <li><strong>E-mail de contato:</strong> daniel@daferinvest.com.br</li>
+          <li><strong>WhatsApp:</strong> +55 (35) 99702-4283</li>
+          <li><strong>LinkedIn:</strong> linkedin.com/in/danielferreira1997/</li>
+          <li><strong>Endereço profissional:</strong> Avenida Coronel Jorge Vieira, 535, Sala 02, Centro, Areado - MG, 37140-000</li>
+        </ul>
+        <div class="legal-note">
+          <p>Os dados acima identificam o fornecedor em sua atuação como pessoa física. Caso a operação comercial passe a ser realizada por pessoa jurídica, as referências cadastrais e fiscais desta página deverão ser atualizadas para refletir o CNPJ e os demais dados da estrutura contratante.</p>
+        </div>
+
+        <h2 id="objeto">2. Objeto</h2>
+        <p>Este site tem por objeto a oferta de:</p>
+        <ul>
+          <li>material digital de caráter educacional e informativo, incluindo o ebook “Investimentos para Iniciantes”;</li>
+          <li>serviços de consultoria de valores mobiliários, prestados de forma personalizada, nos termos da regulamentação aplicável;</li>
+          <li>serviços acessórios relacionados ao diagnóstico de perfil, análise de carteira, elaboração de plano de investimentos e acompanhamento periódico, conforme o plano contratado.</li>
+        </ul>
+
+        <h2 id="elegibilidade">3. Elegibilidade e Capacidade</h2>
+        <p>Ao contratar qualquer produto ou serviço por meio deste site, o usuário declara ser maior de 18 (dezoito) anos e plenamente capaz para os atos da vida civil, ou estar devidamente representado ou assistido na forma da lei.</p>
+        <p>O usuário declara, ainda, que fornecerá informações verdadeiras, completas e atualizadas durante o processo de contratação, agendamento e prestação do serviço.</p>
+
+        <h2 id="servicos">4. Natureza dos Produtos e Serviços</h2>
+        <p>O ebook disponibilizado neste site possui natureza <strong>educacional e informativa</strong>, sendo destinado ao estudo de conceitos, fundamentos e boas práticas relacionadas ao universo dos investimentos.</p>
+        <p>Os serviços de consultoria consistem em atividade profissional de orientação, análise e recomendação personalizada relacionada a valores mobiliários, observadas as características, objetivos, horizonte temporal e perfil do cliente.</p>
+        <p>O serviço prestado <strong>não inclui</strong>:</p>
+        <ul>
+          <li>custódia de recursos ou ativos do cliente;</li>
+          <li>recebimento, guarda, movimentação ou transferência de valores;</li>
+          <li>execução de ordens de compra ou venda em nome do cliente;</li>
+          <li>administração de carteira, gestão discricionária, intermediação de operações em mercado ou promessa de monitoramento contínuo do mercado em tempo real;</li>
+          <li>garantia de rentabilidade, de resultado ou de performance futura.</li>
+        </ul>
+        <p>A implementação de qualquer estratégia, aporte, resgate, rebalanceamento ou aplicação é de responsabilidade exclusiva do cliente, perante a instituição financeira, corretora, distribuidora ou plataforma de investimento por ele escolhida.</p>
+
+        <h2 id="planos">5. Planos, Entregáveis e Escopo</h2>
+
+        <h3>5.1. Plano Base – Ebook</h3>
+        <p>O Plano Base compreende o fornecimento do ebook em formato digital, para uso pessoal do comprador, sem suporte individualizado, sem análise de carteira e sem sessão ao vivo.</p>
+        <p>A entrega do ebook ocorre após a confirmação do pagamento pela plataforma de pagamento utilizada, por meio de página de confirmação, link de download e/ou envio ao e-mail informado no checkout, conforme a estrutura operacional vigente no momento da compra.</p>
+        <p>O cliente é responsável por informar corretamente seu e-mail, verificar caixa de entrada, spam, lixo eletrônico ou abas promocionais e entrar em contato caso não localize o material em prazo razoável após a aprovação do pagamento.</p>
+
+        <h3>5.2. Plano Estratégico – Ebook + Consultoria Individual</h3>
+        <p>O Plano Estratégico compreende:</p>
+        <ul>
+          <li>acesso ao ebook em formato digital;</li>
+          <li>1 (uma) sessão individual online, com duração estimada entre 1h e 1h30;</li>
+          <li>diagnóstico do perfil de risco, objetivos e contexto apresentado pelo cliente;</li>
+          <li>análise da carteira atual, quando existente e quando as informações forem adequadamente disponibilizadas;</li>
+          <li>plano de investimentos por escrito;</li>
+          <li>orientação inicial quanto à manutenção da carteira e critérios gerais de rebalanceamento;</li>
+          <li>suporte por e-mail pelo prazo de 7 (sete) dias corridos, contados da data da sessão.</li>
+        </ul>
+        <p>O Plano Estratégico é indicado para diagnóstico inicial, organização da estratégia ou revisão pontual.</p>
+
+        <h3>5.3. Plano de Acompanhamento – Consultoria Contínua</h3>
+        <p>O Plano de Acompanhamento, de natureza recorrente, compreende:</p>
+        <ul>
+          <li>acesso ao ebook em formato digital;</li>
+          <li>etapa inicial de diagnóstico e orientação estratégica;</li>
+          <li>1 (uma) reunião mensal de revisão da carteira e da estratégia;</li>
+          <li>orientações de rebalanceamento, incluindo sugestões de ajuste de alocação e percentuais de referência, cabendo exclusivamente ao cliente decidir se irá ou não implementá-las e executar as ordens correspondentes;</li>
+          <li>relatório mensal ou registro escrito das principais recomendações e ajustes;</li>
+          <li>suporte recorrente enquanto a assinatura estiver ativa, dentro de critérios razoáveis de uso e disponibilidade.</li>
+        </ul>
+        <p>O Plano de Acompanhamento não se confunde com promessa de monitoramento ininterrupto do mercado, gestão discricionária de carteira ou obrigação de resposta imediata a qualquer hora.</p>
+        <div class="legal-note">
+          <p>As respostas de suporte por e-mail serão prestadas em dias úteis, em prazo estimado de até 2 (dois) dias úteis, ressalvadas situações excepcionais, feriados, períodos de recesso informados previamente ou demandas de maior complexidade.</p>
+        </div>
+
+        <h2 id="informacoes">6. Informações Prestadas pelo Cliente</h2>
+        <p>A qualidade, a adequação e a personalização da consultoria dependem das informações fornecidas pelo cliente. Ao contratar os serviços, o cliente se compromete a fornecer dados corretos, completos e atualizados sobre sua situação financeira, patrimônio, objetivos, horizonte de investimento, tolerância a risco, investimentos já existentes e demais informações relevantes para a análise.</p>
+        <p>O prestador não se responsabiliza por prejuízos, distorções analíticas ou recomendações inadequadas decorrentes de informações incompletas, desatualizadas, imprecisas ou omitidas pelo cliente.</p>
+
+        <h2 id="riscos">7. Riscos, Limitações e Ausência de Garantia de Resultado</h2>
+        <p>O usuário reconhece que investimentos em valores mobiliários e outros ativos financeiros envolvem riscos, inclusive de perda parcial ou total do capital investido, oscilação de mercado, liquidez, crédito, marcação a mercado, volatilidade, variação cambial, eventos extraordinários e mudanças regulatórias, tributárias ou macroeconômicas.</p>
+        <p>Nenhum conteúdo disponibilizado neste site, nenhum material educacional e nenhuma orientação prestada em sessão ou em relatório constitui garantia de rentabilidade, promessa de lucro, certeza de valorização ou eliminação de risco.</p>
+        <p>Rentabilidade passada não representa garantia de rentabilidade futura.</p>
+        <p>As recomendações são formuladas com base nas informações disponíveis no momento da análise e podem perder adequação ao longo do tempo em razão de mudanças no mercado, na vida financeira do cliente, na sua tolerância a risco ou em outros fatores supervenientes.</p>
+
+        <h2 id="pagamentos">8. Preços, Remuneração e Condições Comerciais</h2>
+        <p>Para fins de transparência comercial e descritivo da remuneração cobrada pelos serviços, os planos atualmente ofertados neste site são os seguintes:</p>
+        <ul>
+          <li><strong>Plano Base – Ebook:</strong> R$ 39,90, em pagamento único.</li>
+          <li><strong>Plano Estratégico – Ebook + Consultoria Individual:</strong> R$ 397,00, em pagamento único.</li>
+          <li><strong>Plano de Acompanhamento – Ebook + Consultoria Contínua:</strong> R$ 497,00 por mês, em cobrança recorrente mensal até cancelamento.</li>
+        </ul>
+        <p>Salvo indicação expressa diversa, os valores acima correspondem ao preço bruto da oferta publicada nesta página e na página comercial vinculada no momento da contratação. Eventuais alterações futuras de preços não atingirão retroativamente compras já concluídas nem ciclos já pagos, salvo hipótese de erro material evidente ou exigência legal.</p>
+        <p>Os pagamentos são processados por terceiros especializados, como a Stripe, de acordo com os termos e políticas da respectiva plataforma. O prestador não armazena integralmente os dados do cartão do cliente, salvo as informações estritamente necessárias à confirmação da contratação, gestão da relação contratual e defesa em disputas comerciais.</p>
+        <div class="legal-note">
+          <p>Para fins de segurança, prevenção a fraude e defesa em contestação de pagamento, o prestador poderá manter registros relacionados à contratação, confirmação de pagamento, acesso ao material, histórico de agendamento, comunicações de suporte e evidências razoavelmente necessárias à comprovação da prestação do serviço ou entrega do produto digital.</p>
+        </div>
+        <div class="legal-warning">
+          <p>Em caso de suspeita de fraude, contestação indevida de pagamento, chargeback abusivo ou uso abusivo da plataforma após acesso ao conteúdo ou utilização do serviço, o prestador poderá suspender novos atendimentos, restringir acesso a benefícios remanescentes e adotar as medidas administrativas e legais cabíveis para resguardar seus direitos.</p>
+        </div>
+
+        <h2 id="arrependimento">9. Direito de Arrependimento</h2>
+        <p>Nas contratações realizadas fora do estabelecimento comercial, inclusive por meio eletrônico, o consumidor poderá exercer o direito de arrependimento no prazo de 7 (sete) dias corridos, contados da contratação ou do recebimento do produto ou serviço, nos termos da legislação aplicável.</p>
+        <p>Para exercer esse direito, o cliente deverá encaminhar solicitação expressa para o e-mail <strong>daniel@daferinvest.com.br</strong> ou para o canal oficial de atendimento indicado no site, informando nome completo, e-mail utilizado na compra, produto ou serviço contratado e data da compra.</p>
+        <p>Uma vez exercido validamente o direito de arrependimento, o valor pago será restituído conforme os procedimentos e prazos operacionais do meio de pagamento utilizado.</p>
+        <div class="legal-note">
+          <p><strong>Regras operacionais por tipo de contratação:</strong></p>
+          <ul>
+            <li><strong>Plano Base – Ebook:</strong> em caso de arrependimento dentro do prazo legal, o acesso ao material poderá ser cancelado e o valor pago será restituído na forma da legislação aplicável.</li>
+            <li><strong>Plano Estratégico – Consultoria Individual:</strong> caso o cliente exerça o arrependimento antes da realização da sessão, o contrato poderá ser desfeito com restituição integral. Se a sessão já tiver sido realizada e o plano escrito já tiver sido entregue, a solicitação será analisada à luz da legislação aplicável e da extensão do serviço efetivamente prestado, preservados os direitos do consumidor.</li>
+            <li><strong>Plano de Acompanhamento:</strong> o cancelamento dentro do prazo legal será analisado considerando o estágio de execução do serviço, o acesso ao ebook e a eventual realização de reunião ou entrega de material, sempre observada a legislação aplicável.</li>
+          </ul>
+        </div>
+
+        <h2 id="cancelamento">10. Cancelamento da Assinatura Recorrente</h2>
+        <p>O Plano de Acompanhamento poderá ser cancelado a qualquer momento pelo cliente, mediante solicitação pelos canais indicados no site ou por meio da ferramenta disponibilizada pela plataforma de pagamento, quando aplicável.</p>
+        <p>O cancelamento impede cobranças futuras, mas não gera, por si só, reembolso automático de ciclos já cobrados e já disponibilizados, ressalvadas as hipóteses legais de arrependimento, erro de cobrança ou obrigação legal específica.</p>
+        <p>Após o cancelamento, o acesso aos benefícios vinculados ao plano permanecerá disponível até o término do ciclo já pago, salvo informação diversa expressa na oferta ou em comunicação contratual específica.</p>
+
+        <h2 id="agendamento">11. Agendamento, Remarcação e No-show</h2>
+        <p>As sessões de consultoria serão realizadas em data e horário previamente agendados entre as partes, por videoconferência ou outro meio remoto informado no processo de atendimento.</p>
+        <p>Aplicam-se, salvo divulgação diversa na página comercial vigente, as seguintes regras:</p>
+        <ul>
+          <li>tolerância máxima de 15 (quinze) minutos de atraso;</li>
+          <li>remarcações devem ser solicitadas com antecedência mínima de 24 (vinte e quatro) horas;</li>
+          <li>o não comparecimento sem aviso prévio poderá caracterizar no-show e resultar na perda da sessão, sem obrigação de reagendamento gratuito;</li>
+          <li>casos excepcionais poderão ser avaliados discricionariamente, a critério do prestador, sem gerar direito adquirido a novas remarcações.</li>
+        </ul>
+
+        <h2 id="propriedade">12. Propriedade Intelectual</h2>
+        <p>Todo o conteúdo deste site e dos materiais fornecidos ao cliente, incluindo textos, layout, identidade visual, relatórios, documentos, apresentações, ebook, vídeos, imagens, logotipos, marcas, estrutura de navegação e demais elementos, é protegido pela legislação aplicável de propriedade intelectual e direitos autorais.</p>
+        <p>Salvo autorização expressa e por escrito, é vedado ao usuário:</p>
+        <ul>
+          <li>copiar, reproduzir, editar, adaptar, publicar, distribuir ou comercializar qualquer conteúdo;</li>
+          <li>compartilhar o ebook ou relatórios com terceiros;</li>
+          <li>revender, sublicenciar, ratear ou disponibilizar o material em grupos, plataformas ou áreas públicas;</li>
+          <li>utilizar o conteúdo para fins comerciais ou concorrenciais sem autorização expressa.</li>
+        </ul>
+        <p>O acesso concedido ao material é pessoal, limitado, não exclusivo e intransferível.</p>
+
+        <h2 id="privacidade">13. Proteção de Dados, Privacidade e Cookies</h2>
+        <p>O tratamento de dados pessoais realizado no contexto deste site e da prestação dos serviços observará a legislação aplicável e será detalhado na <strong>Política de Privacidade</strong> e na <strong>Política de Cookies</strong>, documentos que integram estes Termos para todos os fins.</p>
+        <p>Os dados pessoais poderão ser tratados para viabilizar cadastro, pagamento, emissão de comunicações contratuais, agendamento, atendimento, cumprimento de obrigações legais e exercício regular de direitos, conforme descrito na documentação própria.</p>
+        <p>Quando houver captação para comunicações promocionais, materiais gratuitos, novidades, conteúdos ou e-mails de marketing, esse envio poderá depender do consentimento do titular, quando essa for a base legal aplicável, sem prejuízo das demais hipóteses legais previstas na legislação.</p>
+        <p>Os dados pessoais serão mantidos pelo tempo necessário para cumprir as finalidades da contratação, obrigações legais, regulatórias, fiscais, contábeis, prevenção a fraude, exercício regular de direitos e prazos de retenção compatíveis com a natureza da relação, conforme detalhado na Política de Privacidade.</p>
+        <div class="legal-note">
+          <p>Embora agentes de tratamento de pequeno porte possam ter regime jurídico diferenciado em certos pontos, este site manterá canal específico para demandas de privacidade e proteção de dados por meio do e-mail <strong>privacidade@daferinvest.com.br</strong>. Enquanto não houver indicação diversa em documento próprio, esse canal poderá ser utilizado para dúvidas, solicitações de titulares e comunicações relacionadas ao tratamento de dados.</p>
+        </div>
+        <div class="legal-note">
+          <p>Na hipótese de incidente de segurança com dados pessoais que possa acarretar risco ou dano relevante, serão adotadas as medidas técnicas e administrativas cabíveis, bem como as comunicações legalmente exigidas aos titulares e à autoridade competente, nos termos da legislação aplicável.</p>
+        </div>
+
+        <h2 id="conflitos">14. Independência, Outras Atividades e Potenciais Conflitos de Interesse</h2>
+        <p>A atuação do prestador na atividade de consultoria é independente e orientada pelo dever de buscar recomendações compatíveis com o perfil, os objetivos e o contexto do cliente.</p>
+        <p>No exercício da consultoria prestada por este site, o prestador <strong>não recebe rebate, comissão de distribuição ou remuneração variável paga por terceiros em razão da indicação de produtos financeiros</strong>, salvo se tal condição vier a ser expressamente divulgada de forma clara e específica antes da contratação ou da recomendação correspondente.</p>
+        <p>O prestador também exerce atividade profissional vinculada à <strong>Lafer Invest Securitizadora S/A</strong>, inscrita no CNPJ nº <strong>54.864.802/0001-79</strong>. Em razão dessa atuação paralela, pode haver potencial conflito de interesses entre essa atividade e a consultoria de valores mobiliários prestada aos clientes.</p>
+        <p>Como medida de mitigação, o prestador mantém segregação de atuação e <strong>não realiza, no âmbito da consultoria, recomendações de investimento com o objetivo de favorecer operações, títulos, valores mobiliários ou estruturas originadas, emitidas, distribuídas ou relacionadas à referida securitizadora</strong>. Caso exista situação concreta de potencial conflito em relação a determinado ativo, operação, emissor ou estrutura, essa circunstância será informada ao cliente de forma clara e transparente.</p>
+
+        <h2 id="conduta">15. Uso Adequado do Site e Condutas Vedadas</h2>
+        <p>O usuário compromete-se a utilizar o site e seus canais de forma lícita, ética e compatível com estes Termos, abstendo-se de praticar atos que possam:</p>
+        <ul>
+          <li>violar a legislação vigente ou direitos de terceiros;</li>
+          <li>prejudicar o funcionamento do site, seus sistemas, integrações ou serviços relacionados;</li>
+          <li>tentar acessar áreas restritas sem autorização;</li>
+          <li>introduzir códigos maliciosos, automatismos abusivos, scraping não autorizado, ataques de força bruta, engenharia reversa ou mecanismos de coleta massiva de dados;</li>
+          <li>criar cadastros falsos, utilizar identidade de terceiros ou prestar informações fraudulentas;</li>
+          <li>utilizar o conteúdo para fins ilegais, concorrenciais, enganosos ou não autorizados.</li>
+        </ul>
+
+        <h2 id="responsabilidade">16. Limitação de Responsabilidade</h2>
+        <p>Sem prejuízo dos direitos inderrogáveis do consumidor previstos em lei, o prestador não será responsável por:</p>
+        <ul>
+          <li>decisões de investimento tomadas pelo cliente em desacordo com as orientações recebidas;</li>
+          <li>prejuízos decorrentes de informações falsas, incompletas ou desatualizadas fornecidas pelo cliente;</li>
+          <li>falhas imputáveis a instituições financeiras, corretoras, plataformas, processadores de pagamento, serviços de e-mail, provedores de videoconferência ou outros provedores tecnológicos terceiros;</li>
+          <li>eventos extraordinários, caso fortuito, força maior, instabilidades de mercado, indisponibilidades sistêmicas ou alterações regulatórias supervenientes.</li>
+        </ul>
+
+        <h2 id="atualizacoes">17. Alterações destes Termos</h2>
+        <p>Estes Termos poderão ser alterados, atualizados ou substituídos a qualquer tempo, especialmente para refletir mudanças legais, regulatórias, operacionais, comerciais ou tecnológicas.</p>
+        <p>A versão vigente será sempre aquela publicada nesta página, com indicação da data da última atualização. Alterações não terão efeito retroativo sobre compras já concluídas, salvo quando decorrerem de exigência legal, regulatória ou de necessidade técnica indispensável à execução do serviço.</p>
+        <p>Em caso de alterações relevantes aplicáveis a clientes com contratação recorrente em curso, poderá haver comunicação adicional pelos canais de contato cadastrados. A continuidade de uso dos serviços após a divulgação da nova versão poderá ser interpretada como ciência das alterações, sem prejuízo dos direitos do consumidor e da necessidade de comunicação específica quando legalmente exigida.</p>
+
+        <h2 id="foro">18. Lei Aplicável e Foro</h2>
+        <p>Estes Termos serão regidos pelas leis da República Federativa do Brasil.</p>
+        <p>Fica eleito o foro da comarca de Areado/MG, com ressalva dos direitos do consumidor quando houver foro legalmente mais favorável, para dirimir questões oriundas destes Termos.</p>
+
+        <h2 id="contato">19. Contato</h2>
+        <p>Em caso de dúvidas sobre estes Termos, sobre a contratação ou sobre qualquer produto ou serviço disponibilizado neste site, entre em contato pelos seguintes canais:</p>
+        <ul>
+          <li><strong>E-mail principal:</strong> daniel@daferinvest.com.br</li>
+          <li><strong>E-mail de privacidade:</strong> privacidade@daferinvest.com.br</li>
+          <li><strong>WhatsApp:</strong> +55 (35) 99702-4283</li>
+          <li><strong>Endereço profissional:</strong> Avenida Coronel Jorge Vieira, 535, Sala 02, Centro, Areado - MG, 37140-000</li>
+        </ul>
+      </section></section>
+    </div>
+  </main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">Daniel<span>.</span></span>
+      <div class="footer-links">
+        <a href="/">Início</a>
+        <a href="/termos-de-uso">Termos</a>
+        <a href="/politica-de-privacidade">Privacidade</a>
+        <a href="/politica-de-cookies">Cookies</a>
+        <a href="mailto:daniel@daferinvest.com.br">Contato</a>
+      </div>
+      <span>© 2025 · Todos os direitos reservados</span>
+    </div>
+    <div class="footer-reg">
+      Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo registrado na Comissão de Valores Mobiliários (CVM) sob o nº 003838-5 · CEA certificado pela ANBIMA.<br>
+      As informações contidas neste site têm caráter meramente informativo e educacional, não constituindo oferta, solicitação, recomendação ou assessoria de investimento.
+      Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura. Leia atentamente as informações antes de investir.
+    </div>
+  </div>
+</footer>
+</body>
+</html>

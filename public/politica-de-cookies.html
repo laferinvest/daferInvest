@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Cookies · Daniel Ferreira</title>
+  <meta name="description" content="Política de Cookies do site de Daniel Oliveira Ferreira, com informações sobre categorias de cookies, consentimento, preferências e tecnologias de terceiros." />
+  <link rel="canonical" href="https://daferinvest.com.br/politica-de-cookies" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0c0e13;
+      --ink-2:    #181b24;
+      --ink-soft: #2a2f42;
+      --muted:    #58607a;
+      --line:     #d4d1cb;
+      --bg:       #f7f6f3;
+      --bg-warm:  #edeae3;
+      --gold:     #a07c30;
+      --gold-lt:  #c09a50;
+      --white:    #ffffff;
+
+      --ff-head:  'Barlow Condensed', sans-serif;
+      --ff-body:  'Barlow', sans-serif;
+      --ff-sans:  'DM Sans', sans-serif;
+
+      --max-w: 1100px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-sans);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247, 246, 243, 0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: var(--ff-head);
+      font-size: 1.15rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink); text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 2.25rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--ff-body);
+      font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-soft); text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      font-family: var(--ff-body);
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1.4rem;
+      background: var(--gold);
+      color: var(--white);
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--gold-lt); }
+
+    .legal-hero {
+      position: relative;
+      padding: calc(64px + 5rem) 0 4rem;
+      background: var(--ink);
+      overflow: hidden;
+    }
+    .legal-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .legal-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 3rem;
+      align-items: end;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .65rem;
+      font-family: var(--ff-body);
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.25rem;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: block;
+      width: 22px; height: 2px; background: var(--gold);
+    }
+    h1 {
+      font-family: var(--ff-head);
+      font-size: clamp(3rem, 5.5vw, 4.8rem);
+      font-weight: 700; line-height: 1.02;
+      letter-spacing: 0.02em; text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 1.25rem;
+    }
+    h1 em { font-style: normal; color: var(--gold); }
+    .hero-sub {
+      max-width: 720px;
+      font-family: var(--ff-sans);
+      font-size: 1rem;
+      color: rgba(255,255,255,.65);
+      line-height: 1.9;
+    }
+    .hero-meta {
+      display: grid;
+      gap: 1rem;
+    }
+    .hero-meta-card {
+      border: 1px solid rgba(160,124,48,.28);
+      background: rgba(255,255,255,.03);
+      padding: 1.2rem 1.25rem;
+    }
+    .hero-meta-label {
+      font-family: var(--ff-body);
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold-lt);
+      margin-bottom: .45rem;
+    }
+    .hero-meta-text {
+      font-family: var(--ff-sans);
+      font-size: .9rem;
+      color: rgba(255,255,255,.74);
+      line-height: 1.7;
+    }
+
+    .legal-main {
+      padding: 4rem 0 5rem;
+    }
+    .legal-layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+    .legal-aside {
+      position: sticky;
+      top: 88px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      padding: 1.35rem 1.2rem;
+    }
+    .legal-aside-title {
+      font-family: var(--ff-body);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .85rem;
+    }
+    .legal-aside ul {
+      list-style: none;
+      display: grid;
+      gap: .55rem;
+    }
+    .legal-aside a {
+      text-decoration: none;
+      color: var(--ink-soft);
+      font-family: var(--ff-body);
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+    .legal-aside a:hover { color: var(--gold); }
+
+    .legal-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: clamp(1.5rem, 3vw, 2.6rem);
+    }
+    .legal-kicker {
+      font-family: var(--ff-body);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .9rem;
+    }
+    h2 {
+      font-family: var(--ff-head);
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      margin: 2.35rem 0 1rem;
+      scroll-margin-top: 92px;
+    }
+    h3 {
+      font-family: var(--ff-body);
+      font-size: .98rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin: 1.55rem 0 .6rem;
+    }
+    p + p { margin-top: 1rem; }
+    ul, ol {
+      margin: .8rem 0 1rem 1.2rem;
+    }
+    li + li { margin-top: .45rem; }
+    strong { font-weight: 700; color: var(--ink); }
+    a { color: var(--gold); }
+
+    .notice,
+    .cookie-table-wrap {
+      margin-top: 1.2rem;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff 0%, #faf8f4 100%);
+    }
+    .notice {
+      padding: 1rem 1.15rem;
+    }
+    .notice strong {
+      display: block;
+      font-family: var(--ff-body);
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .35rem;
+    }
+    .cookie-table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: .94rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: .9rem .85rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-family: var(--ff-body);
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: #fbfaf7;
+    }
+
+    footer {
+      background: var(--ink-2); color: rgba(255,255,255,.55);
+      padding: 2.5rem 0;
+      font-family: var(--ff-sans); font-size: .78rem;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .footer-logo {
+      font-family: var(--ff-head); font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.9);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-links a {
+      font-family: var(--ff-body); font-size: .68rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(255,255,255,.55); text-decoration: none; transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-legal {
+      display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: .5rem;
+    }
+    .footer-legal a {
+      font-family: var(--ff-body); font-size: .65rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.38); text-decoration: underline;
+      text-underline-offset: 3px; transition: color .2s;
+    }
+    .footer-legal a:hover { color: var(--gold); }
+    .footer-reg {
+      padding-top: 1.5rem; margin-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .7rem; color: rgba(255,255,255,.38); line-height: 1.9;
+    }
+    .footer-meta {
+      margin-top: .85rem;
+      font-size: .7rem;
+      color: rgba(255,255,255,.42);
+      line-height: 1.9;
+    }
+
+    @media (max-width: 980px) {
+      .legal-hero-inner,
+      .legal-layout {
+        grid-template-columns: 1fr;
+      }
+      .legal-aside {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      .nav-inner { gap: 1rem; }
+      .nav-cta { padding-inline: 1rem; }
+      body { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <a class="nav-logo" href="index.html">Daniel <span>Ferreira</span></a>
+      <ul class="nav-links">
+        <li><a href="#o-que-sao">O que são</a></li>
+        <li><a href="#categorias">Categorias</a></li>
+        <li><a href="#como-usamos">Como usamos</a></li>
+        <li><a href="#gerenciamento">Gerenciamento</a></li>
+      </ul>
+      <a class="nav-cta" href="index.html#pacotes">Ver planos</a>
+    </div>
+  </nav>
+
+  <header class="legal-hero">
+    <div class="container legal-hero-inner">
+      <div>
+        <div class="hero-eyebrow">Documento de transparência</div>
+        <h1>Política de <em>Cookies</em></h1>
+        <p class="hero-sub">
+          Esta Política de Cookies explica como o site utiliza cookies e tecnologias semelhantes,
+          para quais finalidades, como você pode gerenciar suas preferências e de que forma
+          tratamos sua escolha de consentimento.
+        </p>
+      </div>
+
+      <div class="hero-meta">
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Última atualização</div>
+          <div class="hero-meta-text">24 de março de 2026</div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Controlador</div>
+          <div class="hero-meta-text">
+            Daniel Oliveira Ferreira<br>
+            CPF 104.217.166-14<br>
+            Avenida Coronel Jorge Vieira, 535, Sala 02<br>
+            Centro · Areado - MG · 37140-000
+          </div>
+        </div>
+        <div class="hero-meta-card">
+          <div class="hero-meta-label">Canal de privacidade</div>
+          <div class="hero-meta-text">daniel@daferinvest.com.br</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="legal-main">
+    <div class="container legal-layout">
+      <aside class="legal-aside">
+        <div class="legal-aside-title">Nesta página</div>
+        <ul>
+          <li><a href="#o-que-sao">1. O que são cookies</a></li>
+          <li><a href="#por-que-existem">2. Por que usamos</a></li>
+          <li><a href="#categorias">3. Categorias de cookies</a></li>
+          <li><a href="#como-usamos">4. Como o site usa</a></li>
+          <li><a href="#terceiros">5. Tecnologias de terceiros</a></li>
+          <li><a href="#consentimento">6. Consentimento</a></li>
+          <li><a href="#gerenciamento">7. Como gerenciar</a></li>
+          <li><a href="#retencao">8. Duração</a></li>
+          <li><a href="#alteracoes">9. Alterações</a></li>
+          <li><a href="#contato">10. Contato</a></li>
+        </ul>
+      </aside>
+
+      <section class="legal-card">
+        <div class="legal-kicker">Política aplicável ao site</div>
+        <p>
+          Esta Política de Cookies complementa os Termos de Uso e a Política de Privacidade do site. Ela deve ser interpretada em conjunto com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados Pessoais – LGPD), com a legislação consumerista aplicável e com as orientações pertinentes da ANPD.
+          Ela se aplica às páginas, formulários, áreas de contato, páginas de venda e demais recursos
+          do domínio <strong>daferinvest.com.br</strong> e páginas relacionadas.
+        </p>
+
+        <div class="notice">
+          <strong>Resumo rápido</strong>
+          Cookies necessários podem ser utilizados para o funcionamento básico do site. Cookies não
+          necessários, como analytics e publicidade, devem depender da sua escolha no banner de consentimento.
+          Você pode aceitar, rejeitar ou revisar suas preferências posteriormente.
+        </div>
+
+        <h2 id="o-que-sao">1. O que são cookies</h2>
+        <p>
+          Cookies são pequenos arquivos ou identificadores armazenados no seu navegador, dispositivo ou sessão
+          de navegação. Eles ajudam o site a lembrar preferências, entender como as páginas são usadas, medir
+          desempenho, manter funcionalidades e, quando autorizado, apoiar ações de analytics e publicidade.
+        </p>
+        <p>
+          Além dos cookies tradicionais, o site pode usar tecnologias semelhantes, como armazenamento local
+          do navegador, pixels, tags e identificadores relacionados ao funcionamento de ferramentas de medição,
+          segurança ou marketing.
+        </p>
+
+        <h2 id="por-que-existem">2. Por que usamos cookies</h2>
+        <p>Os cookies e tecnologias semelhantes podem ser usados para:</p>
+        <ul>
+          <li>manter o funcionamento técnico básico do site;</li>
+          <li>registrar sua preferência de consentimento;</li>
+          <li>melhorar desempenho, estabilidade e segurança;</li>
+          <li>entender como os visitantes navegam nas páginas;</li>
+          <li>medir campanhas, conversões e interações com anúncios, quando houver consentimento;</li>
+          <li>lembrar preferências funcionais do usuário, quando aplicável.</li>
+        </ul>
+
+        <h2 id="categorias">3. Categorias de cookies</h2>
+        <p>
+          Para fins desta Política, os cookies podem ser organizados nas seguintes categorias:
+        </p>
+
+        <div class="cookie-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Finalidade</th>
+                <th>Necessidade</th>
+                <th>Exemplos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Necessários</strong></td>
+                <td>Permitem o funcionamento básico do site, segurança, estabilidade e registro da sua escolha de consentimento.</td>
+                <td>Essenciais para a operação básica.</td>
+                <td>Preferência do banner, prevenção a abuso, integridade de formulários.</td>
+              </tr>
+              <tr>
+                <td><strong>Funcionais</strong></td>
+                <td>Memorizam preferências do usuário e personalizações não essenciais.</td>
+                <td>Opcional, dependendo do recurso.</td>
+                <td>Lembrança de idioma, estado de interface ou preferências visuais.</td>
+              </tr>
+              <tr>
+                <td><strong>Analytics / desempenho</strong></td>
+                <td>Permitem compreender tráfego, comportamento agregado, desempenho de páginas e eventos de navegação.</td>
+                <td>Não necessário.</td>
+                <td>Medição de visitas, páginas mais acessadas, origem de tráfego.</td>
+              </tr>
+              <tr>
+                <td><strong>Publicidade / marketing</strong></td>
+                <td>Podem ser usados para medir campanhas, atribuição de conversão, remarketing e personalização de anúncios.</td>
+                <td>Não necessário.</td>
+                <td>Tags de Google Ads, identificação de conversão e públicos de remarketing.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="como-usamos">4. Como o site usa cookies na prática</h2>
+        <h3>4.1. Funcionamento básico</h3>
+        <p>
+          O site pode usar cookies ou armazenamento local para garantir a operação mínima da página,
+          registrar se o banner de cookies já foi exibido e memorizar se você aceitou, recusou ou personalizou
+          suas preferências.
+        </p>
+
+        <h3>4.2. Medição e analytics</h3>
+        <p>
+          Se você autorizar essa categoria, o site poderá usar ferramentas de analytics para entender métricas
+          agregadas de acesso, como número de visitas, páginas visualizadas, origem de tráfego e interações com
+          elementos relevantes da navegação.
+        </p>
+
+        <h3>4.3. Publicidade e conversão</h3>
+        <p>
+          Se você autorizar cookies de marketing, o site poderá utilizar tags e tecnologias de terceiros para
+          medir campanhas, registrar conversões, melhorar atribuição e, quando aplicável, apoiar recursos de
+          remarketing e anúncios personalizados.
+        </p>
+
+        <h3>4.4. Formulários e contatos</h3>
+        <p>
+          Em páginas de contato, captura de lead, agenda ou checkout, podem existir tecnologias destinadas à
+          segurança, prevenção de fraude, integridade de envio e medição de performance dos formulários.
+        </p>
+
+        <h2 id="terceiros">5. Tecnologias e serviços de terceiros</h2>
+        <p>
+          O site pode integrar serviços de terceiros que utilizam cookies, identificadores ou tecnologias semelhantes,
+          de acordo com a configuração implementada. Entre os serviços que podem ser utilizados, conforme a operação do site,
+          estão:
+        </p>
+        <ul>
+          <li><strong>Cloudflare</strong>, para CDN, proteção, estabilidade, mitigação de abuso, segurança e gerenciamento técnico do tráfego do site;</li>
+          <li><strong>Stripe</strong>, para processamento de pagamento, segurança da transação e prevenção a fraude;</li>
+          <li><strong>Google Analytics</strong>, para métricas de uso e desempenho, quando habilitado pelo seu consentimento;</li>
+          <li><strong>Google Ads / Google Tag</strong>, para medição de campanhas, conversões e publicidade, quando habilitado pelo seu consentimento;</li>
+          <li><strong>Google Fonts</strong>, para carregamento de tipografia web, podendo envolver requisições técnicas a servidores do Google para entrega das fontes;</li>
+          <li>outras ferramentas de hospedagem, proteção, formulários e segurança necessárias à operação do site.</li>
+        </ul>
+        <p>
+          Alguns desses fornecedores podem receber informações técnicas como endereço IP, dados do navegador, identificadores
+          do dispositivo, registros de acesso e parâmetros da requisição necessários para a prestação do serviço correspondente.
+          Nem todo serviço de terceiro implica, por si só, cookie de marketing; em certos casos, trata-se apenas de infraestrutura
+          técnica, segurança, entrega de conteúdo ou tipografia.
+        </p>
+        <p>
+          Como esses serviços podem evoluir ao longo do tempo, a lista acima é exemplificativa e poderá ser atualizada sempre que
+          houver mudança relevante na stack do site.
+        </p>
+
+        <h2 id="consentimento">6. Consentimento e banner de cookies</h2>
+        <p>
+          Quando exigido pela Lei nº 13.709/2018 (LGPD), pela legislação aplicável e pela natureza do cookie, o site solicitará sua escolha por meio
+          de banner ou ferramenta de gerenciamento de preferências. Em regra:
+        </p>
+        <ul>
+          <li>cookies necessários permanecem ativos para o funcionamento básico do site;</li>
+          <li>cookies de analytics, funcionalidade não essencial e marketing devem depender da sua escolha;</li>
+          <li>você poderá aceitar, rejeitar ou personalizar categorias, conforme a implementação disponível.</li>
+        </ul>
+        <p>
+          A sua escolha de consentimento costuma ser registrada em um cookie próprio do site ou em armazenamento local
+          do navegador, para que o banner não precise reaparecer a cada acesso e para que as ferramentas respeitem sua
+          decisão.
+        </p>
+        <div class="notice">
+          <strong>Importante</strong>
+          Apagar os cookies do navegador ou trocar de navegador/dispositivo pode fazer o banner reaparecer, porque a
+          preferência anterior deixa de estar disponível naquele ambiente.
+        </div>
+
+        <h2 id="gerenciamento">7. Como gerenciar ou revogar sua escolha</h2>
+        <p>Você pode gerenciar cookies de três formas principais:</p>
+        <ol>
+          <li>pelo próprio banner ou centro de preferências do site, quando disponível;</li>
+          <li>pelas configurações do seu navegador, apagando ou bloqueando cookies;</li>
+          <li>por ferramentas adicionais de privacidade do dispositivo ou extensões específicas do navegador.</li>
+        </ol>
+        <p>
+          O bloqueio de cookies necessários pode comprometer o funcionamento de determinadas páginas, formulários,
+          recursos de pagamento ou preferências de navegação.
+        </p>
+
+        <h2 id="retencao">8. Duração, expiração e retenção</h2>
+        <p>
+          Os cookies podem ser de sessão, quando expiram ao fechar o navegador, ou persistentes, quando permanecem por determinado
+          período para cumprir a finalidade informada. Sempre que possível, o site buscará limitar a duração dos cookies persistentes
+          ao tempo necessário para a respectiva finalidade.
+        </p>
+        <p>
+          A duração exata pode variar conforme a configuração técnica, a ferramenta utilizada, o navegador, a atualização do serviço
+          do terceiro e a forma como o banner de consentimento estiver implementado. A tabela abaixo apresenta exemplos de prazos
+          normalmente associados às tecnologias atualmente previstas para o site:
+        </p>
+
+        <div class="cookie-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tecnologia / Cookie</th>
+                <th>Fornecedor</th>
+                <th>Finalidade</th>
+                <th>Duração típica</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Preferência de consentimento</strong></td>
+                <td>Próprio site</td>
+                <td>Registrar se você aceitou, rejeitou ou personalizou categorias de cookies.</td>
+                <td>Até 12 meses, ou até nova escolha / limpeza do navegador.</td>
+              </tr>
+              <tr>
+                <td><strong>_ga</strong> e variações do GA4</td>
+                <td>Google Analytics</td>
+                <td>Distinguir usuários e apoiar medição agregada de tráfego e desempenho.</td>
+                <td>Até 2 anos, conforme configuração padrão do serviço.</td>
+              </tr>
+              <tr>
+                <td><strong>Cookies / tags de conversão</strong></td>
+                <td>Google Ads</td>
+                <td>Medição de campanhas, conversões e, se permitido, remarketing.</td>
+                <td>Variável; em muitos cenários pode chegar a até 90 dias ou conforme configuração do serviço.</td>
+              </tr>
+              <tr>
+                <td><strong>Cookies de segurança</strong></td>
+                <td>Cloudflare</td>
+                <td>Proteção, mitigação de abuso, integridade de requisição e estabilidade do site.</td>
+                <td>Variável conforme a funcionalidade de segurança utilizada.</td>
+              </tr>
+              <tr>
+                <td><strong>Cookies de transação e prevenção a fraude</strong></td>
+                <td>Stripe</td>
+                <td>Viabilizar o pagamento, segurança da transação e prevenção a fraude.</td>
+                <td>Variável conforme a ferramenta e a sessão de pagamento.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          As informações associadas à sua escolha de consentimento e a registros técnicos correlatos poderão ser mantidas pelo prazo
+          necessário para demonstrar conformidade, segurança, atendimento a obrigações legais e exercício regular de direitos, observada
+          a Política de Privacidade.
+        </p>
+
+        <h2 id="alteracoes">9. Alterações desta Política</h2>
+        <p>
+          Esta Política de Cookies poderá ser alterada a qualquer momento para refletir mudanças legais, regulatórias,
+          tecnológicas ou operacionais. A versão vigente será sempre a publicada nesta página, com indicação da data de
+          atualização.
+        </p>
+        <p>
+          Em caso de alteração relevante que afete a forma como cookies não necessários são utilizados, o site poderá
+          renovar a solicitação de consentimento ou adotar medidas técnicas compatíveis com a nova configuração.
+        </p>
+
+        <h2 id="contato">10. Contato</h2>
+        <p>
+          Se você tiver dúvidas sobre esta Política de Cookies ou quiser exercer direitos relacionados ao tratamento de dados
+          pessoais, entre em contato por:
+        </p>
+        <ul>
+          <li><strong>E-mail:</strong> daniel@daferinvest.com.br</li>
+          <li><strong>Endereço profissional:</strong> Avenida Coronel Jorge Vieira, 535, Sala 02, Centro, Areado - MG, 37140-000</li>
+          <li><strong>Documentos relacionados:</strong> Termos de Uso e Política de Privacidade do site</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-logo">Daniel<span>.</span></span>
+      <div class="footer-links">
+        <a href="/">Início</a>
+        <a href="/termos-de-uso">Termos</a>
+        <a href="/politica-de-privacidade">Privacidade</a>
+        <a href="/politica-de-cookies">Cookies</a>
+        <a href="mailto:daniel@daferinvest.com.br">Contato</a>
+      </div>
+      <span>© 2025 · Todos os direitos reservados</span>
+    </div>
+    <div class="footer-reg">
+      Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo registrado na Comissão de Valores Mobiliários (CVM) sob o nº 003838-5 · CEA certificado pela ANBIMA.<br>
+      As informações contidas neste site têm caráter meramente informativo e educacional, não constituindo oferta, solicitação, recomendação ou assessoria de investimento.
+      Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura. Leia atentamente as informações antes de investir.
+    </div>
+  </div>
+</footer>
+</body>
+</html>

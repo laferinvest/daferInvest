@@ -1,0 +1,287 @@
+require("dotenv").config();
+
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const PUBLIC_DIR = path.join(__dirname, "public");
+
+// ─────────────────────────────────────────────────────────────
+// CONFIG DOS PRODUTOS
+// ─────────────────────────────────────────────────────────────
+const products = {
+  ebook: {
+    priceId: process.env.STRIPE_PRICE_EBOOK,
+    mode: "payment",
+    productName: "Ebook Investimentos para Iniciantes",
+  },
+  consultoria_avulsa: {
+    priceId: process.env.STRIPE_PRICE_CONSULTORIA_AVULSA,
+    mode: "payment",
+    productName: "Ebook + Consultoria Individual",
+  },
+  consultoria_mensal: {
+    priceId: process.env.STRIPE_PRICE_CONSULTORIA_MENSAL,
+    mode: "subscription",
+    productName: "Ebook + Consultoria Contínua",
+  },
+};
+
+// ─────────────────────────────────────────────────────────────
+// WEBHOOK STRIPE
+// IMPORTANTE: precisa vir antes do express.json()
+// ─────────────────────────────────────────────────────────────
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error("❌ Erro na assinatura do webhook:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    try {
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object;
+          const email = session.customer_details?.email || "sem e-mail";
+          const productKey = session.metadata?.product_key || "desconhecido";
+          const productName = session.metadata?.product_name || "Produto";
+
+          console.log("✅ Pagamento confirmado:", {
+            sessionId: session.id,
+            email,
+            productKey,
+            productName,
+          });
+
+          break;
+        }
+
+        case "invoice.payment_failed": {
+          const invoice = event.data.object;
+          console.log("❌ Falha na cobrança recorrente:", invoice.id);
+          break;
+        }
+
+        case "customer.subscription.deleted": {
+          const subscription = event.data.object;
+          console.log("ℹ️ Assinatura cancelada:", subscription.id);
+          break;
+        }
+
+        case "payment_intent.payment_failed": {
+          const paymentIntent = event.data.object;
+          console.log("❌ Pagamento falhou:", paymentIntent.id);
+          break;
+        }
+
+        default:
+          console.log("ℹ️ Evento Stripe recebido:", event.type);
+      }
+
+      return res.json({ received: true });
+    } catch (err) {
+      console.error("❌ Erro ao processar webhook:", err.message);
+      return res.status(500).json({ error: "Erro interno no webhook" });
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────
+// MIDDLEWARES GERAIS
+// ─────────────────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(PUBLIC_DIR));
+
+// ─────────────────────────────────────────────────────────────
+// HEALTHCHECK
+// ─────────────────────────────────────────────────────────────
+app.get("/health", (_req, res) => {
+  res.json({
+    ok: true,
+    env: {
+      hasSecretKey: Boolean(process.env.STRIPE_SECRET_KEY),
+      hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      hasPriceEbook: Boolean(process.env.STRIPE_PRICE_EBOOK),
+      hasPriceConsultoriaAvulsa: Boolean(
+        process.env.STRIPE_PRICE_CONSULTORIA_AVULSA
+      ),
+      hasPriceConsultoriaMensal: Boolean(
+        process.env.STRIPE_PRICE_CONSULTORIA_MENSAL
+      ),
+      baseUrl: BASE_URL,
+    },
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// CRIAR CHECKOUT SESSION
+// ─────────────────────────────────────────────────────────────
+app.post("/create-checkout-session", async (req, res) => {
+  try {
+    const { product } = req.body;
+
+    if (!product || !products[product]) {
+      return res.status(400).json({ error: "Produto inválido." });
+    }
+
+    const selectedProduct = products[product];
+
+    if (!selectedProduct.priceId) {
+      return res.status(500).json({
+        error: `Price ID não configurado para o produto: ${product}`,
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: selectedProduct.mode,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: selectedProduct.priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: `${BASE_URL}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${BASE_URL}/?cancelado=1`,
+      allow_promotion_codes: true,
+      billing_address_collection: "auto",
+      metadata: {
+        product_key: product,
+        product_name: selectedProduct.productName,
+      },
+    });
+
+    return res.json({ url: session.url });
+  } catch (err) {
+    console.error("❌ Erro ao criar sessão de checkout:", err.message);
+    return res.status(500).json({ error: "Erro ao criar checkout session." });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICAR SESSÃO
+// ─────────────────────────────────────────────────────────────
+app.get("/verificar-sessao", async (req, res) => {
+  try {
+    const { session_id } = req.query;
+
+    if (!session_id) {
+      return res.status(400).json({ error: "session_id obrigatório" });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    return res.json({
+      id: session.id,
+      status: session.payment_status,
+      customer_email: session.customer_details?.email || null,
+      product_key: session.metadata?.product_key || null,
+      product_name: session.metadata?.product_name || null,
+    });
+  } catch (err) {
+    console.error("❌ Erro ao verificar sessão:", err.message);
+    return res.status(500).json({ error: "Erro ao verificar sessão." });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// LIBERAR DOWNLOAD DO EBOOK APÓS PAGAMENTO
+// ─────────────────────────────────────────────────────────────
+app.get("/download-ebook", async (req, res) => {
+  const sessionId = req.query.session_id;
+
+  if (!sessionId) {
+    return res.status(400).send("session_id obrigatório");
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    const isPaid =
+      session.payment_status === "paid" || session.status === "complete";
+
+    const allowedProducts = [
+      "ebook",
+      "consultoria_avulsa",
+      "consultoria_mensal",
+    ];
+
+    const isAllowed = allowedProducts.includes(session.metadata?.product_key);
+
+    if (!isPaid) {
+      return res.status(403).send("Pagamento ainda não confirmado.");
+    }
+
+    if (!isAllowed) {
+      return res.status(403).send("Esta compra não dá acesso ao ebook.");
+    }
+
+    const filePath = path.join(
+      PUBLIC_DIR,
+      "downloads",
+      "ebook-investimentos-para-iniciantes.pdf"
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res
+        .status(404)
+        .send(
+          "Arquivo do ebook não encontrado. Coloque o PDF em public/downloads/ebook-investimentos-para-iniciantes.pdf"
+        );
+    }
+
+    return res.download(
+      filePath,
+      "ebook-investimentos-para-iniciantes.pdf"
+    );
+  } catch (err) {
+    console.error("❌ Erro ao liberar ebook:", err.message);
+    return res.status(500).send("Erro ao liberar o arquivo.");
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// ROTAS DE PÁGINAS PRINCIPAIS
+// ─────────────────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.get("/sucesso", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
+});
+
+app.get("/politica-de-privacidade", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "politica-de-privacidade.html"));
+});
+
+app.get("/politica-de-cookies", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "politica-de-cookies.html"));
+});
+
+app.get("/termos-de-uso", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "termos-de-uso.html"));
+});
+
+// ─────────────────────────────────────────────────────────────
+// START
+// ─────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`✅ Servidor rodando em ${BASE_URL}`);
+});

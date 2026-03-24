@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento Confirmado · Daniel Ferreira</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0c0e13;
+      --ink-2:    #181b24;
+      --ink-soft: #2a2f42;
+      --muted:    #58607a;
+      --line:     #d4d1cb;
+      --bg:       #f7f6f3;
+      --bg-warm:  #edeae3;
+      --gold:     #a07c30;
+      --gold-lt:  #c09a50;
+      --white:    #ffffff;
+
+      --ff-head:  'Barlow Condensed', sans-serif;
+      --ff-body:  'Barlow', sans-serif;
+      --ff-sans:  'DM Sans', sans-serif;
+
+      --max-w: 1100px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-sans);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247, 246, 243, 0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: var(--ff-head);
+      font-size: 1.15rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink); text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-badge {
+      font-family: var(--ff-body);
+      font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: .3rem .9rem;
+      border: 1px solid rgba(160,124,48,.35);
+      color: var(--gold);
+    }
+
+    /* ── Hero Banner ────────────────────────────────────────── */
+    .confirm-hero {
+      background: var(--ink);
+      padding-top: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .confirm-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    .confirm-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .hero-inner {
+      position: relative; z-index: 1;
+      padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(3rem, 6vw, 5rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.25rem;
+    }
+
+    /* animated checkmark circle */
+    .check-ring {
+      width: 72px; height: 72px;
+      position: relative;
+      margin-bottom: .5rem;
+    }
+    .check-ring svg {
+      width: 100%; height: 100%;
+    }
+    .ring-track {
+      fill: none;
+      stroke: rgba(160,124,48,.2);
+      stroke-width: 2;
+    }
+    .ring-fill {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 2;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      animation: ring-draw .9s cubic-bezier(.4,0,.2,1) .2s forwards;
+    }
+    .check-icon {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      opacity: 0;
+      animation: icon-appear .3s ease .9s forwards;
+    }
+    @keyframes ring-draw {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes icon-appear {
+      to { opacity: 1; }
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .65rem;
+      font-family: var(--ff-body);
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold);
+    }
+    .hero-eyebrow::before {
+      content: ''; display: block;
+      width: 22px; height: 2px; background: var(--gold);
+    }
+    .hero-eyebrow::after {
+      content: ''; display: block;
+      width: 22px; height: 2px; background: var(--gold);
+    }
+
+    .confirm-title {
+      font-family: var(--ff-head);
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 700; line-height: 1.0;
+      letter-spacing: 0.03em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .confirm-title em { font-style: normal; color: var(--gold); }
+
+    .confirm-sub {
+      font-family: var(--ff-sans);
+      font-size: .95rem;
+      color: rgba(255,255,255,.6);
+      max-width: 480px;
+      line-height: 1.85;
+    }
+    .confirm-sub strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* ── Main Content ───────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: clamp(3rem, 6vw, 5rem) 0;
+    }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* Steps card */
+    .steps-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+    .steps-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+    }
+    .steps-card-header {
+      padding: 2rem 2rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .card-label {
+      font-family: var(--ff-body);
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .6rem;
+    }
+    .card-title {
+      font-family: var(--ff-head);
+      font-size: 1.55rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .steps-body {
+      padding: 1.75rem 2rem 2rem;
+    }
+
+    /* Loading skeleton */
+    .skeleton-list {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .skeleton-item {
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .skel-num { width: 28px; height: 28px; border-radius: 2px; background: var(--line); flex-shrink: 0; }
+    .skel-text { flex: 1; }
+    .skel-line { height: 10px; border-radius: 2px; background: var(--line); margin-bottom: .5rem; }
+    .skel-line.short { width: 60%; }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .45; }
+    }
+    .skeleton-list .skel-num,
+    .skeleton-list .skel-line { animation: pulse 1.4s ease-in-out infinite; }
+
+    /* Actual steps */
+    .next-steps {
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .step {
+      display: flex; gap: 1rem; align-items: flex-start;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: step-in .4s ease forwards;
+    }
+    .step:nth-child(1) { animation-delay: .05s; }
+    .step:nth-child(2) { animation-delay: .15s; }
+    .step:nth-child(3) { animation-delay: .25s; }
+    .step:nth-child(4) { animation-delay: .1s; } /* btn-row */
+    @keyframes step-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .step-num {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--ff-head);
+      font-size: .85rem; font-weight: 700;
+      color: var(--gold);
+      letter-spacing: .04em;
+      background: var(--bg);
+    }
+    .step-text {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.8;
+      padding-top: .2rem;
+    }
+    .step-text strong { color: var(--ink); font-weight: 500; }
+
+    /* Btn row inside card */
+    /* Btn row inside card */
+.btn-row-card {
+  margin-top: 1rem;
+  display: flex; gap: .75rem; flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+    /* Buttons */
+    a.btn, button.btn {
+      display: inline-block;
+      padding: .75rem 1.8rem;
+      font-family: var(--ff-body);
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+    a.btn:hover { transform: translateY(-1px); }
+
+    a.btn-primary {
+      background: var(--gold); color: var(--white);
+    }
+    a.btn-primary:hover { background: var(--gold-lt); }
+
+    a.btn-outline {
+      background: transparent; color: var(--ink);
+      border: 1.5px solid var(--line);
+    }
+    a.btn-outline:hover { border-color: var(--ink); }
+
+    /* Ebook sidebar card */
+    .ebook-card {
+      position: sticky; top: 88px;
+    }
+    .ebook-cover-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .ebook-cover-wrap img {
+      width: 100%; display: block;
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 48px rgba(12,14,19,.12);
+    }
+    .ebook-card-meta {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-top: none;
+      padding: 1.25rem 1.5rem;
+    }
+    .ebook-card-meta .card-label {
+      margin-bottom: .4rem;
+    }
+    .ebook-card-name {
+      font-family: var(--ff-head);
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    /* Info strip */
+    .info-strip {
+      margin-top: 2rem;
+      background: var(--white);
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .info-strip-item {
+      padding: 1.25rem 1.5rem;
+      border-right: 1px solid var(--line);
+    }
+    .info-strip-item:last-child { border-right: none; }
+    .info-strip-label {
+      font-family: var(--ff-body);
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .35rem;
+    }
+    .info-strip-value {
+      font-family: var(--ff-head);
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--ink);
+    }
+    .info-strip-value.gold { color: var(--gold); }
+
+    /* Error state */
+    .error-block {
+      padding: 1.5rem;
+      border: 1px solid rgba(160,50,30,.15);
+      background: rgba(160,50,30,.04);
+      font-size: .875rem;
+      color: #7a3520;
+      line-height: 1.7;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      background: var(--ink);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .footer-logo {
+      font-family: var(--ff-head);
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links {
+      display: flex; gap: 2rem; flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-family: var(--ff-body);
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    footer > .container > span {
+      display: block;
+      font-size: .75rem;
+      color: rgba(255,255,255,.25);
+      padding: .75rem 0 0;
+    }
+    .footer-reg {
+      font-size: .68rem;
+      color: rgba(255,255,255,.2);
+      line-height: 1.8;
+      padding: .5rem 0 1.75rem;
+    }
+
+    /* ── Animations ─────────────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 820px) {
+      .content-layout {
+        grid-template-columns: 1fr;
+      }
+      .ebook-card {
+        position: static;
+        max-width: 260px;
+        margin: 0 auto;
+      }
+      .info-strip {
+        grid-template-columns: 1fr;
+      }
+      .info-strip-item { border-right: none; border-bottom: 1px solid var(--line); }
+      .info-strip-item:last-child { border-bottom: none; }
+    }
+    @media (max-width: 600px) {
+      .steps-card-header, .steps-body { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .confirm-title { font-size: 2rem; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ────────────────────────────────────────────────────────────── -->
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">Daniel<span>.</span></a>
+        <span class="nav-badge">Confirmação de Compra</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+  <section class="confirm-hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="check-ring" aria-hidden="true">
+          <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+            <circle class="ring-track" cx="36" cy="36" r="34"/>
+            <circle class="ring-fill" cx="36" cy="36" r="34"/>
+          </svg>
+          <div class="check-icon">✓</div>
+        </div>
+
+        <div class="hero-eyebrow">Pedido registrado</div>
+
+        <h1 class="confirm-title">Pagamento<br><em>Confirmado</em></h1>
+
+        <p class="confirm-sub" id="hero-sub">
+          Sua compra de <strong><span id="product-display">seu produto</span></strong> foi
+          confirmada para o e-mail&nbsp;<strong><span id="email-display">seu endereço cadastrado</span></strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Main ───────────────────────────────────────────────────────────── -->
+  <main>
+    <div class="container">
+
+      <!-- info strip -->
+      <div class="info-strip fade-up" id="info-strip">
+        <div class="info-strip-item">
+          <div class="info-strip-label">Status</div>
+          <div class="info-strip-value gold" id="strip-status">—</div>
+        </div>
+        <div class="info-strip-item">
+          <div class="info-strip-label">Produto</div>
+          <div class="info-strip-value" id="strip-product">—</div>
+        </div>
+        <div class="info-strip-item">
+          <div class="info-strip-label">E-mail</div>
+          <div class="info-strip-value" id="strip-email" style="font-size:.8rem; letter-spacing:.02em;">—</div>
+        </div>
+      </div>
+
+      <!-- content grid -->
+      <div class="content-layout" style="margin-top: 2rem;">
+
+        <!-- steps card -->
+        <div class="steps-card fade-up" style="transition-delay:.1s;">
+          <div class="steps-card-header">
+            <div class="card-label">Próximos passos</div>
+            <div class="card-title">O que acontece agora?</div>
+          </div>
+          <div class="steps-body">
+            <!-- skeleton shown while loading -->
+            <div class="skeleton-list" id="steps-skeleton">
+              <div class="skeleton-item"><div class="skel-num"></div><div class="skel-text"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+              <div class="skeleton-item"><div class="skel-num"></div><div class="skel-text"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+              <div class="skeleton-item"><div class="skel-num"></div><div class="skel-text"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+            </div>
+            <!-- steps injected by JS -->
+            <div class="next-steps" id="next-steps" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- ebook sidebar -->
+        <aside class="ebook-card fade-up" style="transition-delay:.2s;">
+          <div class="ebook-cover-wrap">
+            <img src="img/capa-ebook.png" alt="Ebook Investimentos para Iniciantes" />
+          </div>
+          <div class="ebook-card-meta">
+            <div class="card-label">Material incluso</div>
+            <div class="ebook-card-name">Ebook<br>Investimentos</div>
+          </div>
+        </aside>
+
+      </div><!-- /content-layout -->
+
+      <!-- back btn -->
+      <div style="margin-top: 2rem;" class="fade-up" style="transition-delay:.3s;">
+        <a href="/" class="btn btn-outline">← Voltar ao início</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-logo">Daniel<span>.</span></span>
+        <div class="footer-links">
+          <a href="/">Início</a>
+          <a href="/termos-de-uso">Termos</a>
+          <a href="/politica-de-privacidade">Privacidade</a>
+          <a href="mailto:daniel@daferinvest.com.br">Contato</a>
+        </div>
+        <span style="font-size:.72rem; color:rgba(255,255,255,.25);">© 2025 · Todos os direitos reservados</span>
+      </div>
+      <div class="footer-reg">
+        Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo registrado na CVM sob o nº 003838-5 · CEA certificado pela ANBIMA.<br>
+        Dúvidas? <a href="mailto:daniel@daferinvest.com.br" style="color:rgba(255,255,255,.35); text-decoration:none;">daniel@daferinvest.com.br</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Fade-up observer ── */
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+      { threshold: 0.06 }
+    );
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+    /* ── Session verification ── */
+    const params    = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+
+    async function verificar() {
+      if (!sessionId) {
+        showError('Sessão de pagamento não encontrada. Verifique o link ou entre em contato.');
+        return;
+      }
+
+      try {
+        const res  = await fetch(`/verificar-sessao?session_id=${sessionId}`);
+        const data = await res.json();
+
+        /* fill hero text */
+        if (data.customer_email) {
+          document.getElementById('email-display').textContent  = data.customer_email;
+          document.getElementById('strip-email').textContent    = data.customer_email;
+        }
+        if (data.product_name) {
+          document.getElementById('product-display').textContent = data.product_name;
+          document.getElementById('strip-product').textContent   = data.product_name;
+        }
+
+        /* status badge */
+        const statusMap = { paid: 'Confirmado', unpaid: 'Pendente', expired: 'Expirado' };
+        document.getElementById('strip-status').textContent = statusMap[data.status] || data.status || '—';
+
+        renderNextSteps(data);
+      } catch (e) {
+        showError('Não foi possível verificar o pagamento agora. Atualize a página ou tente em instantes.');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('steps-skeleton').style.display = 'none';
+      const ns = document.getElementById('next-steps');
+      ns.style.display = 'flex';
+      ns.innerHTML = `<div class="error-block">${msg}</div>`;
+    }
+
+    function renderNextSteps(data) {
+      document.getElementById('steps-skeleton').style.display = 'none';
+      const ns = document.getElementById('next-steps');
+      ns.style.display = 'flex';
+
+      if (!data || data.status !== 'paid') {
+        ns.innerHTML = `
+          <div class="step"><span class="step-num">01</span><span class="step-text">Seu pagamento ainda não foi processado.</span></div>
+          <div class="step"><span class="step-num">02</span><span class="step-text">Atualize esta página em alguns instantes — o status é atualizado automaticamente.</span></div>
+        `;
+        return;
+      }
+
+      if (data.product_key === 'ebook') {
+        ns.innerHTML = `
+          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+          <div class="step"><span class="step-num">02</span><span class="step-text">Use o botão abaixo para baixá-lo agora. O link também será enviado ao seu e-mail.</span></div>
+          <div class="step" style="animation-delay:.25s;">
+            <div class="btn-row-card">
+              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (data.product_key === 'consultoria_avulsa') {
+        ns.innerHTML = `
+          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
+          <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, já aproveite o ebook pelo botão abaixo.</span></div>
+          <div class="step" style="animation-delay:.3s;">
+            <div class="btn-row-card">
+              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (data.product_key === 'consultoria_mensal') {
+        ns.innerHTML = `
+          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Sua assinatura foi ativada</strong> com sucesso.</span></div>
+          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail os <strong>próximos passos do acompanhamento contínuo</strong>.</span></div>
+          <div class="step"><span class="step-num">03</span><span class="step-text">Seu ebook também está liberado para download imediato.</span></div>
+          <div class="step" style="animation-delay:.3s;">
+            <div class="btn-row-card">
+              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      ns.innerHTML = `<div class="step"><span class="step-num">01</span><span class="step-text"><strong>Pagamento confirmado com sucesso.</strong> Você receberá um e-mail de confirmação em breve.</span></div>`;
+    }
+
+    verificar();
+  </script>
+
+</body>
+</html>
