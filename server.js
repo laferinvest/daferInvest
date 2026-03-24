@@ -118,28 +118,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
   });
 }
 
-app.get("/test-email", async (_req, res) => {
-  try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: "daanieel01@gmail.com",
-      subject: "Teste SMTP Hostinger",
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Teste de envio</h2>
-          <p>Se você recebeu isso, o SMTP da Hostinger está funcionando.</p>
-        </div>
-      `,
-    });
-
-    console.log("📧 Teste SMTP enviado:", info.messageId);
-    return res.json({ ok: true, messageId: info.messageId });
-  } catch (err) {
-    console.error("❌ Erro no teste SMTP:", err);
-    return res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
 // ─────────────────────────────────────────────────────────────
 // WEBHOOK STRIPE
 // IMPORTANTE: precisa vir antes do express.json()

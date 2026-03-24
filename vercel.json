@@ -5,7 +5,6 @@
     { "source": "/verificar-sessao", "destination": "/api" },
     { "source": "/download-ebook", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
-    { "source": "/sucesso", "destination": "/api" },
-    { "source": "/test-email", "destination": "/api" }
+    { "source": "/sucesso", "destination": "/api" }
   ]
 }
