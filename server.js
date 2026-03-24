@@ -122,7 +122,7 @@ app.get("/test-email", async (_req, res) => {
   try {
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM,
-      to: "SEU_EMAIL_AQUI",
+      to: "daanieel01@gmail.com",
       subject: "Teste SMTP Hostinger",
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
