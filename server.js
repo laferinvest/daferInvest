@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const nodemailer = require("nodemailer");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -31,6 +32,92 @@ const products = {
   },
 };
 
+
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT || 465),
+  secure: String(process.env.EMAIL_SECURE) === "true",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+
+async function sendPurchaseEmail({ email, productKey, productName, sessionId }) {
+  const downloadUrl = `${BASE_URL}/download-ebook?session_id=${encodeURIComponent(sessionId)}`;
+
+  let subject = "Compra confirmada";
+  let html = "";
+
+  if (productKey === "ebook") {
+    subject = "Seu ebook está disponível";
+    html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+        <h2>Pagamento confirmado</h2>
+        <p>Olá!</p>
+        <p>Sua compra de <strong>${productName}</strong> foi confirmada.</p>
+        <p>Para baixar seu ebook, clique no botão abaixo:</p>
+        <p>
+          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
+            Baixar ebook
+          </a>
+        </p>
+        <p>Se tiver qualquer problema, responda este e-mail.</p>
+        <p>Daniel Ferreira</p>
+      </div>
+    `;
+  } else if (productKey === "consultoria_avulsa") {
+    subject = "Compra confirmada | Ebook + Consultoria Individual";
+    html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+        <h2>Pagamento confirmado</h2>
+        <p>Olá!</p>
+        <p>Sua compra de <strong>${productName}</strong> foi confirmada.</p>
+        <p>Seu ebook já está liberado:</p>
+        <p>
+          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
+            Baixar ebook
+          </a>
+        </p>
+        <p>Você receberá em até 1 dia útil as instruções para agendamento da consultoria individual.</p>
+        <p>Daniel Ferreira</p>
+      </div>
+    `;
+  } else if (productKey === "consultoria_mensal") {
+    subject = "Assinatura confirmada | Ebook + Consultoria Contínua";
+    html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+        <h2>Assinatura ativada</h2>
+        <p>Olá!</p>
+        <p>Sua assinatura de <strong>${productName}</strong> foi ativada com sucesso.</p>
+        <p>Seu ebook já está liberado:</p>
+        <p>
+          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
+            Baixar ebook
+          </a>
+        </p>
+        <p>Você receberá por e-mail os próximos passos do acompanhamento contínuo.</p>
+        <p>Daniel Ferreira</p>
+      </div>
+    `;
+  } else {
+    html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+        <h2>Pagamento confirmado</h2>
+        <p>Sua compra foi confirmada com sucesso.</p>
+      </div>
+    `;
+  }
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject,
+    html,
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // WEBHOOK STRIPE
 // IMPORTANTE: precisa vir antes do express.json()
@@ -55,21 +142,31 @@ app.post(
 
     try {
       switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object;
-          const email = session.customer_details?.email || "sem e-mail";
-          const productKey = session.metadata?.product_key || "desconhecido";
-          const productName = session.metadata?.product_name || "Produto";
+          case "checkout.session.completed": {
+            const session = event.data.object;
+            const email = session.customer_details?.email || null;
+            const productKey = session.metadata?.product_key || "desconhecido";
+            const productName = session.metadata?.product_name || "Produto";
 
-          console.log("✅ Pagamento confirmado:", {
-            sessionId: session.id,
-            email,
-            productKey,
-            productName,
-          });
+            console.log("✅ Pagamento confirmado:", {
+              sessionId: session.id,
+              email,
+              productKey,
+              productName,
+            });
 
-          break;
-        }
+            if (email) {
+              await sendPurchaseEmail({
+                email,
+                productKey,
+                productName,
+                sessionId: session.id,
+              });
+              console.log("📧 E-mail enviado para:", email);
+            }
+
+            break;
+          }
 
         case "invoice.payment_failed": {
           const invoice = event.data.object;
