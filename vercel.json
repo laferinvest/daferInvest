@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/create-checkout-session", "destination": "/api" },
+    { "source": "/webhook", "destination": "/api" },
+    { "source": "/verificar-sessao", "destination": "/api" },
+    { "source": "/download-ebook", "destination": "/api" },
+    { "source": "/health", "destination": "/api" },
+    { "source": "/sucesso", "destination": "/api" }
+  ]
+}
