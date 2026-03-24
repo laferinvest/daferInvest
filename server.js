@@ -47,67 +47,281 @@ const transporter = nodemailer.createTransport({
 async function sendPurchaseEmail({ email, productKey, productName, sessionId }) {
   const downloadUrl = `${BASE_URL}/download-ebook?session_id=${encodeURIComponent(sessionId)}`;
 
+  // ── Bloco de rodapé reutilizável ──────────────────────────────
+  const emailFooter = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:40px;border-top:1px solid #d4d1cb;">
+      <tr>
+        <td style="padding:28px 40px 0;text-align:left;">
+          <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:18px;font-weight:700;letter-spacing:0.06em;color:#0c0e13;">
+            Daniel<span style="color:#a07c30;">.</span>
+          </p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#58607a;line-height:1.7;">
+            Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo<br>
+            Registrado na CVM sob o nº 003838-5 · CEA certificado pela ANBIMA
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 40px 32px;">
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;color:#8a90a2;line-height:1.7;">
+            As informações contidas neste e-mail têm caráter informativo e educacional, não constituindo recomendação de investimento.
+            Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura.
+          </p>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  // ── Wrapper HTML externo reutilizável ─────────────────────────
+  const wrapEmail = (headerLabel, bodyHtml) => `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+    <body style="margin:0;padding:0;background:#f7f6f3;-webkit-font-smoothing:antialiased;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f6f3;padding:40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
+
+              <!-- Header -->
+              <tr>
+                <td style="background:#0c0e13;padding:32px 40px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                                  letter-spacing:0.18em;text-transform:uppercase;color:#a07c30;">
+                          ${headerLabel}
+                        </p>
+                        <p style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;
+                                  letter-spacing:0.02em;color:#ffffff;line-height:1.2;">
+                          Daniel<span style="color:#a07c30;">.</span>
+                        </p>
+                      </td>
+                      <td align="right" valign="middle">
+                        <span style="display:inline-block;padding:5px 12px;font-family:Arial,sans-serif;
+                                     font-size:9px;font-weight:700;letter-spacing:0.14em;
+                                     text-transform:uppercase;color:#ffffff;
+                                     border:1px solid rgba(160,124,48,0.4);">
+                          CEA · CVM Nº 003838-5
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding:40px 40px 0;">
+                  ${bodyHtml}
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td>${emailFooter}</td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
   let subject = "Compra confirmada";
   let html = "";
 
   if (productKey === "ebook") {
-    subject = "Seu ebook está disponível";
-    html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Pagamento confirmado</h2>
-        <p>Olá!</p>
-        <p>Sua compra de <strong>${productName}</strong> foi confirmada.</p>
-        <p>Para baixar seu ebook, clique no botão abaixo:</p>
-        <p>
-          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
-            Baixar ebook
-          </a>
-        </p>
-        <p>Se tiver qualquer problema, responda este e-mail.</p>
-        <p>Daniel Ferreira</p>
-      </div>
-    `;
+    subject = "Seu ebook está disponível · Daniel Ferreira";
+    html = wrapEmail("Confirmação de compra", `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
+                 color:#0c0e13;line-height:1.3;">
+        Seu ebook está pronto para download
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. O acesso ao <strong style="color:#0c0e13;">${productName}</strong>
+        foi liberado e você já pode fazer o download pelo botão abaixo.
+      </p>
+
+      <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        O link é pessoal e intransferível. Em caso de qualquer dificuldade, basta responder
+        a este e-mail que eu retorno em até 1 dia útil.
+      </p>
+
+      <!-- CTA -->
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:36px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${downloadUrl}"
+               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
+                      font-size:11px;font-weight:700;letter-spacing:0.12em;
+                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook agora
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `);
+
   } else if (productKey === "consultoria_avulsa") {
-    subject = "Compra confirmada | Ebook + Consultoria Individual";
-    html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Pagamento confirmado</h2>
-        <p>Olá!</p>
-        <p>Sua compra de <strong>${productName}</strong> foi confirmada.</p>
-        <p>Seu ebook já está liberado:</p>
-        <p>
-          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
-            Baixar ebook
-          </a>
-        </p>
-        <p>Você receberá em até 1 dia útil as instruções para agendamento da consultoria individual.</p>
-        <p>Daniel Ferreira</p>
-      </div>
-    `;
+    subject = "Compra confirmada · Ebook + Consultoria Individual";
+    html = wrapEmail("Confirmação de compra", `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
+                 color:#0c0e13;line-height:1.3;">
+        Ebook liberado e consultoria agendada em breve
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua confiança. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
+        foi confirmada com sucesso.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        O ebook já está disponível para download. Para a consultoria individual, você receberá
+        as instruções de agendamento em até <strong style="color:#0c0e13;">1 dia útil</strong>.
+      </p>
+
+      <!-- CTA -->
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${downloadUrl}"
+               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
+                      font-size:11px;font-weight:700;letter-spacing:0.12em;
+                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook agora
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <!-- O que esperar -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              Próximos passos
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
+              Em até 1 dia útil você receberá um e-mail com o link para agendar sua
+              sessão de consultoria individual. Fique atento à sua caixa de entrada.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `);
+
   } else if (productKey === "consultoria_mensal") {
-    subject = "Assinatura confirmada | Ebook + Consultoria Contínua";
-    html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Assinatura ativada</h2>
-        <p>Olá!</p>
-        <p>Sua assinatura de <strong>${productName}</strong> foi ativada com sucesso.</p>
-        <p>Seu ebook já está liberado:</p>
-        <p>
-          <a href="${downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:6px;">
-            Baixar ebook
-          </a>
-        </p>
-        <p>Você receberá por e-mail os próximos passos do acompanhamento contínuo.</p>
-        <p>Daniel Ferreira</p>
-      </div>
-    `;
+    subject = "Assinatura ativada · Ebook + Consultoria Contínua";
+    html = wrapEmail("Assinatura ativada", `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Assinatura confirmada
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
+                 color:#0c0e13;line-height:1.3;">
+        Bem-vindo ao acompanhamento contínuo
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Sua assinatura de <strong style="color:#0c0e13;">${productName}</strong> está ativa.
+        A partir de agora você conta com acompanhamento recorrente e acesso direto à consultoria
+        ao longo de toda a vigência do plano.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        O ebook já está liberado para download:
+      </p>
+
+      <!-- CTA -->
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${downloadUrl}"
+               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
+                      font-size:11px;font-weight:700;letter-spacing:0.12em;
+                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook agora
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <!-- O que esperar -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              O que acontece a seguir
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
+              Em breve você receberá por e-mail as instruções completas sobre a dinâmica
+              do acompanhamento contínuo, incluindo canais de contato, periodicidade e
+              como aproveitar ao máximo cada sessão.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `);
+
   } else {
-    html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-        <h2>Pagamento confirmado</h2>
-        <p>Sua compra foi confirmada com sucesso.</p>
-      </div>
-    `;
+    html = wrapEmail("Confirmação", `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
+                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
+                 color:#0c0e13;line-height:1.3;">
+        Sua compra foi confirmada
+      </h1>
+      <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. Em caso de dúvidas, responda diretamente a este e-mail.
+      </p>
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `);
   }
 
   await transporter.sendMail({
