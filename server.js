@@ -282,6 +282,10 @@ app.get("/termos-de-uso", (_req, res) => {
 // ─────────────────────────────────────────────────────────────
 // START
 // ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅ Servidor rodando em ${BASE_URL}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor rodando em ${BASE_URL}`);
+  });
+}
+
+module.exports = app;
