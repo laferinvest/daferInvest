@@ -30,6 +30,11 @@ const products = {
     mode: "subscription",
     productName: "Ebook + Consultoria Contínua",
   },
+  consultoria_premium: {
+    priceId: process.env.STRIPE_PRICE_CONSULTORIA_PREMIUM,
+    mode: "subscription",
+    productName: "Ebook + Consultoria Premium",
+  },
 };
 
 
@@ -215,7 +220,29 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- O que esperar -->
+      <!-- O que está incluso -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              O que está incluso no seu plano
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Sessão individual completa<br>
+              · Diagnóstico do perfil de risco<br>
+              · Análise do momento financeiro e dos objetivos<br>
+              · Avaliação da carteira atual, quando houver<br>
+              · Plano de investimentos por escrito<br>
+              · Orientação para manutenção da carteira e rebalanceamentos<br>
+              · Suporte por e-mail por 30 dias
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Próximos passos -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
         <tr>
@@ -240,26 +267,27 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
     `);
 
-  } else if (productKey === "consultoria_mensal") {
-    subject = "Assinatura ativada · Ebook + Consultoria Contínua";
-    html = wrapEmail("Assinatura ativada", `
+  } else if (productKey === "consultoria_premium") {
+    subject = "Compra confirmada · Ebook + Imersão Estratégica";
+    html = wrapEmail("Confirmação de compra", `
       <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
                 letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Assinatura confirmada
+        Pagamento confirmado
       </p>
       <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
                  color:#0c0e13;line-height:1.3;">
-        Bem-vindo ao acompanhamento contínuo
+        Bem-vindo à Imersão Estratégica
       </h1>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Sua assinatura de <strong style="color:#0c0e13;">${productName}</strong> está ativa.
-        A partir de agora você conta com acompanhamento recorrente e acesso direto à consultoria
-        ao longo de toda a vigência do plano.
+        Obrigado pela sua confiança. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
+        foi confirmada com sucesso.
       </p>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O ebook já está liberado para download:
+        O ebook já está liberado para download. Em até <strong style="color:#0c0e13;">1 dia útil</strong>
+        você receberá as instruções completas para darmos início ao processo — incluindo um
+        formulário de contexto financeiro que preparo antes da nossa reunião.
       </p>
 
       <!-- CTA -->
@@ -276,19 +304,43 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- O que esperar -->
+      <!-- O que está incluso -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              O que está incluso no seu plano
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Raio-X financeiro completo enviado antes da reunião<br>
+              · Reunião estratégica aprofundada<br>
+              · Diagnóstico do perfil, objetivos e estrutura patrimonial<br>
+              · Apresentação com plano de investimentos detalhado<br>
+              · Proposta de organização da carteira por classes de ativos<br>
+              · Guia de execução com próximos passos mês a mês<br>
+              · 2 reuniões de retorno para ajustes e acompanhamento<br>
+              · Suporte por WhatsApp por 30 dias<br>
+              · Suporte por e-mail por 60 dias
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Próximos passos -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
         <tr>
           <td style="padding:18px 20px;">
             <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
                       letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              O que acontece a seguir
+              Próximos passos
             </p>
             <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
-              Em breve você receberá por e-mail as instruções completas sobre a dinâmica
-              do acompanhamento contínuo, incluindo canais de contato, periodicidade e
-              como aproveitar ao máximo cada sessão.
+              Em até 1 dia útil você receberá um e-mail com o link de agendamento e
+              o formulário de contexto financeiro. Preencha-o com antecedência — ele é
+              a base do Raio-X que preparo antes da nossa reunião.
             </p>
           </td>
         </tr>
@@ -531,6 +583,7 @@ app.get("/download-ebook", async (req, res) => {
       "ebook",
       "consultoria_avulsa",
       "consultoria_mensal",
+      "consultoria_premium",
     ];
 
     const isAllowed = allowedProducts.includes(session.metadata?.product_key);
