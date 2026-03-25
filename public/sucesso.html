@@ -479,7 +479,7 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  
+
   <!-- ── Nav ────────────────────────────────────────────────────────────── -->
   <nav>
     <div class="container">
@@ -608,6 +608,36 @@
 
   let pollingHandle = null;
 
+  window.__purchaseTracked = false;
+
+function trackPurchase(data) {
+  if (window.__purchaseTracked) return;
+  if (!data) return;
+
+  if (!(data.status === 'paid' || data.status === 'no_payment_required')) {
+    return;
+  }
+
+  window.__purchaseTracked = true;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'purchase',
+    ecommerce: {
+      transaction_id: data.id,
+      value: (data.amount_total || 0) / 100,
+      currency: 'BRL',
+      items: [
+        {
+          item_id: data.product_key || 'produto',
+          item_name: data.product_name || 'Produto'
+        }
+      ]
+    },
+    product_key: data.product_key || '',
+    product_name: data.product_name || ''
+  });
+}
+
   async function verificar() {
     if (!sessionId) {
       showError('Sessão de pagamento não encontrada. Verifique o link ou entre em contato.');
@@ -643,6 +673,7 @@
         statusMap[data.status] || data.status || '—';
 
       renderNextSteps(data);
+      trackPurchase(data);
 
       if (data.status === 'paid' || data.status === 'no_payment_required') {
         stopPolling();
