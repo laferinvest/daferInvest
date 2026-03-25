@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 
+  <link rel="preload" as="image" href="/img/capa-ebook.webp" fetchpriority="high">
+
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -18,9 +20,21 @@
   <!-- Google Ads: canonical e no index para testes -->
   <link rel="canonical" href="https://daferinvest.com.br/" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'"
+  >
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500&display=swap"
+    >
+  </noscript>
 
   <style>
     /* ── Reset & Variables ─────────────────────────────────── */
@@ -87,12 +101,21 @@
     }
 
     /* ── Nav ────────────────────────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(247, 246, 243, 0.96);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--line);
-    }
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(247, 246, 243, 0.98);
+        border-bottom: 1px solid var(--line);
+      }
+
+      @media (min-width: 901px) {
+        nav {
+          backdrop-filter: blur(8px);
+        }
+      }
     .nav-inner {
       display: flex; align-items: center; justify-content: space-between;
       height: 64px;
@@ -948,11 +971,15 @@
     .fade-up.visible { opacity: 1; transform: translateY(0); }
 
     /* ── Loading ────────────────────────────────────────────── */
-    #loading-overlay {
-      display: none; position: fixed; inset: 0; z-index: 999;
-      background: rgba(12,14,19,.78); backdrop-filter: blur(4px);
-      align-items: center; justify-content: center;
-    }
+      #loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(12,14,19,.78);
+        align-items: center;
+        justify-content: center;
+      }
     #loading-overlay.active { display: flex; }
     .loading-box {
       background: var(--white); padding: 2rem 2.5rem;
