@@ -547,6 +547,7 @@ app.post("/create-checkout-session", async (req, res) => {
       ],
       success_url: `${BASE_URL}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/?cancelado=1`,
+      locale: 'pt-BR',
       allow_promotion_codes: true,
       billing_address_collection: "auto",
       metadata: {
