@@ -603,21 +603,46 @@ app.post(
           break;
         }
 
+        case "checkout.session.async_payment_failed": {
+          const session = event.data.object;
+          console.log("❌ Pagamento assíncrono falhou:", {
+            sessionId: session.id,
+            paymentStatus: session.payment_status,
+            customerEmail:
+              session.customer_details?.email || session.customer_email || null,
+            productKey: session.metadata?.product_key || null,
+            productName: session.metadata?.product_name || null,
+          });
+          break;
+        }
+
         case "invoice.payment_failed": {
           const invoice = event.data.object;
-          console.log("❌ Falha na cobrança recorrente:", invoice.id);
+          console.log("❌ Falha na cobrança recorrente:", {
+            invoiceId: invoice.id,
+            customerId: invoice.customer,
+            subscriptionId: invoice.subscription,
+          });
           break;
         }
 
         case "customer.subscription.deleted": {
           const subscription = event.data.object;
-          console.log("ℹ️ Assinatura cancelada:", subscription.id);
+          console.log("ℹ️ Assinatura cancelada:", {
+            subscriptionId: subscription.id,
+            customerId: subscription.customer,
+            status: subscription.status,
+          });
           break;
         }
 
         case "payment_intent.payment_failed": {
           const paymentIntent = event.data.object;
-          console.log("❌ Pagamento falhou:", paymentIntent.id);
+          console.log("❌ Pagamento falhou:", {
+            paymentIntentId: paymentIntent.id,
+            status: paymentIntent.status,
+            customerId: paymentIntent.customer,
+          });
           break;
         }
 
