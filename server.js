@@ -32,7 +32,7 @@ const products = {
   },
   consultoria_premium: {
     priceId: process.env.STRIPE_PRICE_CONSULTORIA_PREMIUM,
-    mode: "subscription",
+    mode: "payment",
     productName: "Ebook + Consultoria Premium",
   },
 };
