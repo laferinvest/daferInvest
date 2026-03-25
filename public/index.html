@@ -115,12 +115,13 @@
       transition: background .2s;
     }
     .nav-cta:hover { background: var(--gold-lt); }
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
       .consultoria-grid { grid-template-columns: 1fr; }
       .consultoria-item { border-right: none; border-bottom: 1px solid var(--line); }
       .consultoria-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--line); }
       .consultoria-item:last-child { border-bottom: none; }
- .nav-links { display: none; } }
+      .nav-links { display: none; }
+    }
 
     /* ── Hero ───────────────────────────────────────────────── */
     #hero {
@@ -1112,7 +1113,14 @@
 
 
 
-  </style>
+  
+    @media (max-width: 900px) {
+      .consultoria-grid { grid-template-columns: 1fr !important; }
+      .consultoria-item { border-right: none !important; border-bottom: 1px solid var(--line) !important; }
+      .consultoria-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--line) !important; }
+      .consultoria-item:last-child { border-bottom: none !important; }
+    }
+</style>
 </head>
 
 <body>
@@ -1432,7 +1440,7 @@
   <!-- Plano 3: Imersão Premium -->
   <div class="pac-card">
     <p class="pac-tag">Plano Premium</p>
-    <h3>Ebook + Imersão Estratégica</h3>
+    <h3>Ebook + Consultoria Premium</h3>
     <p>
       Para quem quer implementar a estratégia com suporte real — análise aprofundada,
       acompanhamento direto e acesso contínuo durante toda a execução.

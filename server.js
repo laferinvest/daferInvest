@@ -185,7 +185,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     `);
 
   } else if (productKey === "consultoria_avulsa") {
-    subject = "Compra confirmada · Ebook + Consultoria Individual";
+    subject = "Compra confirmada · Ebook + Consultoria Estratégica";
     html = wrapEmail("Confirmação de compra", `
       <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
                 letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
@@ -197,12 +197,12 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </h1>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua confiança. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
+        Obrigado pela sua compra. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
         foi confirmada com sucesso.
       </p>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O ebook já está disponível para download. Para a consultoria individual, você receberá
+        O ebook já está disponível para download. Para a consultoria estratégica, você receberá
         as instruções de agendamento em até <strong style="color:#0c0e13;">1 dia útil</strong>.
       </p>
 
@@ -268,7 +268,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     `);
 
   } else if (productKey === "consultoria_premium") {
-    subject = "Compra confirmada · Ebook + Imersão Estratégica";
+    subject = "Compra confirmada · Ebook + Consultoria Premium";
     html = wrapEmail("Confirmação de compra", `
       <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
                 letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
@@ -276,11 +276,11 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
       <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
                  color:#0c0e13;line-height:1.3;">
-        Bem-vindo à Imersão Estratégica
+        Bem-vindo à Consultoria Premium
       </h1>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua confiança. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
+        Obrigado pela sua compra. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
         foi confirmada com sucesso.
       </p>
 
