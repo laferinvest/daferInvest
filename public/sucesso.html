@@ -669,6 +669,20 @@
         return;
       }
 
+      if (data.product_key === 'consultoria_premium') {
+        ns.innerHTML = `
+          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
+          <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, já aproveite o ebook pelo botão abaixo.</span></div>
+          <div class="step" style="animation-delay:.3s;">
+            <div class="btn-row-card">
+              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       if (data.product_key === 'consultoria_mensal') {
         ns.innerHTML = `
           <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Sua assinatura foi ativada</strong> com sucesso.</span></div>
