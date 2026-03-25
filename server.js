@@ -81,7 +81,10 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
   const wrapEmail = (headerLabel, bodyHtml) => `
     <!DOCTYPE html>
     <html lang="pt-BR">
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
     <body style="margin:0;padding:0;background:#f7f6f3;-webkit-font-smoothing:antialiased;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f6f3;padding:40px 0;">
         <tr>
@@ -137,6 +140,26 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     </html>
   `;
 
+  const guaranteeBlock = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
+                    letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+            Garantia de 7 dias
+          </p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
+            Você conta com uma garantia de 7 dias. Se entender que o material ou o serviço
+            não é adequado para você, basta responder este e-mail, no prazo de até
+            <strong style="color:#0c0e13;">7 dias após a compra</strong>, e solicitar o
+            <strong style="color:#0c0e13;">reembolso integral</strong>.
+          </p>
+        </td>
+      </tr>
+    </table>
+  `;
+
   let subject = "Compra confirmada";
   let html = "";
 
@@ -157,12 +180,13 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         foi liberado e você já pode fazer o download pelo botão abaixo.
       </p>
 
-      <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O link é pessoal e intransferível. Em caso de qualquer dificuldade, basta responder
-        a este e-mail que eu retorno em até 1 dia útil.
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        O link é pessoal e intransferível. Em caso de qualquer dificuldade com o acesso,
+        basta responder a este e-mail e eu retorno em até 1 dia útil.
       </p>
 
-      <!-- CTA -->
+      ${guaranteeBlock}
+
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:36px;">
         <tr>
           <td style="background:#a07c30;">
@@ -206,7 +230,8 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         as instruções de agendamento em até <strong style="color:#0c0e13;">1 dia útil</strong>.
       </p>
 
-      <!-- CTA -->
+      ${guaranteeBlock}
+
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
         <tr>
           <td style="background:#a07c30;">
@@ -220,7 +245,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- O que está incluso -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
         <tr>
@@ -242,7 +266,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- Próximos passos -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
         <tr>
@@ -286,11 +309,12 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
         O ebook já está liberado para download. Em até <strong style="color:#0c0e13;">1 dia útil</strong>
-        você receberá as instruções completas para darmos início ao processo — incluindo um
+        você receberá as instruções completas para darmos início ao processo, incluindo um
         formulário de contexto financeiro que preparo antes da nossa reunião.
       </p>
 
-      <!-- CTA -->
+      ${guaranteeBlock}
+
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
         <tr>
           <td style="background:#a07c30;">
@@ -304,7 +328,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- O que está incluso -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
         <tr>
@@ -328,7 +351,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         </tr>
       </table>
 
-      <!-- Próximos passos -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
         <tr>
@@ -339,7 +361,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
             </p>
             <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
               Em até 1 dia útil você receberá um e-mail com o link de agendamento e
-              o formulário de contexto financeiro. Preencha-o com antecedência — ele é
+              o formulário de contexto financeiro. Preencha-o com antecedência, pois ele é
               a base do Raio-X que preparo antes da nossa reunião.
             </p>
           </td>
@@ -364,9 +386,12 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
                  color:#0c0e13;line-height:1.3;">
         Sua compra foi confirmada
       </h1>
-      <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
         Obrigado pela sua compra. Em caso de dúvidas, responda diretamente a este e-mail.
       </p>
+
+      ${guaranteeBlock}
+
       <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
         Daniel Ferreira
       </p>
