@@ -580,128 +580,187 @@
     </div>
   </footer>
 
-  <script>
-    /* ── Fade-up observer ── */
-    const obs = new IntersectionObserver(
-      entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.06 }
-    );
-    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+<script>
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+    { threshold: 0.06 }
+  );
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
-    /* ── Session verification ── */
-    const params    = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session_id');
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
 
-    async function verificar() {
-      if (!sessionId) {
-        showError('Sessão de pagamento não encontrada. Verifique o link ou entre em contato.');
-        return;
-      }
+  let pollingHandle = null;
 
-      try {
-        const res  = await fetch(`/verificar-sessao?session_id=${sessionId}`);
-        const data = await res.json();
-
-        /* fill hero text */
-        if (data.customer_email) {
-          document.getElementById('email-display').textContent  = data.customer_email;
-          document.getElementById('strip-email').textContent    = data.customer_email;
-        }
-        if (data.product_name) {
-          document.getElementById('product-display').textContent = data.product_name;
-          document.getElementById('strip-product').textContent   = data.product_name;
-        }
-
-        /* status badge */
-        const statusMap = { paid: 'Confirmado', unpaid: 'Pendente', expired: 'Expirado' };
-        document.getElementById('strip-status').textContent = statusMap[data.status] || data.status || '—';
-
-        renderNextSteps(data);
-      } catch (e) {
-        showError('Não foi possível verificar o pagamento agora. Atualize a página ou tente em instantes.');
-      }
+  async function verificar() {
+    if (!sessionId) {
+      showError('Sessão de pagamento não encontrada. Verifique o link ou entre em contato.');
+      return;
     }
 
-    function showError(msg) {
-      document.getElementById('steps-skeleton').style.display = 'none';
-      const ns = document.getElementById('next-steps');
-      ns.style.display = 'flex';
-      ns.innerHTML = `<div class="error-block">${msg}</div>`;
+    try {
+      const res = await fetch(`/verificar-sessao?session_id=${encodeURIComponent(sessionId)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Falha ao verificar sessão.');
+      }
+
+      if (data.customer_email) {
+        document.getElementById('email-display').textContent = data.customer_email;
+        document.getElementById('strip-email').textContent = data.customer_email;
+      }
+
+      if (data.product_name) {
+        document.getElementById('product-display').textContent = data.product_name;
+        document.getElementById('strip-product').textContent = data.product_name;
+      }
+
+      const statusMap = {
+        paid: 'Confirmado',
+        unpaid: 'Pendente',
+        no_payment_required: 'Confirmado',
+        expired: 'Expirado'
+      };
+
+      document.getElementById('strip-status').textContent =
+        statusMap[data.status] || data.status || '—';
+
+      renderNextSteps(data);
+
+      if (data.status === 'paid' || data.status === 'no_payment_required') {
+        stopPolling();
+      } else {
+        startPolling();
+      }
+    } catch (e) {
+      showError('Não foi possível verificar o pagamento agora. Atualize a página ou tente em instantes.');
+    }
+  }
+
+  function startPolling() {
+    if (pollingHandle) return;
+    pollingHandle = setInterval(verificar, 15000);
+  }
+
+  function stopPolling() {
+    if (!pollingHandle) return;
+    clearInterval(pollingHandle);
+    pollingHandle = null;
+  }
+
+  function showError(msg) {
+    document.getElementById('steps-skeleton').style.display = 'none';
+    const ns = document.getElementById('next-steps');
+    ns.style.display = 'flex';
+    ns.innerHTML = `<div class="error-block">${msg}</div>`;
+  }
+
+  function renderPendingBlock(data) {
+    const ns = document.getElementById('next-steps');
+    const isBoletoLike = data.status !== 'paid';
+
+    ns.innerHTML = `
+      <div class="step">
+        <span class="step-num">01</span>
+        <span class="step-text">
+          <strong>Seu pagamento ainda está pendente de confirmação.</strong>
+        </span>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <span class="step-text">
+          ${
+            isBoletoLike
+              ? 'Se você escolheu boleto, a compensação pode levar algum tempo. Assim que o pagamento for confirmado, o sistema enviará automaticamente um e-mail para você.'
+              : 'A confirmação ainda está sendo processada. Assim que o pagamento for confirmado, o sistema enviará automaticamente um e-mail para você.'
+          }
+        </span>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <span class="step-text">
+          Você também pode deixar esta página aberta. O status será atualizado automaticamente.
+        </span>
+      </div>
+    `;
+  }
+
+  function renderNextSteps(data) {
+    document.getElementById('steps-skeleton').style.display = 'none';
+    const ns = document.getElementById('next-steps');
+    ns.style.display = 'flex';
+
+    if (!data || (data.status !== 'paid' && data.status !== 'no_payment_required')) {
+      renderPendingBlock(data || {});
+      return;
     }
 
-    function renderNextSteps(data) {
-      document.getElementById('steps-skeleton').style.display = 'none';
-      const ns = document.getElementById('next-steps');
-      ns.style.display = 'flex';
-
-      if (!data || data.status !== 'paid') {
-        ns.innerHTML = `
-          <div class="step"><span class="step-num">01</span><span class="step-text">Seu pagamento ainda não foi processado.</span></div>
-          <div class="step"><span class="step-num">02</span><span class="step-text">Atualize esta página em alguns instantes — o status é atualizado automaticamente.</span></div>
-        `;
-        return;
-      }
-
-      if (data.product_key === 'ebook') {
-        ns.innerHTML = `
-          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-          <div class="step"><span class="step-num">02</span><span class="step-text">Use o botão abaixo para baixá-lo agora. O link também será enviado ao seu e-mail.</span></div>
-          <div class="step" style="animation-delay:.25s;">
-            <div class="btn-row-card">
-              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
-            </div>
+    if (data.product_key === 'ebook') {
+      ns.innerHTML = `
+        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+        <div class="step"><span class="step-num">02</span><span class="step-text">Use o botão abaixo para baixá-lo agora. O link também foi enviado ao seu e-mail.</span></div>
+        <div class="step" style="animation-delay:.25s;">
+          <div class="btn-row-card">
+            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
           </div>
-        `;
-        return;
-      }
-
-      if (data.product_key === 'consultoria_avulsa') {
-        ns.innerHTML = `
-          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
-          <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, já aproveite o ebook pelo botão abaixo.</span></div>
-          <div class="step" style="animation-delay:.3s;">
-            <div class="btn-row-card">
-              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      if (data.product_key === 'consultoria_premium') {
-        ns.innerHTML = `
-          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
-          <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, já aproveite o ebook pelo botão abaixo.</span></div>
-          <div class="step" style="animation-delay:.3s;">
-            <div class="btn-row-card">
-              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      if (data.product_key === 'consultoria_mensal') {
-        ns.innerHTML = `
-          <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Sua assinatura foi ativada</strong> com sucesso.</span></div>
-          <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail os <strong>próximos passos do acompanhamento contínuo</strong>.</span></div>
-          <div class="step"><span class="step-num">03</span><span class="step-text">Seu ebook também está liberado para download imediato.</span></div>
-          <div class="step" style="animation-delay:.3s;">
-            <div class="btn-row-card">
-              <a class="btn btn-primary" href="/download-ebook?session_id=${sessionId}">Baixar ebook agora</a>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      ns.innerHTML = `<div class="step"><span class="step-num">01</span><span class="step-text"><strong>Pagamento confirmado com sucesso.</strong> Você receberá um e-mail de confirmação em breve.</span></div>`;
+        </div>
+      `;
+      return;
     }
 
-    verificar();
-  </script>
+    if (data.product_key === 'consultoria_avulsa') {
+      ns.innerHTML = `
+        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
+        <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, você já pode baixar o ebook pelo botão abaixo.</span></div>
+        <div class="step" style="animation-delay:.3s;">
+          <div class="btn-row-card">
+            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (data.product_key === 'consultoria_premium') {
+      ns.innerHTML = `
+        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
+        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria premium</strong> em até 1 dia útil.</span></div>
+        <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, você já pode baixar o ebook pelo botão abaixo.</span></div>
+        <div class="step" style="animation-delay:.3s;">
+          <div class="btn-row-card">
+            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (data.product_key === 'consultoria_mensal') {
+      ns.innerHTML = `
+        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Sua assinatura foi ativada</strong> com sucesso.</span></div>
+        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail os <strong>próximos passos do acompanhamento contínuo</strong>.</span></div>
+        <div class="step"><span class="step-num">03</span><span class="step-text">Seu ebook também está liberado para download imediato.</span></div>
+        <div class="step" style="animation-delay:.3s;">
+          <div class="btn-row-card">
+            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    ns.innerHTML = `
+      <div class="step">
+        <span class="step-num">01</span>
+        <span class="step-text"><strong>Pagamento confirmado com sucesso.</strong> Você receberá um e-mail em breve.</span>
+      </div>
+    `;
+  }
+
+  verificar();
+</script>
 
 </body>
 </html>

@@ -409,6 +409,155 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
   });
 }
 
+
+
+async function sendAdminSaleEmail({
+  buyerEmail,
+  productKey,
+  productName,
+  sessionId,
+  amountTotal,
+  mode,
+}) {
+  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || process.env.EMAIL_USER;
+
+  const amountFormatted =
+    typeof amountTotal === "number"
+      ? new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(amountTotal / 100)
+      : "Não informado";
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+    </head>
+    <body style="margin:0;padding:24px;background:#f7f6f3;font-family:Arial,sans-serif;color:#0c0e13;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center">
+            <table width="640" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:640px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
+              <tr>
+                <td style="background:#0c0e13;padding:24px 28px;">
+                  <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a07c30;">
+                    Nova venda confirmada
+                  </p>
+                  <p style="margin:0;font-size:28px;font-family:Georgia,serif;color:#ffffff;">
+                    Daniel<span style="color:#a07c30;">.</span>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:28px;">
+                  <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">Você vendeu.</h1>
+
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Produto</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productName}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Tipo</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${mode}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Valor</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${amountFormatted}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>E-mail do comprador</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${buyerEmail || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Produto key</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productKey}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;"><strong>Session ID</strong></td>
+                      <td style="padding:10px 0;">${sessionId}</td>
+                    </tr>
+                  </table>
+
+                  ${
+                    buyerEmail
+                      ? `
+                    <div style="margin-top:24px;">
+                      <a href="mailto:${buyerEmail}?subject=${encodeURIComponent(
+                          "Agendamento da sua consultoria"
+                        )}"
+                         style="display:inline-block;padding:14px 22px;background:#a07c30;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">
+                        Responder comprador
+                      </a>
+                    </div>
+                  `
+                      : ""
+                  }
+
+                  <p style="margin:24px 0 0;font-size:13px;color:#58607a;line-height:1.7;">
+                    Esse e-mail foi enviado automaticamente pelo webhook da Stripe após confirmação de pagamento.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: adminEmail,
+    subject: `Nova venda confirmada · ${productName} · ${buyerEmail || "sem e-mail"}`,
+    html,
+  });
+}
+
+async function handleConfirmedSale(session) {
+  const email = session.customer_details?.email || session.customer_email || null;
+  const productKey = session.metadata?.product_key || "desconhecido";
+  const productName = session.metadata?.product_name || "Produto";
+  const amountTotal = session.amount_total ?? null;
+  const mode = session.mode || "payment";
+
+  console.log("✅ Venda confirmada:", {
+    sessionId: session.id,
+    email,
+    productKey,
+    productName,
+    paymentStatus: session.payment_status,
+    amountTotal,
+  });
+
+  if (email) {
+    await sendPurchaseEmail({
+      email,
+      productKey,
+      productName,
+      sessionId: session.id,
+    });
+    console.log("📧 E-mail enviado para comprador:", email);
+  }
+
+  await sendAdminSaleEmail({
+    buyerEmail: email,
+    productKey,
+    productName,
+    sessionId: session.id,
+    amountTotal,
+    mode,
+  });
+  console.log("📨 E-mail interno enviado para o admin");
+}
+
+
+
 // ─────────────────────────────────────────────────────────────
 // WEBHOOK STRIPE
 // IMPORTANTE: precisa vir antes do express.json()
@@ -433,31 +582,26 @@ app.post(
 
     try {
       switch (event.type) {
-          case "checkout.session.completed": {
-            const session = event.data.object;
-            const email = session.customer_details?.email || null;
-            const productKey = session.metadata?.product_key || "desconhecido";
-            const productName = session.metadata?.product_name || "Produto";
+        case "checkout.session.completed": {
+          const session = event.data.object;
 
-            console.log("✅ Pagamento confirmado:", {
+          if (session.payment_status === "paid") {
+            await handleConfirmedSale(session);
+          } else {
+            console.log("ℹ️ Checkout concluído, mas ainda não pago:", {
               sessionId: session.id,
-              email,
-              productKey,
-              productName,
+              paymentStatus: session.payment_status,
             });
-
-            if (email) {
-              await sendPurchaseEmail({
-                email,
-                productKey,
-                productName,
-                sessionId: session.id,
-              });
-              console.log("📧 E-mail enviado para:", email);
-            }
-
-            break;
           }
+
+          break;
+        }
+
+        case "checkout.session.async_payment_succeeded": {
+          const session = event.data.object;
+          await handleConfirmedSale(session);
+          break;
+        }
 
         case "invoice.payment_failed": {
           const invoice = event.data.object;
@@ -483,7 +627,7 @@ app.post(
 
       return res.json({ received: true });
     } catch (err) {
-      console.error("❌ Erro ao processar webhook:", err.message);
+      console.error("❌ Erro ao processar webhook:", err);
       return res.status(500).json({ error: "Erro interno no webhook" });
     }
   }
@@ -584,9 +728,12 @@ app.get("/verificar-sessao", async (req, res) => {
     return res.json({
       id: session.id,
       status: session.payment_status,
-      customer_email: session.customer_details?.email || null,
+      checkout_status: session.status,
+      customer_email: session.customer_details?.email || session.customer_email || null,
       product_key: session.metadata?.product_key || null,
       product_name: session.metadata?.product_name || null,
+      mode: session.mode || null,
+      amount_total: session.amount_total ?? null,
     });
   } catch (err) {
     console.error("❌ Erro ao verificar sessão:", err.message);
@@ -595,7 +742,7 @@ app.get("/verificar-sessao", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// LIBERAR DOWNLOAD DO EBOOK APÓS PAGAMENTO
+// LIBERAR DOWNLOAD DO EBOOK APÓS PAGAMENTO CONFIRMADO
 // ─────────────────────────────────────────────────────────────
 app.get("/download-ebook", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -607,8 +754,7 @@ app.get("/download-ebook", async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    const isPaid =
-      session.payment_status === "paid" || session.status === "complete";
+    const isPaid = session.payment_status === "paid";
 
     const allowedProducts = [
       "ebook",
@@ -627,27 +773,16 @@ app.get("/download-ebook", async (req, res) => {
       return res.status(403).send("Esta compra não dá acesso ao ebook.");
     }
 
-    const filePath = path.join(
-      PUBLIC_DIR,
-      "downloads",
-      "ebook-investimentos-para-iniciantes.pdf"
-    );
+    const ebookPath = path.join(PUBLIC_DIR, "ebook", "Investimentos para Iniciantes.pdf");
 
-    if (!fs.existsSync(filePath)) {
-      return res
-        .status(404)
-        .send(
-          "Arquivo do ebook não encontrado. Coloque o PDF em public/downloads/ebook-investimentos-para-iniciantes.pdf"
-        );
+    if (!fs.existsSync(ebookPath)) {
+      return res.status(404).send("Arquivo do ebook não encontrado.");
     }
 
-    return res.download(
-      filePath,
-      "ebook-investimentos-para-iniciantes.pdf"
-    );
+    return res.download(ebookPath, "Investimentos-para-Iniciantes.pdf");
   } catch (err) {
-    console.error("❌ Erro ao liberar ebook:", err.message);
-    return res.status(500).send("Erro ao liberar o arquivo.");
+    console.error("❌ Erro ao liberar download:", err.message);
+    return res.status(500).send("Erro ao liberar download.");
   }
 });
 
