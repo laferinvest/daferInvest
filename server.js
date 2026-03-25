@@ -536,9 +536,14 @@ app.post("/create-checkout-session", async (req, res) => {
       });
     }
 
+    const paymentMethods =
+      selectedProduct.mode === "subscription"
+        ? ["card"]
+        : ["card", "boleto"];
+
     const session = await stripe.checkout.sessions.create({
       mode: selectedProduct.mode,
-      payment_method_types: ["card"],
+      payment_method_types: paymentMethods,
       line_items: [
         {
           price: selectedProduct.priceId,
@@ -547,7 +552,7 @@ app.post("/create-checkout-session", async (req, res) => {
       ],
       success_url: `${BASE_URL}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/?cancelado=1`,
-      locale: 'pt-BR',
+      locale: "pt-BR",
       allow_promotion_codes: true,
       billing_address_collection: "auto",
       metadata: {
