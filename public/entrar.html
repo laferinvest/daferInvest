@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar · Área do Investidor</title>
+  <style>
+    :root {
+      --ink:#0c0e13; --ink2:#181b24; --muted:#58607a; --line:#d4d1cb;
+      --bg:#f7f6f3; --gold:#a07c30; --gold2:#c09a50; --white:#fff;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    nav{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(247,246,243,.96);border-bottom:1px solid var(--line);display:flex;align-items:center;z-index:10}
+    .container{max-width:1100px;margin:0 auto;padding:0 24px;width:100%}
+    .nav-inner{display:flex;justify-content:space-between;align-items:center}
+    .logo{font-size:24px;font-weight:700;text-decoration:none;color:var(--ink)} .logo span{color:var(--gold)}
+    main{min-height:100vh;display:grid;place-items:center;padding:110px 24px 40px}
+    .wrap{width:min(980px,100%);display:grid;grid-template-columns:1.05fr .95fr;background:var(--white);border:1px solid var(--line)}
+    .hero{background:var(--ink);color:var(--white);padding:48px 40px;display:flex;flex-direction:column;justify-content:center}
+    .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2);font-weight:700;margin-bottom:18px}
+    h1{font-size:48px;line-height:1;margin:0 0 18px;text-transform:uppercase}
+    h1 em{font-style:normal;color:var(--gold2)}
+    .hero p{line-height:1.8;color:rgba(255,255,255,.72);max-width:420px}
+    .card{padding:40px}
+    .label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px}
+    h2{margin:0 0 8px;font-size:28px;text-transform:uppercase}
+    .sub{margin:0 0 24px;color:var(--muted);line-height:1.7}
+    form{display:grid;gap:14px}
+    label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    input{width:100%;padding:14px 16px;border:1px solid var(--line);background:#fff;font-size:15px}
+    input:focus{outline:none;border-color:var(--gold)}
+    button{border:none;background:var(--gold);color:#fff;padding:14px 18px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+    button:hover{background:var(--gold2)}
+    .muted-link{display:inline-block;margin-top:14px;color:var(--muted);text-decoration:none;font-size:14px}
+    .muted-link:hover{color:var(--gold)}
+    .msg{margin-top:14px;padding:12px 14px;border:1px solid var(--line);display:none;line-height:1.6;font-size:14px}
+    .msg.show{display:block}.msg.error{background:#fff4f1;color:#8a3b24;border-color:#f0c5b8}.msg.ok{background:#f5f8f2;color:#335c2c;border-color:#cadabf}
+    @media (max-width: 860px){.wrap{grid-template-columns:1fr}.hero{padding:34px 24px}.card{padding:28px 24px}h1{font-size:34px}}
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <a class="logo" href="/">Daniel<span>.</span></a>
+      <a class="muted-link" href="/">Voltar ao site</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="wrap">
+      <section class="hero">
+        <div class="eyebrow">Área do investidor</div>
+        <h1>Entre na sua <em>área</em></h1>
+        <p>
+          Aqui o cliente acessa perfil do investidor, alocação-alvo, recomendações macro e micro,
+          histórico de snapshots e o rebalanceamento sugerido com base no aporte e na carteira atual.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="label">Login</div>
+        <h2>Acesse com seu e-mail</h2>
+        <p class="sub">Usuário e senha vêm do Supabase Auth. A autorização dos dados acontece no backend com o token da sessão.</p>
+
+        <form id="login-form">
+          <div>
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+          </div>
+          <div>
+            <label for="password">Senha</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" id="submit-btn">Entrar</button>
+        </form>
+
+        <button type="button" id="reset-btn" style="margin-top:12px;background:#181b24;">Enviar e-mail para redefinir senha</button>
+        <div id="message" class="msg"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const messageEl = document.getElementById('message');
+    const submitBtn = document.getElementById('submit-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const loginForm = document.getElementById('login-form');
+
+    function showMessage(text, type = 'ok') {
+      messageEl.textContent = text;
+      messageEl.className = `msg show ${type}`;
+    }
+
+    async function getSupabaseClient() {
+      const res = await fetch('/api/supabase-config');
+      if (!res.ok) throw new Error('Supabase não configurado no servidor.');
+      const cfg = await res.json();
+      return createClient(cfg.url, cfg.anonKey);
+    }
+
+    let supabase = null;
+
+    async function ensureClient() {
+      if (!supabase) supabase = await getSupabaseClient();
+      return supabase;
+    }
+
+    async function redirectIfLogged() {
+      const client = await ensureClient();
+      const { data } = await client.auth.getSession();
+      if (data.session?.access_token) {
+        window.location.href = '/area-investidor';
+      }
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Entrando...';
+      messageEl.className = 'msg';
+
+      try {
+        const client = await ensureClient();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (!data.session?.access_token) throw new Error('Sessão não iniciada.');
+
+        window.location.href = '/area-investidor';
+      } catch (err) {
+        showMessage(err.message || 'Falha ao entrar.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Entrar';
+      }
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      try {
+        const email = document.getElementById('email').value.trim();
+        if (!email) {
+          showMessage('Digite o e-mail antes de pedir a redefinição.', 'error');
+          return;
+        }
+
+        const client = await ensureClient();
+        const { error } = await client.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/entrar`
+        });
+        if (error) throw error;
+        showMessage('E-mail de redefinição enviado.', 'ok');
+      } catch (err) {
+        showMessage(err.message || 'Não foi possível enviar o e-mail.', 'error');
+      }
+    });
+
+    redirectIfLogged();
+  </script>
+</body>
+</html>

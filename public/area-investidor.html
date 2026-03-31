@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Investidor</title>
+  <style>
+    :root {
+      --ink:#0c0e13;
+      --ink2:#181b24;
+      --panel:#11141c;
+      --muted:#667089;
+      --muted-2:#8b93a8;
+      --line:#ddd8cf;
+      --line-2:#ece8e1;
+      --bg:#f7f6f3;
+      --bg-soft:#fbfaf8;
+      --white:#fff;
+      --gold:#a07c30;
+      --gold2:#c09a50;
+      --ok:#176b52;
+      --ok-bg:#eef8f4;
+      --bad:#a4432a;
+      --bad-bg:#fff5f1;
+      --shadow:0 18px 40px rgba(12,14,19,.06);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f7f6f3 0%,#f4f2ee 100%);color:var(--ink);-webkit-font-smoothing:antialiased}
+    nav{position:sticky;top:0;background:rgba(247,246,243,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(212,209,203,.8);z-index:30}
+nav{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:rgba(247,246,243,.96);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(212,209,203,.72);
+}
+
+.container{
+  max-width:1240px;
+  margin:0 auto;
+  padding:0 28px;
+}
+
+.nav-inner{
+  min-height:78px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  padding:16px 28px;
+}
+
+.logo{
+  display:inline-flex;
+  align-items:center;
+  font-size:27px;
+  font-weight:800;
+  text-decoration:none;
+  color:var(--ink);
+  letter-spacing:.02em;
+  line-height:1;
+}
+
+.logo span{
+  color:var(--gold);
+}
+
+.nav-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  padding:12px 18px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  border-radius:999px;
+  transition:transform .18s ease,opacity .18s ease,background .18s ease,border-color .18s ease, box-shadow .18s ease;
+}
+
+.btn:hover{
+  transform:translateY(-1px);
+}
+
+.btn-dark{
+  background:var(--ink2);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(12,14,19,.10);
+}
+
+.btn-gold{
+  background:var(--gold);
+  color:#fff;
+}
+
+.btn-light{
+  background:#fff;
+  color:var(--ink);
+  border:1px solid var(--line);
+  box-shadow:0 8px 20px rgba(12,14,19,.04);
+}
+
+@media (max-width:640px){
+  nav{
+    background:rgba(247,246,243,.98);
+    border-bottom:1px solid rgba(212,209,203,.9);
+    box-shadow:0 4px 16px rgba(12,14,19,.04);
+  }
+
+  .container{
+    padding:0 24px;
+  }
+
+  .nav-inner{
+    min-height:60px;
+    padding:0 24px;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .logo{
+    font-size:22px;
+    margin:0;
+    padding:0;
+    flex-shrink:0;
+  }
+
+  .nav-actions{
+    display:flex;
+    flex-direction:row;
+    gap:8px;
+    width:auto;
+    margin-top:0;
+    flex-shrink:0;
+  }
+
+  .nav-actions .btn{
+    width:auto;
+    min-height:unset;
+    padding:8px 14px;
+    font-size:10px;
+    letter-spacing:.12em;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+}
+    .btn{border:none;cursor:pointer;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;transition:transform .18s ease,opacity .18s ease,background .18s ease,border-color .18s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn-dark{background:var(--ink2);color:#fff}
+    .btn-gold{background:var(--gold);color:#fff}
+    .btn-light{background:#fff;color:var(--ink);border:1px solid var(--line)}
+    main{padding:128px 0 132px}
+    .hero{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-top:16px;margin-bottom:34px}
+    .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+    h1{font-size:48px;line-height:.98;margin:0 0 14px;text-transform:uppercase;letter-spacing:.02em}
+    .hero p{margin:0;color:var(--muted);line-height:1.75;max-width:820px;font-size:16px}
+    .hero-side{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .hero-pill{display:inline-flex;align-items:center;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12px;color:var(--muted);box-shadow:var(--shadow)}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+    .card{background:rgba(255,255,255,.9);border:1px solid rgba(212,209,203,.8);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card-dark{background:linear-gradient(180deg,#141821 0%,#10131b 100%);border-color:rgba(255,255,255,.06);color:#fff}
+    .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+    .label{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+    .card-dark .label{color:#d3b06b}
+    .value-big{font-size:30px;font-weight:800;text-transform:uppercase;line-height:1.03;letter-spacing:.01em}
+    .value-mid{font-size:18px;font-weight:700;line-height:1.25}
+    .muted{color:var(--muted);line-height:1.78}
+    .card-dark .muted{color:rgba(255,255,255,.68)}
+    .meta-pills,.stack-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .pill{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:var(--bg-soft);color:var(--ink)}
+    .pill.soft{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.1)}
+    .score-grid{display:grid;gap:12px}
+    .score-item{padding:16px 18px;border-radius:18px;border:1px solid var(--line-2);background:linear-gradient(180deg,#fff 0%,#faf9f7 100%)}
+    .score-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+    .score-name{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+    .score-value{font-size:20px;font-weight:800;color:var(--ink)}
+    .score-desc{font-size:14px;line-height:1.65;color:var(--muted)}
+
+    .table-shell{border:1px solid var(--line-2);border-radius:18px;overflow:hidden;background:#fff}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:14px 14px;border-bottom:1px solid var(--line-2);text-align:left;font-size:14px;vertical-align:top}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);background:#faf9f7}
+    tr:last-child td{border-bottom:none}
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#f7f3ea;color:#7c5c19;font-size:12px;border:1px solid #eadcb9}
+    .good{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+
+    .chart-card{padding-bottom:18px}
+    .chart-wrap{position:relative;border:1px solid var(--line-2);border-radius:20px;background:linear-gradient(180deg,#fff 0%,#fcfbf9 100%);padding:18px;overflow:hidden}
+    canvas{display:block;width:100%;height:360px}
+    .chart-caption{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:12px;color:var(--muted);font-size:13px}
+    .legend{display:flex;gap:14px;flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:8px}.legend i{display:inline-block;width:12px;height:12px;border-radius:999px;background:var(--gold)}
+
+    .msg{padding:16px 18px;border-radius:18px;border:1px solid var(--line);margin-bottom:20px;display:none;font-size:14px;line-height:1.7}
+    .msg.show{display:block}.msg.error{background:var(--bad-bg);color:#8a3b24;border-color:#f0c5b8}.msg.ok{background:var(--ok-bg);color:var(--ok);border-color:#bfded2}
+
+    .rebalance-intro{margin-bottom:18px}
+    .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+    .field label{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .field input,.field select{width:100%;padding:14px 15px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:15px;color:var(--ink);outline:none;transition:border-color .18s ease, box-shadow .18s ease}
+    .field input:focus,.field select:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(160,124,48,.08)}
+    .positions-card{margin-top:18px;padding:18px;border:1px solid var(--line-2);background:linear-gradient(180deg,#fff 0%,#faf9f7 100%);border-radius:18px}
+    .positions-grid{
+      display:grid;
+      gap:14px;
+    }
+
+    .position-row{
+      display:grid;
+      grid-template-columns:1.4fr .9fr;
+      gap:14px;
+      padding:16px;
+      border:1px solid var(--line-2);
+      border-radius:18px;
+      background:linear-gradient(180deg,#fff 0%,#faf9f7 100%);
+    }
+
+    .position-row .field{
+      margin:0;
+    }
+
+    .position-row .field label{
+      margin-bottom:8px;
+    }
+
+    .position-row .field input[disabled]{
+      background:#fcfbf9;
+      color:var(--ink);
+      opacity:1;
+    }
+    .actions-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    .small-note{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.7}
+    .summary-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 6px}
+    .summary-box{padding:16px 18px;border-radius:18px;background:linear-gradient(180deg,#fff 0%,#faf9f7 100%);border:1px solid var(--line-2)}
+    .summary-box .k{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .summary-box .v{font-size:22px;font-weight:800;line-height:1.05}
+    .summary-box .s{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.55}
+    .section-space{padding-bottom:38px}
+
+      @media (max-width:1080px){
+        .span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-12{grid-column:span 12}
+        .form-grid,.summary-bar{grid-template-columns:1fr}
+        .hero{flex-direction:column;align-items:flex-start}
+        .hero-side{justify-content:flex-start}
+      }
+
+      @media (max-width:768px){
+        .position-row{
+          grid-template-columns:1fr 1fr;
+          align-items:end;
+        }
+      }
+
+      @media (max-width:560px){
+        .position-row{
+          grid-template-columns:1fr;
+          gap:12px;
+          padding:14px;
+        }
+      }
+
+
+
+
+  .rebalance-mobile-list{
+  display:none;
+  margin-top:18px;
+  gap:14px;
+}
+
+.rebalance-mobile-card{
+  border:1px solid var(--line-2);
+  border-radius:18px;
+  background:linear-gradient(180deg,#fff 0%,#faf9f7 100%);
+  padding:16px;
+}
+
+.rebalance-mobile-title{
+  font-size:16px;
+  font-weight:800;
+  line-height:1.3;
+  color:var(--ink);
+  margin-bottom:12px;
+}
+
+.rebalance-mobile-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 14px;
+}
+
+.rebalance-mobile-item{
+  padding:10px 0;
+  border-top:1px solid var(--line-2);
+}
+
+.rebalance-mobile-item:nth-child(1),
+.rebalance-mobile-item:nth-child(2){
+  border-top:none;
+}
+
+.rebalance-mobile-k{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.rebalance-mobile-v{
+  font-size:15px;
+  line-height:1.45;
+  color:var(--ink);
+}
+
+.rebalance-mobile-v.good{
+  color: var(--ok) !important;
+  font-weight: 700;
+}
+
+.rebalance-mobile-v.bad{
+  color: var(--bad) !important;
+  font-weight: 700;
+}
+
+@media (max-width:768px){
+  .table-shell.rebalance-table-shell{
+    display:none;
+  }
+
+  .rebalance-mobile-list{
+    display:grid;
+  }
+}
+
+@media (max-width:480px){
+  .rebalance-mobile-grid{
+    grid-template-columns:1fr;
+  }
+
+  .rebalance-mobile-item{
+    border-top:1px solid var(--line-2) !important;
+  }
+
+  .rebalance-mobile-item:first-child{
+    border-top:none !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <a class="logo" href="/">Daniel<span>.</span></a>
+      <div class="nav-actions">
+        <button class="btn btn-dark" id="logout-btn">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="message" class="msg"></div>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Painel do cliente</div>
+        <h1>Área do investidor</h1>
+        <p id="hero-summary">Carregando seus dados...</p>
+      </div>
+      <div class="hero-side" id="hero-side-pills"></div>
+    </section>
+
+    <section class="grid section-space">
+      <div class="card card-dark span-5">
+        <div class="label">Cliente</div>
+        <div class="value-big" id="client-name">—</div>
+        <p class="muted" id="client-email">—</p>
+        <div class="meta-pills" id="meta-pills"></div>
+      </div>
+
+      <div class="card span-4">
+        <div class="label">Perfil do investidor</div>
+        <div class="value-big" id="profile-label">—</div>
+        <p class="muted" id="profile-summary">—</p>
+      </div>
+
+      <div class="card span-3">
+        <div class="label">Estratégia do plano</div>
+        <div class="value-mid" id="method-label">—</div>
+        <p class="muted" id="advisor-notes">—</p>
+      </div>
+
+      <div class="card span-7 chart-card">
+        <div class="label">Evolução da carteira</div>
+        <div class="chart-wrap">
+          <canvas id="history-chart" width="980" height="360"></canvas>
+        </div>
+        <div class="chart-caption">
+          <div class="legend"><span><i></i> Valor total da carteira ao longo do tempo</span></div>
+          <div id="chart-range-text">—</div>
+        </div>
+      </div>
+
+      <div class="card span-5">
+        <div class="label">Leitura do perfil</div>
+        <div class="score-grid" id="score-list"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="label">Divisão macro recomendada</div>
+        <div class="table-shell">
+          <table>
+            <thead><tr><th>Classe</th><th class="num">Percentual</th></tr></thead>
+            <tbody id="macro-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <div class="label">Investimentos recomendados</div>
+        <div class="table-shell">
+          <table>
+            <thead><tr><th>Ativo</th><th>Categoria</th><th class="num">Alvo</th></tr></thead>
+            <tbody id="micro-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <div class="label">Atualizar carteira e rebalancear</div>
+        <div class="rebalance-intro muted">
+          Informe a data e os valores atuais da carteira. O novo aporte é opcional: você pode deixar em branco ou zero. O sistema sempre calcula compras e vendas para trazer os investimentos de volta ao alvo sempre que houver desvio relevante.
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="positionDate">Data da posição</label>
+            <input id="positionDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="contributionAmount">Novo aporte (opcional)</label>
+            <input id="contributionAmount" type="number" step="0.01" placeholder="0, se não houver novo aporte" />
+          </div>
+          <div class="field">
+            <label>Como o ajuste é feito</label>
+            <input type="text" value="Compras e vendas automáticas" disabled />
+          </div>
+        </div>
+
+        <div class="positions-card">
+          <div class="label" style="margin-bottom:12px">Posições atuais</div>
+          <div class="positions-grid" id="positions-box"></div>
+          <div class="small-note">Use os valores atuais da sua carteira. Se um ativo ainda não existir, deixe zero. O campo de aporte pode ficar em branco quando você quiser apenas rebalancear a carteira.</div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn btn-light" id="save-position-btn">Salvar posição do dia</button>
+          <button class="btn btn-gold" id="rebalance-btn">Calcular rebalanceamento</button>
+        </div>
+
+        <div class="summary-bar" id="rebalance-summary"></div>
+
+        <div class="table-shell rebalance-table-shell" style="margin-top:18px">
+          <table>
+            <thead>
+              <tr>
+                <th>Ativo</th>
+                <th class="num">Hoje</th>
+                <th class="num">Alvo após ajuste</th>
+                <th class="num">Aportar</th>
+                <th class="num">Vender</th>
+                <th class="num">% pós-ajuste</th>
+                <th>Ação sugerida</th>
+              </tr>
+            </thead>
+            <tbody id="rebalance-body">
+              <tr><td colspan="7">Preencha as posições e clique em calcular rebalanceamento.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rebalance-mobile-list" id="rebalance-mobile-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const messageEl = document.getElementById('message');
+    const positionsBox = document.getElementById('positions-box');
+    const positionDateInput = document.getElementById('positionDate');
+    const contributionInput = document.getElementById('contributionAmount');
+    positionDateInput.value = new Date().toISOString().slice(0,10);
+
+    function showMessage(text, type='error') {
+      messageEl.textContent = text;
+      messageEl.className = `msg show ${type}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function getSupabaseClient() {
+      const res = await fetch('/api/supabase-config');
+      if (!res.ok) throw new Error('Supabase não configurado no servidor.');
+      const cfg = await res.json();
+      return createClient(cfg.url, cfg.anonKey);
+    }
+
+    const supabase = await getSupabaseClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session;
+    if (!session?.access_token) window.location.href = '/entrar';
+
+    async function authFetch(url, options={}) {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        window.location.href = '/entrar';
+        return;
+      }
+      const headers = new Headers(options.headers || {});
+      headers.set('Authorization', `Bearer ${token}`);
+      if (!(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+      return fetch(url, { ...options, headers });
+    }
+
+    function money(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0)); }
+    function pct(v){ return `${Number(v||0).toFixed(2)}%`; }
+    function shortDate(v){ if(!v) return '—'; const d=new Date(v+'T00:00:00'); return d.toLocaleDateString('pt-BR'); }
+
+  function drawHistory(history) {
+      const canvas = document.getElementById('history-chart');
+      const ctx = canvas.getContext('2d');
+
+      // 1. CORREÇÃO DE DEFINIÇÃO (Alta Resolução / Telas Retina)
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssWidth = rect.width || 980;
+      const cssHeight = rect.height || 360;
+
+      // Multiplica os pixels internos do canvas pela densidade da tela
+      canvas.width = cssWidth * dpr;
+      canvas.height = cssHeight * dpr;
+      // Normaliza o contexto para usarmos as medidas normais do CSS
+      ctx.scale(dpr, dpr);
+
+      const width = cssWidth;
+      const height = cssHeight;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const items = (Array.isArray(history) ? history : [])
+        .map(item => ({
+          date: item.snapshotDate || item.positionDate || item.date,
+          total: Array.isArray(item.positions) ? item.positions.reduce((s,p)=>s+Number(p.amount||0),0) : Number(item.total || 0)
+        }))
+        .filter(item => item.date)
+        .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+
+      document.getElementById('chart-range-text').textContent = items.length
+        ? `${shortDate(items[0].date)} até ${shortDate(items[items.length - 1].date)}`
+        : 'Sem histórico ainda';
+
+      // Margens do gráfico
+      const left = 120, right = 30, top = 30, bottom = 44;
+      const plotW = width - left - right;
+      const plotH = height - top - bottom;
+
+      if (!items.length) {
+        ctx.fillStyle = '#8b93a8';
+        ctx.font = '500 14px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Ainda não há histórico salvo da carteira.', 32, 48);
+        return;
+      }
+
+      const maxValue = Math.max(...items.map(i=>i.total), 1);
+      const minValue = Math.min(...items.map(i=>i.total), 0);
+      const padding = Math.max((maxValue - minValue) * 0.15, maxValue * 0.08, 1);
+      const yMin = Math.max(0, minValue - padding * 0.25);
+      const yMax = maxValue + padding;
+      const ticks = 5;
+
+      const yFor = (value) => top + plotH - ((value - yMin) / (yMax - yMin || 1)) * plotH;
+      const xFor = (index) => left + (items.length === 1 ? plotW/2 : (plotW * index/(items.length - 1)));
+      const points = items.map((item, i) => ({ x: xFor(i), y: yFor(item.total) }));
+
+      // 2. DESENHO DO EIXO Y E GRID HORIZONTAL (Elegante e tracejado)
+      ctx.font = '500 12px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i <= ticks; i++) {
+        const value = yMin + ((yMax - yMin) * i / ticks);
+        const y = yFor(value);
+
+        // Linha do Grid
+        ctx.beginPath();
+        ctx.setLineDash([4, 5]); // Efeito tracejado suave
+        ctx.moveTo(left, y);
+        ctx.lineTo(width - right, y);
+        ctx.strokeStyle = 'rgba(212, 209, 203, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Label de Valor Monetário
+        ctx.fillStyle = '#8b93a8';
+        ctx.fillText(money(value), left - 16, y);
+      }
+      ctx.setLineDash([]); // Reseta o tracejado para as próximas linhas
+
+      // 3. LABELS DO EIXO X (Datas inteligentes, evita sobreposição)
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const maxLabels = width > 600 ? 8 : 4; // Responsividade para mobile
+      const step = Math.ceil(items.length / maxLabels);
+
+      items.forEach((item, i) => {
+        const x = xFor(i);
+        if (i === 0 || i === items.length - 1 || i % step === 0) {
+          ctx.fillStyle = '#8b93a8';
+          ctx.fillText(shortDate(item.date), x, height - bottom + 16);
+        }
+      });
+
+      // 4. GRADIENTE ABAIXO DA LINHA (Fundo dinâmico)
+      const gradient = ctx.createLinearGradient(0, top, 0, height - bottom);
+      gradient.addColorStop(0, 'rgba(160,124,48,0.22)'); // Dourado translúcido
+      gradient.addColorStop(1, 'rgba(160,124,48,0.00)'); // Esmaecendo para transparente
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, height - bottom); // Começa na base
+      ctx.lineTo(points[0].x, points[0].y); // Vai para o 1º ponto
+
+      // Curvas Suaves (Bezier) para o fundo
+      if (points.length === 1) {
+        ctx.lineTo(points[0].x, points[0].y);
+      } else {
+        for (let i = 0; i < points.length - 1; i++) {
+          const current = points[i];
+          const next = points[i + 1];
+          const cpX = (current.x + next.x) / 2;
+          ctx.bezierCurveTo(cpX, current.y, cpX, next.y, next.x, next.y);
+        }
+      }
+
+      ctx.lineTo(points[points.length - 1].x, height - bottom); // Desce até a base do último ponto
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // 5. LINHA PRINCIPAL DA CARTEIRA COM EFEITO DE BRILHO (Glow)
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      if (points.length > 1) {
+        for (let i = 0; i < points.length - 1; i++) {
+          const current = points[i];
+          const next = points[i + 1];
+          const cpX = (current.x + next.x) / 2;
+          // Desenha curvas suaves entre os pontos
+          ctx.bezierCurveTo(cpX, current.y, cpX, next.y, next.x, next.y);
+        }
+      }
+
+      ctx.strokeStyle = '#a07c30'; // Cor principal (Dourada)
+      ctx.lineWidth = 3;
+      
+      // Configuração de Sombra (Glow Effect)
+      ctx.shadowColor = 'rgba(160,124,48,0.35)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.stroke();
+
+      // Desliga a sombra para desenhar os pontos
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // 6. PONTOS DOS DADOS (Anéis elegantes)
+      points.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; // Interior branco
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#a07c30'; // Borda dourada
+        ctx.stroke();
+      });
+    }
+    function renderPositions(targetMicro, currentPositions) {
+      positionsBox.innerHTML = '';
+      const byCode = new Map((currentPositions || []).map(p => [p.code, p]));
+      targetMicro.forEach((item) => {
+        const current = byCode.get(item.code);
+        const row = document.createElement('div');
+        row.className = 'position-row';
+        row.innerHTML = `
+          <div class="field">
+            <label>Ativo</label>
+            <input type="text" value="${item.name} · ${item.bucket || 'Carteira'}" disabled />
+          </div>
+          <div class="field">
+            <label>Valor atual</label>
+            <input type="number" data-amount-code="${item.code}" step="0.01" value="${Number(current?.amount || 0)}" placeholder="0" />
+          </div>
+        `;
+        positionsBox.appendChild(row);
+      });
+    }
+
+    function collectCurrentPositions(targetMicro) {
+      return targetMicro.map(item => ({
+        code: item.code,
+        name: item.name,
+        bucket: item.bucket || null,
+        amount: Number(document.querySelector(`[data-amount-code="${item.code}"]`)?.value || 0),
+      }));
+    }
+
+    function renderScoreCard(name, value, description) {
+      return `
+        <div class="score-item">
+          <div class="score-top">
+            <div class="score-name">${name}</div>
+            <div class="score-value">${value ?? '—'}</div>
+          </div>
+          <div class="score-desc">${description}</div>
+        </div>
+      `;
+    }
+
+    function actionText(item) {
+      const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
+      const sell = Number(item.suggested_sale || item.suggested_sell || 0);
+      if (buy > 0 && sell > 0) return `Vender ${money(sell)} e depois direcionar ${money(buy)}.`;
+      if (buy > 0) return `Aportar ${money(buy)}.`;
+      if (sell > 0) return `Reduzir ${money(sell)}.`;
+      return 'Manter como está.';
+    }
+
+    async function loadInvestor() {
+      const res = await authFetch('/api/investor/me');
+      if (!res.ok) {
+        if (res.status === 401) {
+          await supabase.auth.signOut();
+          window.location.href = '/entrar';
+          return;
+        }
+        const err = await res.json().catch(()=>({ error:'Falha ao carregar dados.' }));
+        throw new Error(err.error || 'Falha ao carregar dados.');
+      }
+
+      const payload = await res.json();
+      const data = payload.investorData;
+      window.__investorData = data;
+
+      document.getElementById('client-name').textContent = data.client_name || '—';
+      document.getElementById('client-email').textContent = payload.authUser?.email || data.client_email || '—';
+      document.getElementById('profile-label').textContent = data.profile_label || '—';
+      document.getElementById('profile-summary').textContent = data.profile_summary || 'Sem resumo cadastrado.';
+      document.getElementById('method-label').textContent = data.planning_method_label || 'Sem método definido';
+      document.getElementById('advisor-notes').textContent = data.advisor_notes || 'Sem observações adicionais no momento.';
+      document.getElementById('hero-summary').textContent = data.profile_summary || 'Aqui você acompanha sua estratégia, seus investimentos recomendados e os ajustes sugeridos para a carteira.';
+
+      document.getElementById('hero-side-pills').innerHTML = '';
+
+      document.getElementById('meta-pills').innerHTML = `
+        <span class="pill soft">Índice do perfil: ${data.profile_index ?? '—'}</span>
+        <span class="pill soft">Faixa de rebalanceamento: ${data.rebalance_band_pp ?? '—'} p.p.</span>
+        <span class="pill soft">Alerta de desvio: ${data.drift_warning_pp ?? '—'} p.p.</span>
+      `;
+
+      document.getElementById('score-list').innerHTML = [
+        renderScoreCard('Capacidade de risco', data.risk_capacity_score, 'Quanto sua estrutura financeira comporta em termos de oscilação e prazo.'),
+        renderScoreCard('Tolerância ao risco', data.risk_tolerance_score, 'Quanto desconforto com perdas temporárias você tende a aceitar na prática.'),
+        renderScoreCard('Faixa inicial de implementação', data.risk_implementation_score, 'Faixa usada para transformar o diagnóstico em carteira executável.'),
+        renderScoreCard('Confiança do diagnóstico', data.risk_diagnostic_confidence || '—', 'Leitura da consistência do questionário e da experiência prática informada.')
+      ].join('');
+
+      document.getElementById('macro-body').innerHTML = (data.target_macro || []).map(item => `
+        <tr><td>${item.name}</td><td class="num">${pct(item.target_pct)}</td></tr>
+      `).join('') || '<tr><td colspan="2">Sem divisão macro cadastrada.</td></tr>';
+
+      document.getElementById('micro-body').innerHTML = (data.target_micro || []).map(item => `
+        <tr><td>${item.name}</td><td><span class="tag">${item.bucket || 'Carteira'}</span></td><td class="num">${pct(item.target_pct)}</td></tr>
+      `).join('') || '<tr><td colspan="3">Sem investimentos recomendados cadastrados.</td></tr>';
+
+      renderPositions(data.target_micro || [], data.current_positions || []);
+      drawHistory(data.allocation_history || []);
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/entrar';
+    });
+
+    document.getElementById('save-position-btn').addEventListener('click', async () => {
+      try {
+        const data = window.__investorData;
+        const currentPositions = collectCurrentPositions(data.target_micro || []);
+        const res = await authFetch('/api/investor/snapshot', {
+          method: 'POST',
+          body: JSON.stringify({ snapshotDate: positionDateInput.value, currentPositions })
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || 'Falha ao salvar posição.');
+        showMessage('Posição do dia salva com sucesso.', 'ok');
+        await loadInvestor();
+      } catch (err) {
+        showMessage(err.message || 'Falha ao salvar posição.', 'error');
+      }
+    });
+
+    document.getElementById('rebalance-btn').addEventListener('click', async () => {
+      try {
+        const data = window.__investorData;
+        const currentPositions = collectCurrentPositions(data.target_micro || []);
+        const contributionAmountRaw = contributionInput.value?.trim?.() ?? '';
+        const contributionAmount = contributionAmountRaw === '' ? 0 : Number(contributionAmountRaw || 0);
+        const allowSells = true;
+        const res = await authFetch('/api/investor/rebalance-plan', {
+          method: 'POST',
+          body: JSON.stringify({ snapshotDate: positionDateInput.value, contributionAmount, currentPositions, allowSells })
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || 'Falha ao calcular rebalanceamento.');
+
+        const plan = body.plan || [];
+        const totalBuy = plan.reduce((s,item)=>s+Number(item.suggested_contribution || item.suggested_buy || 0),0);
+        const totalSell = plan.reduce((s,item)=>s+Number(item.suggested_sale || item.suggested_sell || 0),0);
+        const estimatedAfter = plan.reduce((s,item)=>s+Number(item.target_amount_after_contribution || 0),0);
+        const pctAfter = (value) => estimatedAfter > 0 ? `${((Number(value || 0) / estimatedAfter) * 100).toFixed(2)}%` : '—';
+        const actionsCount = plan.filter(item => Number(item.suggested_contribution || item.suggested_buy || 0) > 0 || Number(item.suggested_sale || item.suggested_sell || 0) > 0).length;
+
+        document.getElementById('rebalance-summary').innerHTML = `
+          <div class="summary-box"><div class="k">Novo aporte</div><div class="v">${money(contributionAmount)}</div><div class="s">Valor novo entrando na carteira.</div></div>
+          <div class="summary-box"><div class="k">Compras sugeridas</div><div class="v">${money(totalBuy)}</div><div class="s">Quanto direcionar para os ativos abaixo do alvo.</div></div>
+          <div class="summary-box"><div class="k">Vendas sugeridas</div><div class="v">${money(totalSell)}</div><div class="s">Quanto reduzir dos ativos acima do alvo.</div></div>
+          <div class="summary-box"><div class="k">Ações sugeridas</div><div class="v">${actionsCount}</div><div class="s">Carteira estimada após os ajustes: ${money(estimatedAfter)}.</div></div>
+        `;
+
+const desktopRows = plan.map(item => {
+  const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
+  const sell = Number(item.suggested_sale || item.suggested_sell || 0);
+  const postPct = Number(item.post_rebalance_pct || 0);
+
+  return `
+    <tr>
+      <td>${item.name}</td>
+      <td class="num">${money(item.current_amount)}</td>
+      <td class="num">${money(item.target_amount_after_contribution)}</td>
+      <td class="num ${buy > 0 ? 'good' : ''}">${buy > 0 ? money(buy) : '—'}</td>
+      <td class="num ${sell > 0 ? 'bad' : ''}">${sell > 0 ? money(sell) : '—'}</td>
+      <td class="num">${pct(postPct)}</td>
+      <td>${actionText(item)}</td>
+    </tr>
+  `;
+}).join('');
+
+document.getElementById('rebalance-body').innerHTML =
+  desktopRows || '<tr><td colspan="7">Nenhum ajuste foi necessário.</td></tr>';
+
+document.getElementById('rebalance-mobile-list').innerHTML = plan.map(item => {
+  const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
+  const sell = Number(item.suggested_sale || item.suggested_sell || 0);
+  const postPct = Number(item.post_rebalance_pct || 0);
+
+  return `
+    <div class="rebalance-mobile-card">
+      <div class="rebalance-mobile-title">${item.name}</div>
+      <div class="rebalance-mobile-grid">
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">Hoje</div>
+          <div class="rebalance-mobile-v">${money(item.current_amount)}</div>
+        </div>
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">Alvo após ajuste</div>
+          <div class="rebalance-mobile-v">${money(item.target_amount_after_contribution)}</div>
+        </div>
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">Aportar</div>
+          <div class="rebalance-mobile-v ${buy > 0 ? 'good' : ''}">
+            ${buy > 0 ? money(buy) : '—'}
+          </div>
+        </div>
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">Vender</div>
+          <div class="rebalance-mobile-v ${sell > 0 ? 'bad' : ''}">
+            ${sell > 0 ? money(sell) : '—'}
+          </div>
+        </div>
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">% pós-ajuste</div>
+          <div class="rebalance-mobile-v">${pct(postPct)}</div>
+        </div>
+        <div class="rebalance-mobile-item">
+          <div class="rebalance-mobile-k">Ação sugerida</div>
+          <div class="rebalance-mobile-v">${actionText(item)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}).join('') || '<div class="rebalance-mobile-card">Nenhum ajuste foi necessário.</div>';
+      } catch (err) {
+        showMessage(err.message || 'Falha ao calcular rebalanceamento.', 'error');
+      }
+    });
+
+    loadInvestor().catch(err => showMessage(err.message || 'Falha ao carregar painel.', 'error'));
+  </script>
+</body>
+</html>

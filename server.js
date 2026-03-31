@@ -5,11 +5,232 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const PUBLIC_DIR = path.join(__dirname, "public");
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ADMIN_DASHBOARD_SECRET = process.env.ADMIN_DASHBOARD_SECRET;
+
+const supabaseAdmin =
+  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      })
+    : null;
+
+function requireSupabase(req, res, next) {
+  if (
+    !SUPABASE_URL ||
+    !SUPABASE_ANON_KEY ||
+    !SUPABASE_SERVICE_ROLE_KEY ||
+    !supabaseAdmin
+  ) {
+    return res.status(500).json({
+      error: "Supabase não configurado no servidor.",
+      missing: {
+        SUPABASE_URL: !SUPABASE_URL,
+        SUPABASE_ANON_KEY: !SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: !SUPABASE_SERVICE_ROLE_KEY,
+      },
+    });
+  }
+  next();
+}
+
+async function requireInvestorAuth(req, res, next) {
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: "Supabase não configurado." });
+  }
+
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : null;
+
+  if (!token) {
+    return res.status(401).json({ error: "Token ausente." });
+  }
+
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !data?.user) {
+    return res.status(401).json({ error: "Sessão inválida ou expirada." });
+  }
+
+  req.investorUser = data.user;
+  req.accessToken = token;
+  next();
+}
+
+function requireAdminSecret(req, res, next) {
+  const provided = req.headers["x-admin-secret"] || req.body?.adminSecret;
+
+  if (!ADMIN_DASHBOARD_SECRET) {
+    return res
+      .status(500)
+      .json({ error: "ADMIN_DASHBOARD_SECRET não configurado." });
+  }
+
+  if (!provided || provided !== ADMIN_DASHBOARD_SECRET) {
+    return res.status(403).json({ error: "Acesso administrativo negado." });
+  }
+
+  next();
+}
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function roundPct(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function normalizePositions(currentPositions = [], targetMicro = []) {
+  const currentMap = new Map(
+    (Array.isArray(currentPositions) ? currentPositions : []).map((item) => [
+      item.code,
+      {
+        code: item.code,
+        name: item.name,
+        amount: Number(item.amount || 0),
+      },
+    ])
+  );
+
+  return (Array.isArray(targetMicro) ? targetMicro : []).map((target) => {
+    const current = currentMap.get(target.code);
+
+    return {
+      code: target.code,
+      name: target.name,
+      bucket: target.bucket || null,
+      target_pct: Number(target.target_pct || 0),
+      current_amount: Number(current?.amount || 0),
+    };
+  });
+}
+
+function buildRebalancePlan({
+  positions,
+  contributionAmount,
+  rebalanceBandPp,
+}) {
+  const sanitizedContribution = Number(contributionAmount || 0);
+
+  const totalCurrent = positions.reduce(
+    (sum, item) => sum + Number(item.current_amount || 0),
+    0
+  );
+
+  const totalAfterContribution = totalCurrent + sanitizedContribution;
+
+  const enriched = positions.map((item) => {
+    const currentAmount = Number(item.current_amount || 0);
+    const targetPct = Number(item.target_pct || 0);
+
+    const currentPct =
+      totalCurrent > 0 ? (currentAmount / totalCurrent) * 100 : 0;
+
+    const driftPp = currentPct - targetPct;
+    const outsideBand = Math.abs(driftPp) > Number(rebalanceBandPp || 0);
+
+    const targetAmountAfterContribution =
+      totalAfterContribution * (targetPct / 100);
+
+    return {
+      code: item.code,
+      name: item.name,
+      bucket: item.bucket,
+      target_pct: roundPct(targetPct),
+      current_amount: roundMoney(currentAmount),
+      current_pct: roundPct(currentPct),
+      drift_pp: roundPct(driftPp),
+      outside_band: outsideBand,
+      target_amount_after_contribution: roundMoney(targetAmountAfterContribution),
+    };
+  });
+
+  const shouldRebalance =
+    sanitizedContribution > 0 || enriched.some((item) => item.outside_band);
+
+  const rows = enriched.map((item) => {
+    let suggestedContribution = 0;
+    let suggestedSale = 0;
+    let finalAmount = Number(item.current_amount || 0);
+    let actionLabel = "Manter como está.";
+
+    if (shouldRebalance) {
+      const delta =
+        Number(item.target_amount_after_contribution || 0) -
+        Number(item.current_amount || 0);
+
+      if (delta > 0.004) {
+        suggestedContribution = roundMoney(delta);
+        finalAmount = roundMoney(Number(item.current_amount || 0) + suggestedContribution);
+        actionLabel = `Aportar ${suggestedContribution.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        })}.`;
+      } else if (delta < -0.004) {
+        suggestedSale = roundMoney(Math.abs(delta));
+        finalAmount = roundMoney(Number(item.current_amount || 0) - suggestedSale);
+        actionLabel = `Reduzir ${suggestedSale.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        })}.`;
+      }
+    }
+
+    return {
+      ...item,
+      suggested_contribution: roundMoney(suggestedContribution),
+      suggested_sale: roundMoney(suggestedSale),
+      final_amount: roundMoney(finalAmount),
+      action_label: actionLabel,
+    };
+  });
+
+  const totalBuy = roundMoney(
+    rows.reduce((sum, item) => sum + Number(item.suggested_contribution || 0), 0)
+  );
+
+  const totalSale = roundMoney(
+    rows.reduce((sum, item) => sum + Number(item.suggested_sale || 0), 0)
+  );
+
+  const totalFinal = roundMoney(
+    rows.reduce((sum, item) => sum + Number(item.final_amount || 0), 0)
+  );
+
+  const rowsWithFinalPct = rows.map((item) => ({
+    ...item,
+    post_rebalance_pct:
+      totalFinal > 0
+        ? roundPct((Number(item.final_amount || 0) / totalFinal) * 100)
+        : 0,
+  }));
+
+  const assetsOutsideBand = enriched.filter((item) => item.outside_band).length;
+
+  return {
+    total_current: roundMoney(totalCurrent),
+    contribution_amount: roundMoney(sanitizedContribution),
+    total_after_contribution: roundMoney(totalAfterContribution),
+    total_final: roundMoney(totalFinal),
+    rebalance_band_pp: roundPct(rebalanceBandPp || 0),
+    total_buy: totalBuy,
+    total_sale: totalSale,
+    assets_outside_band: assetsOutsideBand,
+    plan: rowsWithFinalPct,
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG DOS PRODUTOS
@@ -37,7 +258,6 @@ const products = {
   },
 };
 
-
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT || 465),
@@ -48,11 +268,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 async function sendPurchaseEmail({ email, productKey, productName, sessionId }) {
-  const downloadUrl = `${BASE_URL}/download-ebook?session_id=${encodeURIComponent(sessionId)}`;
+  const downloadUrl = `${BASE_URL}/download-ebook?session_id=${encodeURIComponent(
+    sessionId
+  )}`;
+  const investorAreaUrl = `${BASE_URL}/entrar`;
 
-  // ── Bloco de rodapé reutilizável ──────────────────────────────
   const emailFooter = `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:40px;border-top:1px solid #d4d1cb;">
       <tr>
@@ -66,72 +287,26 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
           </p>
         </td>
       </tr>
-      <tr>
-        <td style="padding:16px 40px 32px;">
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;color:#8a90a2;line-height:1.7;">
-            As informações contidas neste e-mail têm caráter informativo e educacional, não constituindo recomendação de investimento.
-            Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura.
-          </p>
-        </td>
-      </tr>
     </table>
   `;
 
-  // ── Wrapper HTML externo reutilizável ─────────────────────────
   const wrapEmail = (headerLabel, bodyHtml) => `
     <!DOCTYPE html>
     <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-    </head>
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
     <body style="margin:0;padding:0;background:#f7f6f3;-webkit-font-smoothing:antialiased;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f6f3;padding:40px 0;">
         <tr>
           <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" border="0"
-                   style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
-
-              <!-- Header -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
               <tr>
                 <td style="background:#0c0e13;padding:32px 40px;">
-                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td>
-                        <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                                  letter-spacing:0.18em;text-transform:uppercase;color:#a07c30;">
-                          ${headerLabel}
-                        </p>
-                        <p style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;
-                                  letter-spacing:0.02em;color:#ffffff;line-height:1.2;">
-                          Daniel<span style="color:#a07c30;">.</span>
-                        </p>
-                      </td>
-                      <td align="right" valign="middle">
-                        <span style="display:inline-block;padding:5px 12px;font-family:Arial,sans-serif;
-                                     font-size:9px;font-weight:700;letter-spacing:0.14em;
-                                     text-transform:uppercase;color:#ffffff;
-                                     border:1px solid rgba(160,124,48,0.4);">
-                          CEA · CVM Nº 003838-5
-                        </span>
-                      </td>
-                    </tr>
-                  </table>
+                  <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#a07c30;">${headerLabel}</p>
+                  <p style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#ffffff;line-height:1.2;">Daniel<span style="color:#a07c30;">.</span></p>
                 </td>
               </tr>
-
-              <!-- Body -->
-              <tr>
-                <td style="padding:40px 40px 0;">
-                  ${bodyHtml}
-                </td>
-              </tr>
-
-              <!-- Footer -->
-              <tr>
-                <td>${emailFooter}</td>
-              </tr>
-
+              <tr><td style="padding:40px 40px 0;">${bodyHtml}</td></tr>
+              <tr><td>${emailFooter}</td></tr>
             </table>
           </td>
         </tr>
@@ -140,266 +315,26 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     </html>
   `;
 
-  const guaranteeBlock = `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
-      <tr>
-        <td style="padding:18px 20px;">
-          <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                    letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-            Garantia de 7 dias
-          </p>
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
-            Você conta com uma garantia de 7 dias. Se entender que o material ou o serviço
-            não é adequado para você, basta responder este e-mail, no prazo de até
-            <strong style="color:#0c0e13;">7 dias após a compra</strong>, e solicitar o
-            <strong style="color:#0c0e13;">reembolso integral</strong>.
-          </p>
-        </td>
-      </tr>
-    </table>
-  `;
-
-  let subject = "Compra confirmada";
-  let html = "";
-
-  if (productKey === "ebook") {
-    subject = "Seu ebook está disponível · Daniel Ferreira";
-    html = wrapEmail("Confirmação de compra", `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
-                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Pagamento confirmado
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
-                 color:#0c0e13;line-height:1.3;">
-        Seu ebook está pronto para download
-      </h1>
-
+  const subject = "Compra confirmada";
+  const html = wrapEmail(
+    "Confirmação de compra",
+    `
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">Sua compra foi confirmada</h1>
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra. O acesso ao <strong style="color:#0c0e13;">${productName}</strong>
-        foi liberado e você já pode fazer o download pelo botão abaixo.
+        Obrigado pela sua compra de <strong style="color:#0c0e13;">${productName}</strong>.
       </p>
-
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O link é pessoal e intransferível. Em caso de qualquer dificuldade com o acesso,
-        basta responder a este e-mail e eu retorno em até 1 dia útil.
+        Seu ebook pode ser baixado pelo link abaixo. A sua área do investidor ficará disponível em <strong>${investorAreaUrl}</strong> assim que o seu usuário for criado no Supabase.
       </p>
-
-      ${guaranteeBlock}
-
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:36px;">
         <tr>
           <td style="background:#a07c30;">
-            <a href="${downloadUrl}"
-               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
-                      font-size:11px;font-weight:700;letter-spacing:0.12em;
-                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook agora
-            </a>
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Baixar ebook agora</a>
           </td>
         </tr>
       </table>
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `);
-
-  } else if (productKey === "consultoria_avulsa") {
-    subject = "Compra confirmada · Ebook + Consultoria Estratégica";
-    html = wrapEmail("Confirmação de compra", `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
-                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Pagamento confirmado
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
-                 color:#0c0e13;line-height:1.3;">
-        Ebook liberado e consultoria agendada em breve
-      </h1>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
-        foi confirmada com sucesso.
-      </p>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O ebook já está disponível para download. Para a consultoria estratégica, você receberá
-        as instruções de agendamento em até <strong style="color:#0c0e13;">1 dia útil</strong>.
-      </p>
-
-      ${guaranteeBlock}
-
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
-        <tr>
-          <td style="background:#a07c30;">
-            <a href="${downloadUrl}"
-               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
-                      font-size:11px;font-weight:700;letter-spacing:0.12em;
-                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook agora
-            </a>
-          </td>
-        </tr>
-      </table>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              O que está incluso no seu plano
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
-              · Sessão individual completa<br>
-              · Diagnóstico do perfil de risco<br>
-              · Análise do momento financeiro e dos objetivos<br>
-              · Avaliação da carteira atual, quando houver<br>
-              · Plano de investimentos por escrito<br>
-              · Orientação para manutenção da carteira e rebalanceamentos<br>
-              · Suporte por e-mail por 30 dias
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              Próximos passos
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
-              Em até 1 dia útil você receberá um e-mail com o link para agendar sua
-              sessão de consultoria individual. Fique atento à sua caixa de entrada.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `);
-
-  } else if (productKey === "consultoria_premium") {
-    subject = "Compra confirmada · Ebook + Consultoria Premium";
-    html = wrapEmail("Confirmação de compra", `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
-                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Pagamento confirmado
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
-                 color:#0c0e13;line-height:1.3;">
-        Bem-vindo à Consultoria Premium
-      </h1>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra. Sua compra de <strong style="color:#0c0e13;">${productName}</strong>
-        foi confirmada com sucesso.
-      </p>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        O ebook já está liberado para download. Em até <strong style="color:#0c0e13;">1 dia útil</strong>
-        você receberá as instruções completas para darmos início ao processo, incluindo um
-        formulário de contexto financeiro que preparo antes da nossa reunião.
-      </p>
-
-      ${guaranteeBlock}
-
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
-        <tr>
-          <td style="background:#a07c30;">
-            <a href="${downloadUrl}"
-               style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;
-                      font-size:11px;font-weight:700;letter-spacing:0.12em;
-                      text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook agora
-            </a>
-          </td>
-        </tr>
-      </table>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              O que está incluso no seu plano
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
-              · Raio-X financeiro completo enviado antes da reunião<br>
-              · Reunião estratégica aprofundada<br>
-              · Diagnóstico do perfil, objetivos e estrutura patrimonial<br>
-              · Apresentação com plano de investimentos detalhado<br>
-              · Proposta de organização da carteira por classes de ativos<br>
-              · Guia de execução com próximos passos mês a mês<br>
-              · 2 reuniões de retorno para ajustes e acompanhamento<br>
-              · Suporte por WhatsApp por 30 dias<br>
-              · Suporte por e-mail por 60 dias
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;
-                      letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              Próximos passos
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
-              Em até 1 dia útil você receberá um e-mail com o link de agendamento e
-              o formulário de contexto financeiro. Preencha-o com antecedência, pois ele é
-              a base do Raio-X que preparo antes da nossa reunião.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `);
-
-  } else {
-    html = wrapEmail("Confirmação", `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;
-                letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Pagamento confirmado
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;
-                 color:#0c0e13;line-height:1.3;">
-        Sua compra foi confirmada
-      </h1>
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra. Em caso de dúvidas, responda diretamente a este e-mail.
-      </p>
-
-      ${guaranteeBlock}
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `);
-  }
+    `
+  );
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
@@ -408,8 +343,6 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     html,
   });
 }
-
-
 
 async function sendAdminSaleEmail({
   buyerEmail,
@@ -430,91 +363,41 @@ async function sendAdminSaleEmail({
       : "Não informado";
 
   const html = `
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width,initial-scale=1" />
-    </head>
+    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /></head>
     <body style="margin:0;padding:24px;background:#f7f6f3;font-family:Arial,sans-serif;color:#0c0e13;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <table width="100%">
         <tr>
           <td align="center">
-            <table width="640" cellpadding="0" cellspacing="0" border="0"
-                   style="max-width:640px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
+            <table width="640" style="max-width:640px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
               <tr>
                 <td style="background:#0c0e13;padding:24px 28px;">
-                  <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a07c30;">
-                    Nova venda confirmada
-                  </p>
-                  <p style="margin:0;font-size:28px;font-family:Georgia,serif;color:#ffffff;">
-                    Daniel<span style="color:#a07c30;">.</span>
-                  </p>
+                  <p style="margin:0;color:#fff;font-size:28px;font-family:Georgia,serif;">Daniel<span style="color:#a07c30;">.</span></p>
                 </td>
               </tr>
               <tr>
                 <td style="padding:28px;">
                   <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">Você vendeu.</h1>
-
-                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-                    <tr>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Produto</strong></td>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productName}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Tipo</strong></td>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${mode}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Valor</strong></td>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${amountFormatted}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>E-mail do comprador</strong></td>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${buyerEmail || "Não informado"}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Produto key</strong></td>
-                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productKey}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:10px 0;"><strong>Session ID</strong></td>
-                      <td style="padding:10px 0;">${sessionId}</td>
-                    </tr>
-                  </table>
-
-                  ${
-                    buyerEmail
-                      ? `
-                    <div style="margin-top:24px;">
-                      <a href="mailto:${buyerEmail}?subject=${encodeURIComponent(
-                          "Agendamento da sua consultoria"
-                        )}"
-                         style="display:inline-block;padding:14px 22px;background:#a07c30;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">
-                        Responder comprador
-                      </a>
-                    </div>
-                  `
-                      : ""
-                  }
-
-                  <p style="margin:24px 0 0;font-size:13px;color:#58607a;line-height:1.7;">
-                    Esse e-mail foi enviado automaticamente pelo webhook da Stripe após confirmação de pagamento.
-                  </p>
+                  <p><strong>Produto:</strong> ${productName}</p>
+                  <p><strong>Tipo:</strong> ${mode}</p>
+                  <p><strong>Valor:</strong> ${amountFormatted}</p>
+                  <p><strong>E-mail:</strong> ${buyerEmail || "Não informado"}</p>
+                  <p><strong>Product key:</strong> ${productKey}</p>
+                  <p><strong>Session ID:</strong> ${sessionId}</p>
                 </td>
               </tr>
             </table>
           </td>
         </tr>
       </table>
-    </body>
-    </html>
+    </body></html>
   `;
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
     to: adminEmail,
-    subject: `Nova venda confirmada · ${productName} · ${buyerEmail || "sem e-mail"}`,
+    subject: `Nova venda confirmada · ${productName} · ${
+      buyerEmail || "sem e-mail"
+    }`,
     html,
   });
 }
@@ -526,15 +409,6 @@ async function handleConfirmedSale(session) {
   const amountTotal = session.amount_total ?? null;
   const mode = session.mode || "payment";
 
-  console.log("✅ Venda confirmada:", {
-    sessionId: session.id,
-    email,
-    productKey,
-    productName,
-    paymentStatus: session.payment_status,
-    amountTotal,
-  });
-
   if (email) {
     await sendPurchaseEmail({
       email,
@@ -542,7 +416,6 @@ async function handleConfirmedSale(session) {
       productName,
       sessionId: session.id,
     });
-    console.log("📧 E-mail enviado para comprador:", email);
   }
 
   await sendAdminSaleEmail({
@@ -553,14 +426,10 @@ async function handleConfirmedSale(session) {
     amountTotal,
     mode,
   });
-  console.log("📨 E-mail interno enviado para o admin");
 }
-
-
 
 // ─────────────────────────────────────────────────────────────
 // WEBHOOK STRIPE
-// IMPORTANTE: precisa vir antes do express.json()
 // ─────────────────────────────────────────────────────────────
 app.post(
   "/webhook",
@@ -584,65 +453,14 @@ app.post(
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object;
-
           if (session.payment_status === "paid") {
             await handleConfirmedSale(session);
-          } else {
-            console.log("ℹ️ Checkout concluído, mas ainda não pago:", {
-              sessionId: session.id,
-              paymentStatus: session.payment_status,
-            });
           }
-
           break;
         }
 
         case "checkout.session.async_payment_succeeded": {
-          const session = event.data.object;
-          await handleConfirmedSale(session);
-          break;
-        }
-
-        case "checkout.session.async_payment_failed": {
-          const session = event.data.object;
-          console.log("❌ Pagamento assíncrono falhou:", {
-            sessionId: session.id,
-            paymentStatus: session.payment_status,
-            customerEmail:
-              session.customer_details?.email || session.customer_email || null,
-            productKey: session.metadata?.product_key || null,
-            productName: session.metadata?.product_name || null,
-          });
-          break;
-        }
-
-        case "invoice.payment_failed": {
-          const invoice = event.data.object;
-          console.log("❌ Falha na cobrança recorrente:", {
-            invoiceId: invoice.id,
-            customerId: invoice.customer,
-            subscriptionId: invoice.subscription,
-          });
-          break;
-        }
-
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object;
-          console.log("ℹ️ Assinatura cancelada:", {
-            subscriptionId: subscription.id,
-            customerId: subscription.customer,
-            status: subscription.status,
-          });
-          break;
-        }
-
-        case "payment_intent.payment_failed": {
-          const paymentIntent = event.data.object;
-          console.log("❌ Pagamento falhou:", {
-            paymentIntentId: paymentIntent.id,
-            status: paymentIntent.status,
-            customerId: paymentIntent.customer,
-          });
+          await handleConfirmedSale(event.data.object);
           break;
         }
 
@@ -659,9 +477,9 @@ app.post(
 );
 
 // ─────────────────────────────────────────────────────────────
-// MIDDLEWARES GERAIS
+// MIDDLEWARES
 // ─────────────────────────────────────────────────────────────
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
 
@@ -674,17 +492,318 @@ app.get("/health", (_req, res) => {
     env: {
       hasSecretKey: Boolean(process.env.STRIPE_SECRET_KEY),
       hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-      hasPriceEbook: Boolean(process.env.STRIPE_PRICE_EBOOK),
-      hasPriceConsultoriaAvulsa: Boolean(
-        process.env.STRIPE_PRICE_CONSULTORIA_AVULSA
-      ),
-      hasPriceConsultoriaMensal: Boolean(
-        process.env.STRIPE_PRICE_CONSULTORIA_MENSAL
-      ),
+      hasSupabaseUrl: Boolean(SUPABASE_URL),
+      hasSupabaseAnonKey: Boolean(SUPABASE_ANON_KEY),
+      hasSupabaseServiceRoleKey: Boolean(SUPABASE_SERVICE_ROLE_KEY),
       baseUrl: BASE_URL,
     },
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+// SUPABASE CONFIG PARA O FRONT
+// ─────────────────────────────────────────────────────────────
+app.get("/api/supabase-config", requireSupabase, (_req, res) => {
+  res.json({
+    url: SUPABASE_URL,
+    anonKey: SUPABASE_ANON_KEY,
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// ÁREA DO INVESTIDOR - DADOS DO CLIENTE
+// ─────────────────────────────────────────────────────────────
+app.get(
+  "/api/investor/me",
+  requireSupabase,
+  requireInvestorAuth,
+  async (req, res) => {
+    const user = req.investorUser;
+
+    const { data, error } = await supabaseAdmin
+      .from("userData")
+      .select("*")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao buscar userData:", error);
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar dados do investidor." });
+    }
+
+    if (!data) {
+      return res
+        .status(404)
+        .json({ error: "Cadastro do investidor não encontrado." });
+    }
+
+    await supabaseAdmin
+      .from("userData")
+      .update({ last_client_access_at: new Date().toISOString() })
+      .eq("auth_user_id", user.id);
+
+    return res.json({
+      authUser: {
+        id: user.id,
+        email: user.email,
+      },
+      investorData: data,
+    });
+  }
+);
+
+// ─────────────────────────────────────────────────────────────
+// SALVAR POSIÇÃO DO DIA
+// ─────────────────────────────────────────────────────────────
+app.post(
+  "/api/investor/snapshot",
+  requireSupabase,
+  requireInvestorAuth,
+  async (req, res) => {
+    const user = req.investorUser;
+    const { snapshotDate, currentPositions } = req.body || {};
+
+    if (!snapshotDate || !Array.isArray(currentPositions)) {
+      return res.status(400).json({
+        error: "snapshotDate e currentPositions são obrigatórios.",
+      });
+    }
+
+    const { data: currentRow, error: loadError } = await supabaseAdmin
+      .from("userData")
+      .select("allocation_history")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (loadError) {
+      return res
+        .status(500)
+        .json({ error: "Erro ao carregar histórico atual." });
+    }
+
+    const allocationHistory = Array.isArray(currentRow?.allocation_history)
+      ? currentRow.allocation_history
+      : [];
+
+    const nextHistory = [
+      ...allocationHistory,
+      {
+        snapshotDate,
+        capturedAt: new Date().toISOString(),
+        positions: currentPositions,
+      },
+    ];
+
+    const { error: updateError } = await supabaseAdmin
+      .from("userData")
+      .update({
+        current_positions: currentPositions,
+        allocation_history: nextHistory,
+        last_snapshot_date: snapshotDate,
+      })
+      .eq("auth_user_id", user.id);
+
+    if (updateError) {
+      return res.status(500).json({ error: "Erro ao salvar snapshot." });
+    }
+
+    return res.json({ ok: true, allocationHistory: nextHistory });
+  }
+);
+
+// ─────────────────────────────────────────────────────────────
+// CALCULAR REBALANCEAMENTO
+// ─────────────────────────────────────────────────────────────
+app.post(
+  "/api/investor/rebalance-plan",
+  requireSupabase,
+  requireInvestorAuth,
+  async (req, res) => {
+    try {
+      const user = req.investorUser;
+      const { snapshotDate, currentPositions, contributionAmount } =
+        req.body || {};
+
+      const parsedContribution =
+        contributionAmount === "" ||
+        contributionAmount === null ||
+        contributionAmount === undefined
+          ? 0
+          : Number(contributionAmount);
+
+      if (!snapshotDate) {
+        return res.status(400).json({
+          error: "A data da carteira é obrigatória.",
+        });
+      }
+
+      if (!Array.isArray(currentPositions) || currentPositions.length === 0) {
+        return res.status(400).json({
+          error: "As posições atuais da carteira são obrigatórias.",
+        });
+      }
+
+      if (Number.isNaN(parsedContribution) || parsedContribution < 0) {
+        return res.status(400).json({
+          error: "O novo aporte deve ser um número maior ou igual a zero.",
+        });
+      }
+
+      const { data: investorData, error: investorError } = await supabaseAdmin
+        .from("userData")
+        .select("*")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (investorError || !investorData) {
+        return res.status(404).json({
+          error: "Dados do investidor não encontrados.",
+        });
+      }
+
+      const targetMicro = Array.isArray(investorData.target_micro)
+        ? investorData.target_micro
+        : [];
+
+      if (targetMicro.length === 0) {
+        return res.status(400).json({
+          error: "Não existe alocação micro cadastrada para este cliente.",
+        });
+      }
+
+      const normalizedPositions = normalizePositions(currentPositions, targetMicro);
+
+      const rebalanceBandPp = Number(investorData.rebalance_band_pp || 0);
+
+      const result = buildRebalancePlan({
+        positions: normalizedPositions,
+        contributionAmount: parsedContribution,
+        rebalanceBandPp,
+      });
+
+      const rebalanceHistory = Array.isArray(investorData.rebalance_history)
+        ? investorData.rebalance_history
+        : [];
+
+      const eventRecord = {
+        snapshotDate,
+        createdAt: new Date().toISOString(),
+        contributionAmount: result.contribution_amount,
+        summary: {
+          totalCurrent: result.total_current,
+          totalAfterContribution: result.total_after_contribution,
+          totalFinal: result.total_final,
+          rebalanceBandPp: result.rebalance_band_pp,
+          totalBuy: result.total_buy,
+          totalSale: result.total_sale,
+          assetsOutsideBand: result.assets_outside_band,
+        },
+        plan: result.plan,
+      };
+
+      await supabaseAdmin
+        .from("userData")
+        .update({ rebalance_history: [...rebalanceHistory, eventRecord] })
+        .eq("auth_user_id", user.id);
+
+      return res.json({
+        ok: true,
+        snapshotDate,
+        contributionAmount: result.contribution_amount,
+        summary: {
+          totalCurrent: result.total_current,
+          totalAfterContribution: result.total_after_contribution,
+          totalFinal: result.total_final,
+          rebalanceBandPp: result.rebalance_band_pp,
+          totalBuy: result.total_buy,
+          totalSale: result.total_sale,
+          assetsOutsideBand: result.assets_outside_band,
+        },
+        plan: result.plan,
+      });
+    } catch (err) {
+      console.error("❌ Erro ao calcular rebalanceamento:", err);
+      return res.status(500).json({
+        error: "Erro interno ao calcular rebalanceamento.",
+      });
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────
+// CRIAR USUÁRIO DO INVESTIDOR NO SUPABASE
+// ─────────────────────────────────────────────────────────────
+app.post(
+  "/admin/create-investor-user",
+  requireSupabase,
+  requireAdminSecret,
+  async (req, res) => {
+    const {
+      email,
+      password,
+      clientName,
+      planType = "consultoria_avulsa",
+      clientStatus = "active",
+      profileLabel = null,
+      profileIndex = null,
+      profileSummary = null,
+      targetMacro = [],
+      targetMicro = [],
+    } = req.body || {};
+
+    if (!email || !password || !clientName) {
+      return res
+        .status(400)
+        .json({ error: "email, password e clientName são obrigatórios." });
+    }
+
+    const { data: created, error: createError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name: clientName },
+      });
+
+    if (createError) {
+      return res.status(400).json({ error: createError.message });
+    }
+
+    const authUserId = created.user?.id;
+
+    const { error: upsertError } = await supabaseAdmin.from("userData").upsert({
+      auth_user_id: authUserId,
+      client_email: email,
+      client_name: clientName,
+      plan_type: planType,
+      client_status: clientStatus,
+      profile_label: profileLabel,
+      profile_index: profileIndex,
+      profile_summary: profileSummary,
+      target_macro: targetMacro,
+      target_micro: targetMicro,
+    });
+
+    if (upsertError) {
+      return res.status(500).json({
+        error: "Usuário Auth criado, mas falhou ao gravar userData.",
+        details: upsertError.message,
+        auth_user_id: authUserId,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      auth_user_id: authUserId,
+      email,
+      tempPassword: password,
+      message:
+        "Usuário do investidor criado com sucesso no Supabase Auth e em userData.",
+    });
+  }
+);
 
 // ─────────────────────────────────────────────────────────────
 // CRIAR CHECKOUT SESSION
@@ -706,9 +825,7 @@ app.post("/create-checkout-session", async (req, res) => {
     }
 
     const paymentMethods =
-      selectedProduct.mode === "subscription"
-        ? ["card"]
-        : ["card", "boleto"];
+      selectedProduct.mode === "subscription" ? ["card"] : ["card", "boleto"];
 
     const session = await stripe.checkout.sessions.create({
       mode: selectedProduct.mode,
@@ -754,7 +871,8 @@ app.get("/verificar-sessao", async (req, res) => {
       id: session.id,
       status: session.payment_status,
       checkout_status: session.status,
-      customer_email: session.customer_details?.email || session.customer_email || null,
+      customer_email:
+        session.customer_details?.email || session.customer_email || null,
       product_key: session.metadata?.product_key || null,
       product_name: session.metadata?.product_name || null,
       mode: session.mode || null,
@@ -767,7 +885,7 @@ app.get("/verificar-sessao", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// LIBERAR DOWNLOAD DO EBOOK APÓS PAGAMENTO CONFIRMADO
+// LIBERAR DOWNLOAD DO EBOOK
 // ─────────────────────────────────────────────────────────────
 app.get("/download-ebook", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -780,14 +898,12 @@ app.get("/download-ebook", async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     const isPaid = session.payment_status === "paid";
-
     const allowedProducts = [
       "ebook",
       "consultoria_avulsa",
       "consultoria_mensal",
       "consultoria_premium",
     ];
-
     const isAllowed = allowedProducts.includes(session.metadata?.product_key);
 
     if (!isPaid) {
@@ -798,7 +914,11 @@ app.get("/download-ebook", async (req, res) => {
       return res.status(403).send("Esta compra não dá acesso ao ebook.");
     }
 
-    const ebookPath = path.join(PUBLIC_DIR, "ebook", "Investimentos para Iniciantes.pdf");
+    const ebookPath = path.join(
+      PUBLIC_DIR,
+      "ebook",
+      "Investimentos para Iniciantes.pdf"
+    );
 
     if (!fs.existsSync(ebookPath)) {
       return res.status(404).send("Arquivo do ebook não encontrado.");
@@ -812,28 +932,37 @@ app.get("/download-ebook", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// ROTAS DE PÁGINAS PRINCIPAIS
+// ROTAS DE PÁGINAS
 // ─────────────────────────────────────────────────────────────
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
+app.get("/", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"))
+);
 
-app.get("/sucesso", (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
-});
+app.get("/sucesso", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"))
+);
 
-app.get("/politica-de-privacidade", (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "politica-de-privacidade.html"));
-});
+app.get("/entrar", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "entrar.html"))
+);
 
-app.get("/politica-de-cookies", (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "politica-de-cookies.html"));
-});
+app.get("/area-investidor", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "area-investidor.html"))
+);
 
-app.get("/termos-de-uso", (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "termos-de-uso.html"));
-});
+app.get("/politica-de-privacidade", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "politica-de-privacidade.html"))
+);
 
+app.get("/politica-de-cookies", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "politica-de-cookies.html"))
+);
+
+app.get("/termos-de-uso", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "termos-de-uso.html"))
+);
+
+// ─────────────────────────────────────────────────────────────
 // START
 // ─────────────────────────────────────────────────────────────
 if (require.main === module) {
