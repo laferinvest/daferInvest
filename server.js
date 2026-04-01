@@ -965,6 +965,10 @@ app.get("/termos-de-uso", (_req, res) =>
 app.get("/ebook", (_req, res) =>
   res.sendFile(path.join(PUBLIC_DIR, "ebook.html"))
 );
+
+app.get("/entrar", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "entrar.html"))
+);
 // ─────────────────────────────────────────────────────────────
 // START
 // ─────────────────────────────────────────────────────────────
