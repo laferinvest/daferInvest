@@ -9,6 +9,7 @@
     { "source": "/politica-de-cookies", "destination": "/api" },
     { "source": "/politica-de-privacidade", "destination": "/api" },
     { "source": "/termos-de-uso", "destination": "/api" },
+    { "source": "/lpEbook", "destination": "/api" },
     { "source": "/", "destination": "/api" }
   ]
 }
