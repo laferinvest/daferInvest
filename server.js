@@ -473,6 +473,10 @@ app.get("/ebook", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "ebook.html"));
 });
 
+app.get("/consultoria", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
+});
+
 app.get("/sucesso", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
 });
