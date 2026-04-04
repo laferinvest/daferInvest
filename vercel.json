@@ -11,6 +11,8 @@
     { "source": "/termos-de-uso", "destination": "/api" },
     { "source": "/ebook", "destination": "/api" },
     { "source": "/entrar", "destination": "/api" },
+    { "source": "/consultoria", "destination": "/api" },
+    { "source": "/preview", "destination": "/api" },
     { "source": "/", "destination": "/api" }
   ]
 }

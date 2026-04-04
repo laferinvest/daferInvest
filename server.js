@@ -477,6 +477,10 @@ app.get("/consultoria", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
 });
 
+app.get("/preview", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "preview.html"));
+});
+
 app.get("/sucesso", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
 });
