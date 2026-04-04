@@ -380,13 +380,12 @@ nav{
     <div class="container nav-inner">
       <a class="logo" href="/">Daniel<span>.</span></a>
       <div class="nav-actions">
-        <button class="btn btn-dark" id="logout-btn">Sair</button>
+        <button class="btn btn-dark" id="logout-btn" type="button">Sair</button>
       </div>
     </div>
   </nav>
 
   <main class="container">
-    <div id="message" class="msg"></div>
 
     <section class="hero">
       <div>
@@ -517,14 +516,59 @@ nav{
     </section>
   </main>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  
+  <script>
+    const DEMO_DATA = {
+      authUser: { email: 'daniel@daferinvest.com.br' },
+      investorData: {
+        client_name: 'Daniel Ferreira',
+        client_email: 'daniel@daferinvest.com.br',
+        profile_label: 'MODERADO',
+        profile_summary: 'Carteira voltada à preservação patrimonial com crescimento gradual, mantendo predominância em renda fixa e uma parcela controlada de ativos de risco para ganho real no longo prazo.',
+        planning_method_label: 'Plano por mandato de risco',
+        advisor_notes: 'Priorizar consistência, diversificação simples e disciplina de rebalanceamento. Evitar concentração excessiva em ativos de maior volatilidade e manter execução gradual dos aportes.',
+        profile_index: 4,
+        rebalance_band_pp: 3,
+        drift_warning_pp: 5,
+        risk_capacity_score: 72.5,
+        risk_tolerance_score: 61,
+        risk_implementation_score: 58,
+        target_macro: [
+          { name: 'Renda Fixa', target_pct: 80 },
+          { name: 'Ações', target_pct: 12 },
+          { name: 'Exterior', target_pct: 8 }
+        ],
+        target_micro: [
+          { code: 'cdi', name: 'Pós-fixado CDI', bucket: 'Renda Fixa', target_pct: 35 },
+          { code: 'ipca', name: 'Tesouro IPCA+', bucket: 'Renda Fixa', target_pct: 25 },
+          { code: 'cp-hg', name: 'Crédito Privado High Grade', bucket: 'Renda Fixa', target_pct: 20 },
+          { code: 'etf-br', name: 'ETF de Ações Brasil', bucket: 'Ações', target_pct: 12 },
+          { code: 'etf-int', name: 'ETF Internacional', bucket: 'Exterior', target_pct: 8 }
+        ],
+        current_positions: [
+          { code: 'cdi', name: 'Pós-fixado CDI', bucket: 'Renda Fixa', amount: 5220.44 },
+          { code: 'ipca', name: 'Tesouro IPCA+', bucket: 'Renda Fixa', amount: 2410.12 },
+          { code: 'cp-hg', name: 'Crédito Privado High Grade', bucket: 'Renda Fixa', amount: 1840.77 },
+          { code: 'etf-br', name: 'ETF de Ações Brasil', bucket: 'Ações', amount: 990.40 },
+          { code: 'etf-int', name: 'ETF Internacional', bucket: 'Exterior', amount: 738.26 }
+        ],
+        allocation_history: [
+          { date: '2026-01-10', total: 8200.00 },
+          { date: '2026-01-24', total: 8800.00 },
+          { date: '2026-02-10', total: 9600.00 },
+          { date: '2026-02-24', total: 9600.00 },
+          { date: '2026-03-10', total: 8900.00 },
+          { date: '2026-03-24', total: 10900.00 },
+          { date: '2026-03-30', total: 11000.00 }
+        ]
+      }
+    };
 
     const messageEl = document.getElementById('message');
     const positionsBox = document.getElementById('positions-box');
     const positionDateInput = document.getElementById('positionDate');
     const contributionInput = document.getElementById('contributionAmount');
-    positionDateInput.value = new Date().toISOString().slice(0,10);
+    positionDateInput.value = '2026-04-04';
 
     function showMessage(text, type='error') {
       messageEl.textContent = text;
@@ -532,54 +576,22 @@ nav{
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function getSupabaseClient() {
-      const res = await fetch('/api/supabase-config');
-      if (!res.ok) throw new Error('Supabase não configurado no servidor.');
-      const cfg = await res.json();
-      return createClient(cfg.url, cfg.anonKey);
-    }
-
-    const supabase = await getSupabaseClient();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (!session?.access_token) window.location.href = '/entrar';
-
-    async function authFetch(url, options={}) {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        window.location.href = '/entrar';
-        return;
-      }
-      const headers = new Headers(options.headers || {});
-      headers.set('Authorization', `Bearer ${token}`);
-      if (!(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-      return fetch(url, { ...options, headers });
-    }
-
     function money(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0)); }
     function pct(v){ return `${Number(v||0).toFixed(2)}%`; }
     function shortDate(v){ if(!v) return '—'; const d=new Date(v+'T00:00:00'); return d.toLocaleDateString('pt-BR'); }
 
-  function drawHistory(history) {
+    function drawHistory(history) {
       const canvas = document.getElementById('history-chart');
       const ctx = canvas.getContext('2d');
-
-      // 1. CORREÇÃO DE DEFINIÇÃO (Alta Resolução / Telas Retina)
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       const cssWidth = rect.width || 980;
       const cssHeight = rect.height || 360;
-
-      // Multiplica os pixels internos do canvas pela densidade da tela
       canvas.width = cssWidth * dpr;
       canvas.height = cssHeight * dpr;
-      // Normaliza o contexto para usarmos as medidas normais do CSS
       ctx.scale(dpr, dpr);
-
       const width = cssWidth;
       const height = cssHeight;
-
       ctx.clearRect(0, 0, width, height);
 
       const items = (Array.isArray(history) ? history : [])
@@ -594,7 +606,6 @@ nav{
         ? `${shortDate(items[0].date)} até ${shortDate(items[items.length - 1].date)}`
         : 'Sem histórico ainda';
 
-      // Margens do gráfico
       const left = 120, right = 30, top = 30, bottom = 44;
       const plotW = width - left - right;
       const plotH = height - top - bottom;
@@ -613,41 +624,32 @@ nav{
       const yMin = Math.max(0, minValue - padding * 0.25);
       const yMax = maxValue + padding;
       const ticks = 5;
-
       const yFor = (value) => top + plotH - ((value - yMin) / (yMax - yMin || 1)) * plotH;
       const xFor = (index) => left + (items.length === 1 ? plotW/2 : (plotW * index/(items.length - 1)));
       const points = items.map((item, i) => ({ x: xFor(i), y: yFor(item.total) }));
 
-      // 2. DESENHO DO EIXO Y E GRID HORIZONTAL (Elegante e tracejado)
       ctx.font = '500 12px Inter, system-ui, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-
       for (let i = 0; i <= ticks; i++) {
         const value = yMin + ((yMax - yMin) * i / ticks);
         const y = yFor(value);
-
-        // Linha do Grid
         ctx.beginPath();
-        ctx.setLineDash([4, 5]); // Efeito tracejado suave
+        ctx.setLineDash([4, 5]);
         ctx.moveTo(left, y);
         ctx.lineTo(width - right, y);
         ctx.strokeStyle = 'rgba(212, 209, 203, 0.45)';
         ctx.lineWidth = 1;
         ctx.stroke();
-
-        // Label de Valor Monetário
         ctx.fillStyle = '#8b93a8';
         ctx.fillText(money(value), left - 16, y);
       }
-      ctx.setLineDash([]); // Reseta o tracejado para as próximas linhas
+      ctx.setLineDash([]);
 
-      // 3. LABELS DO EIXO X (Datas inteligentes, evita sobreposição)
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      const maxLabels = width > 600 ? 8 : 4; // Responsividade para mobile
+      const maxLabels = width > 600 ? 8 : 4;
       const step = Math.ceil(items.length / maxLabels);
-
       items.forEach((item, i) => {
         const x = xFor(i);
         if (i === 0 || i === items.length - 1 || i % step === 0) {
@@ -656,16 +658,12 @@ nav{
         }
       });
 
-      // 4. GRADIENTE ABAIXO DA LINHA (Fundo dinâmico)
       const gradient = ctx.createLinearGradient(0, top, 0, height - bottom);
-      gradient.addColorStop(0, 'rgba(160,124,48,0.22)'); // Dourado translúcido
-      gradient.addColorStop(1, 'rgba(160,124,48,0.00)'); // Esmaecendo para transparente
-
+      gradient.addColorStop(0, 'rgba(160,124,48,0.22)');
+      gradient.addColorStop(1, 'rgba(160,124,48,0.00)');
       ctx.beginPath();
-      ctx.moveTo(points[0].x, height - bottom); // Começa na base
-      ctx.lineTo(points[0].x, points[0].y); // Vai para o 1º ponto
-
-      // Curvas Suaves (Bezier) para o fundo
+      ctx.moveTo(points[0].x, height - bottom);
+      ctx.lineTo(points[0].x, points[0].y);
       if (points.length === 1) {
         ctx.lineTo(points[0].x, points[0].y);
       } else {
@@ -676,51 +674,42 @@ nav{
           ctx.bezierCurveTo(cpX, current.y, cpX, next.y, next.x, next.y);
         }
       }
-
-      ctx.lineTo(points[points.length - 1].x, height - bottom); // Desce até a base do último ponto
+      ctx.lineTo(points[points.length - 1].x, height - bottom);
       ctx.closePath();
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // 5. LINHA PRINCIPAL DA CARTEIRA COM EFEITO DE BRILHO (Glow)
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
-      
       if (points.length > 1) {
         for (let i = 0; i < points.length - 1; i++) {
           const current = points[i];
           const next = points[i + 1];
           const cpX = (current.x + next.x) / 2;
-          // Desenha curvas suaves entre os pontos
           ctx.bezierCurveTo(cpX, current.y, cpX, next.y, next.x, next.y);
         }
       }
-
-      ctx.strokeStyle = '#a07c30'; // Cor principal (Dourada)
+      ctx.strokeStyle = '#a07c30';
       ctx.lineWidth = 3;
-      
-      // Configuração de Sombra (Glow Effect)
       ctx.shadowColor = 'rgba(160,124,48,0.35)';
       ctx.shadowBlur = 10;
       ctx.shadowOffsetY = 4;
       ctx.stroke();
-
-      // Desliga a sombra para desenhar os pontos
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
 
-      // 6. PONTOS DOS DADOS (Anéis elegantes)
       points.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff'; // Interior branco
+        ctx.fillStyle = '#fff';
         ctx.fill();
         ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#a07c30'; // Borda dourada
+        ctx.strokeStyle = '#a07c30';
         ctx.stroke();
       });
     }
+
     function renderPositions(targetMicro, currentPositions) {
       positionsBox.innerHTML = '';
       const byCode = new Map((currentPositions || []).map(p => [p.code, p]));
@@ -772,22 +761,86 @@ nav{
       return 'Manter como está.';
     }
 
-    async function loadInvestor() {
-      const res = await authFetch('/api/investor/me');
-      if (!res.ok) {
-        if (res.status === 401) {
-          await supabase.auth.signOut();
-          window.location.href = '/entrar';
-          return;
-        }
-        const err = await res.json().catch(()=>({ error:'Falha ao carregar dados.' }));
-        throw new Error(err.error || 'Falha ao carregar dados.');
-      }
+    function buildRebalancePlan(currentPositions, contributionAmount) {
+      const targetMicro = window.__investorData.target_micro || [];
+      const currentMap = new Map(currentPositions.map(item => [item.code, item]));
+      const currentTotal = currentPositions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const totalAfter = currentTotal + Number(contributionAmount || 0);
 
-      const payload = await res.json();
+      return targetMicro.map(item => {
+        const currentAmount = Number(currentMap.get(item.code)?.amount || 0);
+        const targetAmountAfterContribution = Number((totalAfter * Number(item.target_pct || 0) / 100).toFixed(2));
+        const diff = Number((targetAmountAfterContribution - currentAmount).toFixed(2));
+        const buy = diff > 0 ? diff : 0;
+        const sell = diff < 0 ? Math.abs(diff) : 0;
+        const postPct = totalAfter > 0 ? (targetAmountAfterContribution / totalAfter) * 100 : 0;
+        return {
+          code: item.code,
+          name: item.name,
+          current_amount: currentAmount,
+          target_amount_after_contribution: targetAmountAfterContribution,
+          suggested_contribution: buy,
+          suggested_sale: sell,
+          post_rebalance_pct: postPct
+        };
+      });
+    }
+
+    function renderRebalancePlan(plan, contributionAmount) {
+      const totalBuy = plan.reduce((s,item)=>s+Number(item.suggested_contribution || item.suggested_buy || 0),0);
+      const totalSell = plan.reduce((s,item)=>s+Number(item.suggested_sale || item.suggested_sell || 0),0);
+      const estimatedAfter = plan.reduce((s,item)=>s+Number(item.target_amount_after_contribution || 0),0);
+      const actionsCount = plan.filter(item => Number(item.suggested_contribution || item.suggested_buy || 0) > 0 || Number(item.suggested_sale || item.suggested_sell || 0) > 0).length;
+
+      document.getElementById('rebalance-summary').innerHTML = `
+        <div class="summary-box"><div class="k">Novo aporte</div><div class="v">${money(contributionAmount)}</div><div class="s">Valor novo entrando na carteira.</div></div>
+        <div class="summary-box"><div class="k">Compras sugeridas</div><div class="v">${money(totalBuy)}</div><div class="s">Quanto direcionar para os ativos abaixo do alvo.</div></div>
+        <div class="summary-box"><div class="k">Vendas sugeridas</div><div class="v">${money(totalSell)}</div><div class="s">Quanto reduzir dos ativos acima do alvo.</div></div>
+        <div class="summary-box"><div class="k">Ações sugeridas</div><div class="v">${actionsCount}</div><div class="s">Carteira estimada após os ajustes: ${money(estimatedAfter)}.</div></div>
+      `;
+
+      const desktopRows = plan.map(item => {
+        const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
+        const sell = Number(item.suggested_sale || item.suggested_sell || 0);
+        const postPct = Number(item.post_rebalance_pct || 0);
+        return `
+          <tr>
+            <td>${item.name}</td>
+            <td class="num">${money(item.current_amount)}</td>
+            <td class="num">${money(item.target_amount_after_contribution)}</td>
+            <td class="num ${buy > 0 ? 'good' : ''}">${buy > 0 ? money(buy) : '—'}</td>
+            <td class="num ${sell > 0 ? 'bad' : ''}">${sell > 0 ? money(sell) : '—'}</td>
+            <td class="num">${pct(postPct)}</td>
+            <td>${actionText(item)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('rebalance-body').innerHTML = desktopRows || '<tr><td colspan="7">Nenhum ajuste foi necessário.</td></tr>';
+      document.getElementById('rebalance-mobile-list').innerHTML = plan.map(item => {
+        const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
+        const sell = Number(item.suggested_sale || item.suggested_sell || 0);
+        const postPct = Number(item.post_rebalance_pct || 0);
+        return `
+          <div class="rebalance-mobile-card">
+            <div class="rebalance-mobile-title">${item.name}</div>
+            <div class="rebalance-mobile-grid">
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">Hoje</div><div class="rebalance-mobile-v">${money(item.current_amount)}</div></div>
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">Alvo após ajuste</div><div class="rebalance-mobile-v">${money(item.target_amount_after_contribution)}</div></div>
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">Aportar</div><div class="rebalance-mobile-v ${buy > 0 ? 'good' : ''}">${buy > 0 ? money(buy) : '—'}</div></div>
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">Vender</div><div class="rebalance-mobile-v ${sell > 0 ? 'bad' : ''}">${sell > 0 ? money(sell) : '—'}</div></div>
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">% pós-ajuste</div><div class="rebalance-mobile-v">${pct(postPct)}</div></div>
+              <div class="rebalance-mobile-item"><div class="rebalance-mobile-k">Ação sugerida</div><div class="rebalance-mobile-v">${actionText(item)}</div></div>
+            </div>
+          </div>
+        `;
+      }).join('') || '<div class="rebalance-mobile-card">Nenhum ajuste foi necessário.</div>';
+    }
+
+    function loadInvestor() {
+      const payload = DEMO_DATA;
       const data = payload.investorData;
       window.__investorData = data;
-
       document.getElementById('client-name').textContent = data.client_name || '—';
       document.getElementById('client-email').textContent = payload.authUser?.email || data.client_email || '—';
       document.getElementById('profile-label').textContent = data.profile_label || '—';
@@ -795,151 +848,47 @@ nav{
       document.getElementById('method-label').textContent = data.planning_method_label || 'Sem método definido';
       document.getElementById('advisor-notes').textContent = data.advisor_notes || 'Sem observações adicionais no momento.';
       document.getElementById('hero-summary').textContent = data.profile_summary || 'Aqui você acompanha sua estratégia, seus investimentos recomendados e os ajustes sugeridos para a carteira.';
-
       document.getElementById('hero-side-pills').innerHTML = '';
-
       document.getElementById('meta-pills').innerHTML = `
         <span class="pill soft">Índice do perfil: ${data.profile_index ?? '—'}</span>
         <span class="pill soft">Faixa de rebalanceamento: ${data.rebalance_band_pp ?? '—'} p.p.</span>
         <span class="pill soft">Alerta de desvio: ${data.drift_warning_pp ?? '—'} p.p.</span>
       `;
-
       document.getElementById('score-list').innerHTML = [
         renderScoreCard('Capacidade de risco', data.risk_capacity_score, 'Quanto sua estrutura financeira comporta em termos de oscilação e prazo.'),
         renderScoreCard('Tolerância ao risco', data.risk_tolerance_score, 'Quanto desconforto com perdas temporárias você tende a aceitar na prática.'),
         renderScoreCard('Faixa inicial de implementação', data.risk_implementation_score, 'Faixa usada para transformar o diagnóstico em carteira executável.')
       ].join('');
-
-      document.getElementById('macro-body').innerHTML = (data.target_macro || []).map(item => `
-        <tr><td>${item.name}</td><td class="num">${pct(item.target_pct)}</td></tr>
-      `).join('') || '<tr><td colspan="2">Sem divisão macro cadastrada.</td></tr>';
-
-      document.getElementById('micro-body').innerHTML = (data.target_micro || []).map(item => `
-        <tr><td>${item.name}</td><td><span class="tag">${item.bucket || 'Carteira'}</span></td><td class="num">${pct(item.target_pct)}</td></tr>
-      `).join('') || '<tr><td colspan="3">Sem investimentos recomendados cadastrados.</td></tr>';
-
+      document.getElementById('macro-body').innerHTML = (data.target_macro || []).map(item => `<tr><td>${item.name}</td><td class="num">${pct(item.target_pct)}</td></tr>`).join('') || '<tr><td colspan="2">Sem divisão macro cadastrada.</td></tr>';
+      document.getElementById('micro-body').innerHTML = (data.target_micro || []).map(item => `<tr><td>${item.name}</td><td><span class="tag">${item.bucket || 'Carteira'}</span></td><td class="num">${pct(item.target_pct)}</td></tr>`).join('') || '<tr><td colspan="3">Sem investimentos recomendados cadastrados.</td></tr>';
       renderPositions(data.target_micro || [], data.current_positions || []);
       drawHistory(data.allocation_history || []);
+      renderRebalancePlan(buildRebalancePlan(data.current_positions || [], 0), 0);
     }
 
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      window.location.href = '/entrar';
-    });
-
-    document.getElementById('save-position-btn').addEventListener('click', async () => {
-      try {
-        const data = window.__investorData;
-        const currentPositions = collectCurrentPositions(data.target_micro || []);
-        const res = await authFetch('/api/investor/snapshot', {
-          method: 'POST',
-          body: JSON.stringify({ snapshotDate: positionDateInput.value, currentPositions })
-        });
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.error || 'Falha ao salvar posição.');
-        showMessage('Posição do dia salva com sucesso.', 'ok');
-        await loadInvestor();
-      } catch (err) {
-        showMessage(err.message || 'Falha ao salvar posição.', 'error');
-      }
-    });
-
-    document.getElementById('rebalance-btn').addEventListener('click', async () => {
+    document.getElementById('logout-btn').textContent = 'Sair';
+    document.getElementById('logout-btn').addEventListener('click', () => showMessage('Esta é uma página de demonstração com dados fixos. Nada é salvo ou enviado.', 'ok'));
+    document.getElementById('save-position-btn').addEventListener('click', () => showMessage('Modo demonstração: esta posição não é salva em lugar nenhum.', 'ok'));
+    document.getElementById('rebalance-btn').addEventListener('click', () => {
       try {
         const data = window.__investorData;
         const currentPositions = collectCurrentPositions(data.target_micro || []);
         const contributionAmountRaw = contributionInput.value?.trim?.() ?? '';
         const contributionAmount = contributionAmountRaw === '' ? 0 : Number(contributionAmountRaw || 0);
-        const allowSells = true;
-        const res = await authFetch('/api/investor/rebalance-plan', {
-          method: 'POST',
-          body: JSON.stringify({ snapshotDate: positionDateInput.value, contributionAmount, currentPositions, allowSells })
-        });
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.error || 'Falha ao calcular rebalanceamento.');
-
-        const plan = body.plan || [];
-        const totalBuy = plan.reduce((s,item)=>s+Number(item.suggested_contribution || item.suggested_buy || 0),0);
-        const totalSell = plan.reduce((s,item)=>s+Number(item.suggested_sale || item.suggested_sell || 0),0);
-        const estimatedAfter = plan.reduce((s,item)=>s+Number(item.target_amount_after_contribution || 0),0);
-        const pctAfter = (value) => estimatedAfter > 0 ? `${((Number(value || 0) / estimatedAfter) * 100).toFixed(2)}%` : '—';
-        const actionsCount = plan.filter(item => Number(item.suggested_contribution || item.suggested_buy || 0) > 0 || Number(item.suggested_sale || item.suggested_sell || 0) > 0).length;
-
-        document.getElementById('rebalance-summary').innerHTML = `
-          <div class="summary-box"><div class="k">Novo aporte</div><div class="v">${money(contributionAmount)}</div><div class="s">Valor novo entrando na carteira.</div></div>
-          <div class="summary-box"><div class="k">Compras sugeridas</div><div class="v">${money(totalBuy)}</div><div class="s">Quanto direcionar para os ativos abaixo do alvo.</div></div>
-          <div class="summary-box"><div class="k">Vendas sugeridas</div><div class="v">${money(totalSell)}</div><div class="s">Quanto reduzir dos ativos acima do alvo.</div></div>
-          <div class="summary-box"><div class="k">Ações sugeridas</div><div class="v">${actionsCount}</div><div class="s">Carteira estimada após os ajustes: ${money(estimatedAfter)}.</div></div>
-        `;
-
-const desktopRows = plan.map(item => {
-  const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
-  const sell = Number(item.suggested_sale || item.suggested_sell || 0);
-  const postPct = Number(item.post_rebalance_pct || 0);
-
-  return `
-    <tr>
-      <td>${item.name}</td>
-      <td class="num">${money(item.current_amount)}</td>
-      <td class="num">${money(item.target_amount_after_contribution)}</td>
-      <td class="num ${buy > 0 ? 'good' : ''}">${buy > 0 ? money(buy) : '—'}</td>
-      <td class="num ${sell > 0 ? 'bad' : ''}">${sell > 0 ? money(sell) : '—'}</td>
-      <td class="num">${pct(postPct)}</td>
-      <td>${actionText(item)}</td>
-    </tr>
-  `;
-}).join('');
-
-document.getElementById('rebalance-body').innerHTML =
-  desktopRows || '<tr><td colspan="7">Nenhum ajuste foi necessário.</td></tr>';
-
-document.getElementById('rebalance-mobile-list').innerHTML = plan.map(item => {
-  const buy = Number(item.suggested_contribution || item.suggested_buy || 0);
-  const sell = Number(item.suggested_sale || item.suggested_sell || 0);
-  const postPct = Number(item.post_rebalance_pct || 0);
-
-  return `
-    <div class="rebalance-mobile-card">
-      <div class="rebalance-mobile-title">${item.name}</div>
-      <div class="rebalance-mobile-grid">
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">Hoje</div>
-          <div class="rebalance-mobile-v">${money(item.current_amount)}</div>
-        </div>
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">Alvo após ajuste</div>
-          <div class="rebalance-mobile-v">${money(item.target_amount_after_contribution)}</div>
-        </div>
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">Aportar</div>
-          <div class="rebalance-mobile-v ${buy > 0 ? 'good' : ''}">
-            ${buy > 0 ? money(buy) : '—'}
-          </div>
-        </div>
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">Vender</div>
-          <div class="rebalance-mobile-v ${sell > 0 ? 'bad' : ''}">
-            ${sell > 0 ? money(sell) : '—'}
-          </div>
-        </div>
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">% pós-ajuste</div>
-          <div class="rebalance-mobile-v">${pct(postPct)}</div>
-        </div>
-        <div class="rebalance-mobile-item">
-          <div class="rebalance-mobile-k">Ação sugerida</div>
-          <div class="rebalance-mobile-v">${actionText(item)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-}).join('') || '<div class="rebalance-mobile-card">Nenhum ajuste foi necessário.</div>';
+        const plan = buildRebalancePlan(currentPositions, contributionAmount);
+        renderRebalancePlan(plan, contributionAmount);
       } catch (err) {
         showMessage(err.message || 'Falha ao calcular rebalanceamento.', 'error');
       }
     });
 
-    loadInvestor().catch(err => showMessage(err.message || 'Falha ao carregar painel.', 'error'));
+    window.addEventListener('resize', () => drawHistory(window.__investorData?.allocation_history || []));
+    loadInvestor();
+  
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      window.location.href = 'consultoria.html';
+    });
   </script>
+
 </body>
 </html>

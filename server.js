@@ -173,14 +173,18 @@ function buildRebalancePlan({
 
       if (delta > 0.004) {
         suggestedContribution = roundMoney(delta);
-        finalAmount = roundMoney(Number(item.current_amount || 0) + suggestedContribution);
+        finalAmount = roundMoney(
+          Number(item.current_amount || 0) + suggestedContribution
+        );
         actionLabel = `Aportar ${suggestedContribution.toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
         })}.`;
       } else if (delta < -0.004) {
         suggestedSale = roundMoney(Math.abs(delta));
-        finalAmount = roundMoney(Number(item.current_amount || 0) - suggestedSale);
+        finalAmount = roundMoney(
+          Number(item.current_amount || 0) - suggestedSale
+        );
         actionLabel = `Reduzir ${suggestedSale.toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
@@ -198,7 +202,10 @@ function buildRebalancePlan({
   });
 
   const totalBuy = roundMoney(
-    rows.reduce((sum, item) => sum + Number(item.suggested_contribution || 0), 0)
+    rows.reduce(
+      (sum, item) => sum + Number(item.suggested_contribution || 0),
+      0
+    )
   );
 
   const totalSale = roundMoney(
@@ -300,13 +307,22 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
           <td align="center">
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
               <tr>
-                <td style="background:#0c0e13;padding:32px 40px;">
-                  <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#a07c30;">${headerLabel}</p>
-                  <p style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#ffffff;line-height:1.2;">Daniel<span style="color:#a07c30;">.</span></p>
+                <td style="background:#0c0e13;padding:18px 40px;border-bottom:1px solid rgba(255,255,255,0.08);">
+                  <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;font-weight:700;">
+                    ${headerLabel}
+                  </p>
                 </td>
               </tr>
-              <tr><td style="padding:40px 40px 0;">${bodyHtml}</td></tr>
-              <tr><td>${emailFooter}</td></tr>
+              <tr>
+                <td style="padding:40px;">
+                  ${bodyHtml}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  ${emailFooter}
+                </td>
+              </tr>
             </table>
           </td>
         </tr>
@@ -315,307 +331,580 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     </html>
   `;
 
-  const subject = "Compra confirmada";
-  const html = wrapEmail(
-    "Confirmação de compra",
-    `
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">Sua compra foi confirmada</h1>
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra de <strong style="color:#0c0e13;">${productName}</strong>.
+  let subject = "";
+  let html = "";
+
+  if (productKey === "ebook") {
+    subject = "Seu ebook já está disponível";
+    html = wrapEmail(
+      "Compra confirmada",
+      `
+      <h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:28px;line-height:1.25;color:#0c0e13;font-weight:700;">
+        Pagamento confirmado.
+      </h1>
+      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
+        Seu acesso ao <strong>${productName}</strong> foi liberado.
       </p>
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Seu ebook pode ser baixado pelo link abaixo. A sua área do investidor ficará disponível em <strong>${investorAreaUrl}</strong> assim que o seu usuário for criado no Supabase.
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
+        Para baixar o material, use o botão abaixo.
       </p>
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:36px;">
+      <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
         <tr>
-          <td style="background:#a07c30;">
-            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Baixar ebook agora</a>
+          <td align="center" style="background:#a07c30;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 24px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook
+            </a>
           </td>
         </tr>
       </table>
-    `
-  );
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;line-height:1.8;color:#58607a;">
+        Se tiver qualquer dificuldade, basta responder este e-mail.
+      </p>
+      `
+    );
+  } else {
+    subject = "Compra confirmada · próximos passos da sua consultoria";
+    html = wrapEmail(
+      "Compra confirmada",
+      `
+      <h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:28px;line-height:1.25;color:#0c0e13;font-weight:700;">
+        Pagamento confirmado.
+      </h1>
+      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
+        Sua compra de <strong>${productName}</strong> foi confirmada.
+      </p>
+      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
+        A partir de agora, o processo segue pela sua área do investidor.
+      </p>
+      <ol style="margin:0 0 24px 18px;padding:0;font-family:Arial,sans-serif;font-size:15px;line-height:1.9;color:#232737;">
+        <li>Você acessa sua área do investidor.</li>
+        <li>Preenche o questionário inicial.</li>
+        <li>Eu analiso suas informações e entro em contato para os próximos passos.</li>
+      </ol>
+      <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+        <tr>
+          <td align="center" style="background:#a07c30;">
+            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 24px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Entrar na área do investidor
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;line-height:1.8;color:#58607a;">
+        O ebook também está incluído e poderá ser acessado conforme a liberação do seu processo.
+      </p>
+      `
+    );
+  }
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+    from: `"Daniel Ferreira" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: email,
     subject,
     html,
   });
 }
 
-async function sendAdminSaleEmail({
-  buyerEmail,
-  productKey,
-  productName,
-  sessionId,
-  amountTotal,
-  mode,
-}) {
-  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || process.env.EMAIL_USER;
+function isStripeSessionPaid(session) {
+  if (!session) return false;
 
-  const amountFormatted =
-    typeof amountTotal === "number"
-      ? new Intl.NumberFormat("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        }).format(amountTotal / 100)
-      : "Não informado";
-
-  const html = `
-    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8" /></head>
-    <body style="margin:0;padding:24px;background:#f7f6f3;font-family:Arial,sans-serif;color:#0c0e13;">
-      <table width="100%">
-        <tr>
-          <td align="center">
-            <table width="640" style="max-width:640px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
-              <tr>
-                <td style="background:#0c0e13;padding:24px 28px;">
-                  <p style="margin:0;color:#fff;font-size:28px;font-family:Georgia,serif;">Daniel<span style="color:#a07c30;">.</span></p>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:28px;">
-                  <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">Você vendeu.</h1>
-                  <p><strong>Produto:</strong> ${productName}</p>
-                  <p><strong>Tipo:</strong> ${mode}</p>
-                  <p><strong>Valor:</strong> ${amountFormatted}</p>
-                  <p><strong>E-mail:</strong> ${buyerEmail || "Não informado"}</p>
-                  <p><strong>Product key:</strong> ${productKey}</p>
-                  <p><strong>Session ID:</strong> ${sessionId}</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body></html>
-  `;
-
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: adminEmail,
-    subject: `Nova venda confirmada · ${productName} · ${
-      buyerEmail || "sem e-mail"
-    }`,
-    html,
-  });
-}
-
-async function handleConfirmedSale(session) {
-  const email = session.customer_details?.email || session.customer_email || null;
-  const productKey = session.metadata?.product_key || "desconhecido";
-  const productName = session.metadata?.product_name || "Produto";
-  const amountTotal = session.amount_total ?? null;
-  const mode = session.mode || "payment";
-
-  if (email) {
-    await sendPurchaseEmail({
-      email,
-      productKey,
-      productName,
-      sessionId: session.id,
-    });
+  if (session.payment_status === "paid") return true;
+  if (session.status === "complete" && session.payment_status === "no_payment_required") {
+    return true;
   }
 
-  await sendAdminSaleEmail({
-    buyerEmail: email,
-    productKey,
-    productName,
-    sessionId: session.id,
-    amountTotal,
-    mode,
-  });
+  return false;
 }
 
-// ─────────────────────────────────────────────────────────────
-// WEBHOOK STRIPE
-// ─────────────────────────────────────────────────────────────
-app.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    let event;
+function normalizeReturnPath(input) {
+  if (!input || typeof input !== "string") return "/";
 
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (err) {
-      console.error("❌ Erro na assinatura do webhook:", err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+  try {
+    const urlObj = new URL(input, "http://dummy.com");
+    
+    let rawPath = urlObj.pathname;
+    
+    if (rawPath === "/index") rawPath = "/index.html";
+    if (rawPath === "/consultoria") rawPath = "/consultoria.html";
+    if (rawPath === "/ebook") rawPath = "/ebook.html";
+
+    const safePaths = new Set(["/", "/index.html", "/consultoria.html", "/ebook.html"]);
+
+    if (!safePaths.has(rawPath)) {
+      return "/";
     }
 
-    try {
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object;
-          if (session.payment_status === "paid") {
-            await handleConfirmedSale(session);
-          }
-          break;
-        }
-
-        case "checkout.session.async_payment_succeeded": {
-          await handleConfirmedSale(event.data.object);
-          break;
-        }
-
-        default:
-          console.log("ℹ️ Evento Stripe recebido:", event.type);
-      }
-
-      return res.json({ received: true });
-    } catch (err) {
-      console.error("❌ Erro ao processar webhook:", err);
-      return res.status(500).json({ error: "Erro interno no webhook" });
-    }
+    return `${rawPath}${urlObj.search}${urlObj.hash}`;
+  } catch (_) {
+    return "/";
   }
-);
+}
+
+function absoluteUrlFromPath(pathname) {
+  return new URL(pathname, BASE_URL).toString();
+}
 
 // ─────────────────────────────────────────────────────────────
 // MIDDLEWARES
 // ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "1mb" }));
+app.use(
+  "/webhook",
+  express.raw({
+    type: "application/json",
+  })
+);
+
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
 
 // ─────────────────────────────────────────────────────────────
-// HEALTHCHECK
+// ROTAS ESTÁTICAS
 // ─────────────────────────────────────────────────────────────
-app.get("/health", (_req, res) => {
-  res.json({
-    ok: true,
-    env: {
-      hasSecretKey: Boolean(process.env.STRIPE_SECRET_KEY),
-      hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-      hasSupabaseUrl: Boolean(SUPABASE_URL),
-      hasSupabaseAnonKey: Boolean(SUPABASE_ANON_KEY),
-      hasSupabaseServiceRoleKey: Boolean(SUPABASE_SERVICE_ROLE_KEY),
-      baseUrl: BASE_URL,
-    },
-  });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.get("/consultoria", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
+});
+
+app.get("/ebook", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "ebook.html"));
+});
+
+app.get("/sucesso", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
+});
+
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
 });
 
 // ─────────────────────────────────────────────────────────────
-// SUPABASE CONFIG PARA O FRONT
+// AUTH / INVESTOR AREA
 // ─────────────────────────────────────────────────────────────
-app.get("/api/supabase-config", requireSupabase, (_req, res) => {
-  res.json({
+app.get("/entrar", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "entrar.html"));
+});
+
+app.get("/area-investidor", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "area-investidor.html"));
+});
+
+app.get("/admin-dashboard", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin-dashboard.html"));
+});
+
+const INVESTOR_TABLE = "userData";
+const INVESTOR_PK = "auth_user_id";
+
+app.get("/api/supabase-config", requireSupabase, (req, res) => {
+  return res.json({
     url: SUPABASE_URL,
     anonKey: SUPABASE_ANON_KEY,
   });
 });
 
-// ─────────────────────────────────────────────────────────────
-// ÁREA DO INVESTIDOR - DADOS DO CLIENTE
-// ─────────────────────────────────────────────────────────────
+app.post("/api/admin/login", requireAdminSecret, async (req, res) => {
+  try {
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error("Erro no login admin:", error);
+    return res.status(500).json({ error: "Erro interno ao autenticar admin." });
+  }
+});
+
 app.get(
   "/api/investor/me",
   requireSupabase,
   requireInvestorAuth,
   async (req, res) => {
-    const user = req.investorUser;
+    try {
+      const user = req.investorUser;
 
-    const { data, error } = await supabaseAdmin
-      .from("userData")
-      .select("*")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+      const { data: investorData, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("*")
+        .eq(INVESTOR_PK, user.id)
+        .maybeSingle();
 
-    if (error) {
-      console.error("Erro ao buscar userData:", error);
+      if (error) {
+        throw error;
+      }
+
+      return res.json({
+        authUser: {
+          id: user.id,
+          email: user.email,
+        },
+        investorData: investorData || {},
+      });
+    } catch (error) {
+      console.error("Erro ao buscar perfil do investidor:", error);
       return res
         .status(500)
-        .json({ error: "Erro ao buscar dados do investidor." });
+        .json({ error: "Erro ao carregar área do investidor." });
     }
-
-    if (!data) {
-      return res
-        .status(404)
-        .json({ error: "Cadastro do investidor não encontrado." });
-    }
-
-    await supabaseAdmin
-      .from("userData")
-      .update({ last_client_access_at: new Date().toISOString() })
-      .eq("auth_user_id", user.id);
-
-    return res.json({
-      authUser: {
-        id: user.id,
-        email: user.email,
-      },
-      investorData: data,
-    });
   }
 );
 
-// ─────────────────────────────────────────────────────────────
-// SALVAR POSIÇÃO DO DIA
-// ─────────────────────────────────────────────────────────────
+app.post(
+  "/api/investor/questionnaire",
+  requireSupabase,
+  requireInvestorAuth,
+  async (req, res) => {
+    try {
+      const user = req.investorUser;
+      const payload = req.body || {};
+
+      const row = {
+        [INVESTOR_PK]: user.id,
+        client_email: payload.client_email || user.email || null,
+        client_name: payload.client_name || payload.full_name || null,
+        questionnaire_answers:
+          payload.questionnaire_answers ||
+          payload.questionnaire_json ||
+          payload.answers ||
+          payload ||
+          null,
+        last_client_access_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .upsert(row, {
+          onConflict: INVESTOR_PK,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ ok: true, investorData: data });
+    } catch (error) {
+      console.error("Erro ao salvar questionário:", error);
+      return res.status(500).json({ error: "Erro ao salvar questionário." });
+    }
+  }
+);
+
+app.post(
+  "/api/admin/investor-access",
+  requireSupabase,
+  requireAdminSecret,
+  async (req, res) => {
+    try {
+      const email = String(req.body?.email || "")
+        .trim()
+        .toLowerCase();
+
+      const clientName = String(req.body?.client_name || req.body?.name || "")
+        .trim();
+
+      if (!email) {
+        return res.status(400).json({ error: "Informe um e-mail." });
+      }
+
+      const { data: existingUsers, error: listError } =
+        await supabaseAdmin.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
+
+      if (listError) {
+        throw listError;
+      }
+
+      const existingUser = existingUsers?.users?.find(
+        (item) => String(item.email || "").toLowerCase() === email
+      );
+
+      let userId = existingUser?.id || null;
+      let createdPassword = null;
+
+      if (!userId) {
+        createdPassword = Math.random().toString(36).slice(-10) + "A1!";
+        const { data: newUserData, error: createError } =
+          await supabaseAdmin.auth.admin.createUser({
+            email,
+            password: createdPassword,
+            email_confirm: true,
+          });
+
+        if (createError) {
+          throw createError;
+        }
+
+        userId = newUserData.user.id;
+      }
+
+      const { data: investorData, error: profileError } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .upsert(
+          {
+            [INVESTOR_PK]: userId,
+            client_email: email,
+            client_name: clientName || null,
+            client_status: "active",
+            updated_at: new Date().toISOString(),
+            last_client_access_at: new Date().toISOString(),
+          },
+          { onConflict: INVESTOR_PK }
+        )
+        .select()
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      return res.json({
+        ok: true,
+        user_id: userId,
+        created: !existingUser,
+        temporary_password: createdPassword,
+        investorData,
+      });
+    } catch (error) {
+      console.error("Erro ao liberar acesso do investidor:", error);
+      return res.status(500).json({ error: "Erro ao liberar acesso." });
+    }
+  }
+);
+
+app.get(
+  "/api/admin/investors",
+  requireSupabase,
+  requireAdminSecret,
+  async (req, res) => {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ investors: data || [] });
+    } catch (error) {
+      console.error("Erro ao listar investidores:", error);
+      return res.status(500).json({ error: "Erro ao listar investidores." });
+    }
+  }
+);
+
+app.get(
+  "/api/admin/investors/:userId",
+  requireSupabase,
+  requireAdminSecret,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      const { data, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("*")
+        .eq(INVESTOR_PK, userId)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        return res.status(404).json({ error: "Investidor não encontrado." });
+      }
+
+      return res.json({ investor: data });
+    } catch (error) {
+      console.error("Erro ao carregar investidor:", error);
+      return res.status(500).json({ error: "Erro ao carregar investidor." });
+    }
+  }
+);
+
+app.patch(
+  "/api/admin/investors/:userId/plan",
+  requireSupabase,
+  requireAdminSecret,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body || {};
+
+      const payload = {
+        client_name: updates.client_name ?? undefined,
+        client_email: updates.client_email ?? undefined,
+        plan_type: updates.plan_type ?? undefined,
+        client_status: updates.client_status ?? undefined,
+        currency: updates.currency ?? undefined,
+        profile_label: updates.profile_label ?? undefined,
+        profile_index:
+          updates.profile_index !== undefined &&
+          updates.profile_index !== null &&
+          updates.profile_index !== ""
+            ? Number(updates.profile_index)
+            : undefined,
+        risk_capacity_score:
+          updates.risk_capacity_score !== undefined &&
+          updates.risk_capacity_score !== null &&
+          updates.risk_capacity_score !== ""
+            ? Number(updates.risk_capacity_score)
+            : undefined,
+        risk_tolerance_score:
+          updates.risk_tolerance_score !== undefined &&
+          updates.risk_tolerance_score !== null &&
+          updates.risk_tolerance_score !== ""
+            ? Number(updates.risk_tolerance_score)
+            : undefined,
+        risk_implementation_score:
+          updates.risk_implementation_score !== undefined &&
+          updates.risk_implementation_score !== null &&
+          updates.risk_implementation_score !== ""
+            ? Number(updates.risk_implementation_score)
+            : undefined,
+        risk_diagnostic_confidence:
+          updates.risk_diagnostic_confidence ?? undefined,
+        planning_method_code: updates.planning_method_code ?? undefined,
+        planning_method_label: updates.planning_method_label ?? undefined,
+        profile_summary: updates.profile_summary ?? undefined,
+        advisor_notes: updates.advisor_notes ?? undefined,
+        rebalance_band_pp:
+          updates.rebalance_band_pp !== undefined &&
+          updates.rebalance_band_pp !== null &&
+          updates.rebalance_band_pp !== ""
+            ? Number(updates.rebalance_band_pp)
+            : undefined,
+        drift_warning_pp:
+          updates.drift_warning_pp !== undefined &&
+          updates.drift_warning_pp !== null &&
+          updates.drift_warning_pp !== ""
+            ? Number(updates.drift_warning_pp)
+            : undefined,
+        allow_sells:
+          updates.allow_sells !== undefined
+            ? Boolean(updates.allow_sells)
+            : undefined,
+        target_macro: updates.target_macro ?? undefined,
+        target_micro: updates.target_micro ?? undefined,
+        current_positions: updates.current_positions ?? undefined,
+        allocation_history: updates.allocation_history ?? undefined,
+        rebalance_history: updates.rebalance_history ?? undefined,
+        questionnaire_answers: updates.questionnaire_answers ?? undefined,
+        plan_outputs: updates.plan_outputs ?? undefined,
+        restrictions_json: updates.restrictions_json ?? undefined,
+        metadata_json: updates.metadata_json ?? undefined,
+        last_recommendation_date:
+          updates.last_recommendation_date ?? undefined,
+        last_snapshot_date: updates.last_snapshot_date ?? undefined,
+        updated_at: new Date().toISOString(),
+      };
+
+      const sanitizedPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined)
+      );
+
+      const { data, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .update(sanitizedPayload)
+        .eq(INVESTOR_PK, userId)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ ok: true, investor: data });
+    } catch (error) {
+      console.error("Erro ao salvar plano:", error);
+      return res.status(500).json({ error: "Erro ao salvar plano." });
+    }
+  }
+);
+
 app.post(
   "/api/investor/snapshot",
   requireSupabase,
   requireInvestorAuth,
   async (req, res) => {
-    const user = req.investorUser;
-    const { snapshotDate, currentPositions } = req.body || {};
+    try {
+      const user = req.investorUser;
+      const snapshotDate = req.body?.snapshotDate || req.body?.snapshot_date;
+      const currentPositions = Array.isArray(
+        req.body?.currentPositions || req.body?.current_positions
+      )
+        ? req.body.currentPositions || req.body.current_positions
+        : [];
 
-    if (!snapshotDate || !Array.isArray(currentPositions)) {
-      return res.status(400).json({
-        error: "snapshotDate e currentPositions são obrigatórios.",
-      });
-    }
+      if (!snapshotDate) {
+        return res.status(400).json({ error: "Informe a data da posição." });
+      }
 
-    const { data: currentRow, error: loadError } = await supabaseAdmin
-      .from("userData")
-      .select("allocation_history")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+      const { data: investorData, error: loadError } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("allocation_history, current_positions")
+        .eq(INVESTOR_PK, user.id)
+        .maybeSingle();
 
-    if (loadError) {
-      return res
-        .status(500)
-        .json({ error: "Erro ao carregar histórico atual." });
-    }
+      if (loadError) {
+        throw loadError;
+      }
 
-    const allocationHistory = Array.isArray(currentRow?.allocation_history)
-      ? currentRow.allocation_history
-      : [];
+      const allocationHistory = Array.isArray(investorData?.allocation_history)
+        ? [...investorData.allocation_history]
+        : [];
 
-    const nextHistory = [
-      ...allocationHistory,
-      {
+      const nextSnapshot = {
         snapshotDate,
-        capturedAt: new Date().toISOString(),
         positions: currentPositions,
-      },
-    ];
+      };
 
-    const { error: updateError } = await supabaseAdmin
-      .from("userData")
-      .update({
-        current_positions: currentPositions,
-        allocation_history: nextHistory,
-        last_snapshot_date: snapshotDate,
-      })
-      .eq("auth_user_id", user.id);
+      const existingIndex = allocationHistory.findIndex(
+        (item) => item?.snapshotDate === snapshotDate
+      );
 
-    if (updateError) {
-      return res.status(500).json({ error: "Erro ao salvar snapshot." });
+      if (existingIndex >= 0) {
+        allocationHistory[existingIndex] = nextSnapshot;
+      } else {
+        allocationHistory.push(nextSnapshot);
+      }
+
+      allocationHistory.sort((a, b) =>
+        String(a?.snapshotDate || "").localeCompare(String(b?.snapshotDate || ""))
+      );
+
+      const { data, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .update({
+          current_positions: currentPositions,
+          allocation_history: allocationHistory,
+          last_snapshot_date: snapshotDate,
+          last_client_access_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq(INVESTOR_PK, user.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ ok: true, investorData: data });
+    } catch (error) {
+      console.error("Erro ao salvar snapshot:", error);
+      return res.status(500).json({ error: "Erro ao salvar posição." });
     }
-
-    return res.json({ ok: true, allocationHistory: nextHistory });
   }
 );
 
-// ─────────────────────────────────────────────────────────────
-// CALCULAR REBALANCEAMENTO
-// ─────────────────────────────────────────────────────────────
 app.post(
   "/api/investor/rebalance-plan",
   requireSupabase,
@@ -623,359 +912,354 @@ app.post(
   async (req, res) => {
     try {
       const user = req.investorUser;
-      const { snapshotDate, currentPositions, contributionAmount } =
-        req.body || {};
+      const contributionAmount = Number(
+        req.body?.contributionAmount ?? req.body?.contribution_amount ?? 0
+      );
 
-      const parsedContribution =
-        contributionAmount === "" ||
-        contributionAmount === null ||
-        contributionAmount === undefined
-          ? 0
-          : Number(contributionAmount);
+      const allowSells =
+        req.body?.allowSells !== undefined
+          ? Boolean(req.body.allowSells)
+          : req.body?.allow_sells !== undefined
+          ? Boolean(req.body.allow_sells)
+          : true;
 
-      if (!snapshotDate) {
+      const snapshotDate = req.body?.snapshotDate || req.body?.snapshot_date || null;
+
+      const rawCurrentPositions =
+        req.body?.currentPositions || req.body?.current_positions || [];
+
+      const { data: investorData, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("target_micro, rebalance_band_pp, rebalance_history")
+        .eq(INVESTOR_PK, user.id)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!investorData?.target_micro) {
         return res.status(400).json({
-          error: "A data da carteira é obrigatória.",
+          error: "Plano ainda não publicado para este investidor.",
         });
       }
 
-      if (!Array.isArray(currentPositions) || currentPositions.length === 0) {
-        return res.status(400).json({
-          error: "As posições atuais da carteira são obrigatórias.",
-        });
-      }
+      const positions = normalizePositions(
+        rawCurrentPositions,
+        investorData.target_micro || []
+      );
 
-      if (Number.isNaN(parsedContribution) || parsedContribution < 0) {
-        return res.status(400).json({
-          error: "O novo aporte deve ser um número maior ou igual a zero.",
-        });
-      }
-
-      const { data: investorData, error: investorError } = await supabaseAdmin
-        .from("userData")
-        .select("*")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (investorError || !investorData) {
-        return res.status(404).json({
-          error: "Dados do investidor não encontrados.",
-        });
-      }
-
-      const targetMicro = Array.isArray(investorData.target_micro)
-        ? investorData.target_micro
-        : [];
-
-      if (targetMicro.length === 0) {
-        return res.status(400).json({
-          error: "Não existe alocação micro cadastrada para este cliente.",
-        });
-      }
-
-      const normalizedPositions = normalizePositions(currentPositions, targetMicro);
-
-      const rebalanceBandPp = Number(investorData.rebalance_band_pp || 0);
-
-      const result = buildRebalancePlan({
-        positions: normalizedPositions,
-        contributionAmount: parsedContribution,
-        rebalanceBandPp,
+      const rebalance = buildRebalancePlan({
+        positions,
+        contributionAmount,
+        rebalanceBandPp:
+          investorData.rebalance_band_pp !== null &&
+          investorData.rebalance_band_pp !== undefined
+            ? Number(investorData.rebalance_band_pp)
+            : 5,
       });
 
-      const rebalanceHistory = Array.isArray(investorData.rebalance_history)
-        ? investorData.rebalance_history
-        : [];
+      const planRows = allowSells
+        ? rebalance.plan
+        : rebalance.plan.map((item) => {
+            if (Number(item.suggested_sale || 0) <= 0) return item;
+            const adjustedFinalAmount = roundMoney(Number(item.current_amount || 0));
+            return {
+              ...item,
+              suggested_sale: 0,
+              final_amount: adjustedFinalAmount,
+              post_rebalance_pct:
+                rebalance.total_final > 0
+                  ? roundPct((adjustedFinalAmount / rebalance.total_final) * 100)
+                  : 0,
+              action_label:
+                Number(item.suggested_contribution || 0) > 0
+                  ? `Aportar ${Number(item.suggested_contribution || 0).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}.`
+                  : "Manter como está.",
+            };
+          });
 
-      const eventRecord = {
-        snapshotDate,
-        createdAt: new Date().toISOString(),
-        contributionAmount: result.contribution_amount,
-        summary: {
-          totalCurrent: result.total_current,
-          totalAfterContribution: result.total_after_contribution,
-          totalFinal: result.total_final,
-          rebalanceBandPp: result.rebalance_band_pp,
-          totalBuy: result.total_buy,
-          totalSale: result.total_sale,
-          assetsOutsideBand: result.assets_outside_band,
-        },
-        plan: result.plan,
+      const responsePlan = {
+        ...rebalance,
+        plan: planRows,
+        allow_sells: allowSells,
       };
 
-      await supabaseAdmin
-        .from("userData")
-        .update({ rebalance_history: [...rebalanceHistory, eventRecord] })
-        .eq("auth_user_id", user.id);
+      const rebalanceHistory = Array.isArray(investorData?.rebalance_history)
+        ? [...investorData.rebalance_history]
+        : [];
 
-      return res.json({
-        ok: true,
+      rebalanceHistory.push({
         snapshotDate,
-        contributionAmount: result.contribution_amount,
-        summary: {
-          totalCurrent: result.total_current,
-          totalAfterContribution: result.total_after_contribution,
-          totalFinal: result.total_final,
-          rebalanceBandPp: result.rebalance_band_pp,
-          totalBuy: result.total_buy,
-          totalSale: result.total_sale,
-          assetsOutsideBand: result.assets_outside_band,
-        },
-        plan: result.plan,
+        contributionAmount: roundMoney(contributionAmount),
+        allowSells: allowSells,
+        plan: responsePlan.plan,
+        generatedAt: new Date().toISOString(),
       });
-    } catch (err) {
-      console.error("❌ Erro ao calcular rebalanceamento:", err);
-      return res.status(500).json({
-        error: "Erro interno ao calcular rebalanceamento.",
-      });
-    }
-  }
-);
 
-// ─────────────────────────────────────────────────────────────
-// CRIAR USUÁRIO DO INVESTIDOR NO SUPABASE
-// ─────────────────────────────────────────────────────────────
-app.post(
-  "/admin/create-investor-user",
-  requireSupabase,
-  requireAdminSecret,
-  async (req, res) => {
-    const {
-      email,
-      password,
-      clientName,
-      planType = "consultoria_avulsa",
-      clientStatus = "active",
-      profileLabel = null,
-      profileIndex = null,
-      profileSummary = null,
-      targetMacro = [],
-      targetMicro = [],
-    } = req.body || {};
+      await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .update({
+          rebalance_history: rebalanceHistory,
+          last_client_access_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq(INVESTOR_PK, user.id);
 
-    if (!email || !password || !clientName) {
+      return res.json(responsePlan);
+    } catch (error) {
+      console.error("Erro ao gerar rebalanceamento:", error);
       return res
-        .status(400)
-        .json({ error: "email, password e clientName são obrigatórios." });
+        .status(500)
+        .json({ error: "Erro ao calcular rebalanceamento." });
     }
+  }
+);
 
-    const { data: created, error: createError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { name: clientName },
+app.post(
+  "/api/investor/rebalance-preview",
+  requireSupabase,
+  requireInvestorAuth,
+  async (req, res) => {
+    try {
+      const user = req.investorUser;
+      const contributionAmount = Number(
+        req.body?.contributionAmount ?? req.body?.contribution_amount ?? 0
+      );
+
+      const rawCurrentPositions =
+        req.body?.currentPositions || req.body?.current_positions || [];
+
+      const { data: investorData, error } = await supabaseAdmin
+        .from(INVESTOR_TABLE)
+        .select("target_micro, rebalance_band_pp")
+        .eq(INVESTOR_PK, user.id)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!investorData?.target_micro) {
+        return res.status(400).json({
+          error: "Plano ainda não publicado para este investidor.",
+        });
+      }
+
+      const positions = normalizePositions(
+        rawCurrentPositions,
+        investorData.target_micro || []
+      );
+
+      const plan = buildRebalancePlan({
+        positions,
+        contributionAmount,
+        rebalanceBandPp:
+          investorData.rebalance_band_pp !== null &&
+          investorData.rebalance_band_pp !== undefined
+            ? Number(investorData.rebalance_band_pp)
+            : 5,
       });
 
-    if (createError) {
-      return res.status(400).json({ error: createError.message });
+      return res.json({ ok: true, plan });
+    } catch (error) {
+      console.error("Erro ao gerar rebalanceamento:", error);
+      return res
+        .status(500)
+        .json({ error: "Erro ao gerar simulação de rebalanceamento." });
     }
-
-    const authUserId = created.user?.id;
-
-    const { error: upsertError } = await supabaseAdmin.from("userData").upsert({
-      auth_user_id: authUserId,
-      client_email: email,
-      client_name: clientName,
-      plan_type: planType,
-      client_status: clientStatus,
-      profile_label: profileLabel,
-      profile_index: profileIndex,
-      profile_summary: profileSummary,
-      target_macro: targetMacro,
-      target_micro: targetMicro,
-    });
-
-    if (upsertError) {
-      return res.status(500).json({
-        error: "Usuário Auth criado, mas falhou ao gravar userData.",
-        details: upsertError.message,
-        auth_user_id: authUserId,
-      });
-    }
-
-    return res.json({
-      ok: true,
-      auth_user_id: authUserId,
-      email,
-      tempPassword: password,
-      message:
-        "Usuário do investidor criado com sucesso no Supabase Auth e em userData.",
-    });
   }
 );
 
 // ─────────────────────────────────────────────────────────────
-// CRIAR CHECKOUT SESSION
+// STRIPE CHECKOUT
 // ─────────────────────────────────────────────────────────────
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    const { product } = req.body;
+    const { product, returnTo } = req.body || {};
+    const selected = products[product];
 
-    if (!product || !products[product]) {
+    if (!selected?.priceId) {
       return res.status(400).json({ error: "Produto inválido." });
     }
 
-    const selectedProduct = products[product];
+    const normalizedReturnTo = normalizeReturnPath(returnTo);
+    const successUrl = new URL("/sucesso", BASE_URL);
 
-    if (!selectedProduct.priceId) {
-      return res.status(500).json({
-        error: `Price ID não configurado para o produto: ${product}`,
-      });
-    }
+    successUrl.search = "";
+    successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+    successUrl.searchParams.set("produto", product);
+    successUrl.searchParams.set("return_to", normalizedReturnTo);
 
-    const paymentMethods =
-      selectedProduct.mode === "subscription" ? ["card"] : ["card", "boleto"];
+    const cancelUrlObj = new URL(normalizedReturnTo, BASE_URL);
+    cancelUrlObj.searchParams.set("cancelado", "1");
 
     const session = await stripe.checkout.sessions.create({
-      mode: selectedProduct.mode,
-      payment_method_types: paymentMethods,
+      mode: selected.mode,
       line_items: [
         {
-          price: selectedProduct.priceId,
+          price: selected.priceId,
           quantity: 1,
         },
       ],
-      success_url: `${BASE_URL}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${BASE_URL}/?cancelado=1`,
+      billing_address_collection: "required",
+      phone_number_collection: {
+        enabled: true,
+      },
       locale: "pt-BR",
       allow_promotion_codes: true,
-      billing_address_collection: "auto",
+      success_url: successUrl.toString(),
+      cancel_url: cancelUrlObj.toString(),
       metadata: {
-        product_key: product,
-        product_name: selectedProduct.productName,
+        product,
+        product_name: selected.productName,
+        return_to: normalizedReturnTo,
       },
     });
 
     return res.json({ url: session.url });
-  } catch (err) {
-    console.error("❌ Erro ao criar sessão de checkout:", err.message);
-    return res.status(500).json({ error: "Erro ao criar checkout session." });
+  } catch (error) {
+    console.error("Erro ao criar sessão de checkout:", error);
+    return res.status(500).json({ error: "Erro ao iniciar checkout." });
   }
 });
 
 // ─────────────────────────────────────────────────────────────
-// VERIFICAR SESSÃO
+// WEBHOOK STRIPE
 // ─────────────────────────────────────────────────────────────
-app.get("/verificar-sessao", async (req, res) => {
-  try {
-    const { session_id } = req.query;
+app.post("/webhook", async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    if (!session_id) {
-      return res.status(400).json({ error: "session_id obrigatório" });
+  let event;
+
+  try {
+    if (endpointSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } else {
+      event = JSON.parse(req.body.toString());
+    }
+  } catch (err) {
+    console.error("⚠️ Erro na assinatura do webhook:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+
+      if (!isStripeSessionPaid(session)) {
+        return res.status(200).json({ received: true });
+      }
+
+      const customerEmail =
+        session.customer_details?.email || session.customer_email;
+      const productKey = session.metadata?.product;
+      const productName =
+        session.metadata?.product_name || products[productKey]?.productName;
+
+      if (customerEmail && productKey && productName) {
+        await sendPurchaseEmail({
+          email: customerEmail,
+          productKey,
+          productName,
+          sessionId: session.id,
+        });
+      }
     }
 
-    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (event.type === "checkout.session.async_payment_succeeded") {
+      const session = event.data.object;
 
-    return res.json({
-      id: session.id,
-      status: session.payment_status,
-      checkout_status: session.status,
-      customer_email:
-        session.customer_details?.email || session.customer_email || null,
-      product_key: session.metadata?.product_key || null,
-      product_name: session.metadata?.product_name || null,
-      mode: session.mode || null,
-      amount_total: session.amount_total ?? null,
-    });
-  } catch (err) {
-    console.error("❌ Erro ao verificar sessão:", err.message);
-    return res.status(500).json({ error: "Erro ao verificar sessão." });
+      const customerEmail =
+        session.customer_details?.email || session.customer_email;
+      const productKey = session.metadata?.product;
+      const productName =
+        session.metadata?.product_name || products[productKey]?.productName;
+
+      if (customerEmail && productKey && productName) {
+        await sendPurchaseEmail({
+          email: customerEmail,
+          productKey,
+          productName,
+          sessionId: session.id,
+        });
+      }
+    }
+
+    return res.json({ received: true });
+  } catch (error) {
+    console.error("Erro ao processar webhook:", error);
+    return res.status(500).json({ error: "Erro ao processar webhook." });
   }
 });
 
 // ─────────────────────────────────────────────────────────────
-// LIBERAR DOWNLOAD DO EBOOK
+// DOWNLOAD EBOOK
 // ─────────────────────────────────────────────────────────────
 app.get("/download-ebook", async (req, res) => {
-  const sessionId = req.query.session_id;
-
-  if (!sessionId) {
-    return res.status(400).send("session_id obrigatório");
-  }
-
   try {
+    const sessionId = req.query.session_id;
+
+    if (!sessionId) {
+      return res.status(400).send("Sessão não informada.");
+    }
+
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    const isPaid = session.payment_status === "paid";
-    const allowedProducts = [
+    if (!isStripeSessionPaid(session)) {
+      return res.status(403).send("Pagamento ainda não confirmado.");
+    }
+
+    const allowedProducts = new Set([
       "ebook",
       "consultoria_avulsa",
       "consultoria_mensal",
       "consultoria_premium",
-    ];
-    const isAllowed = allowedProducts.includes(session.metadata?.product_key);
+    ]);
 
-    if (!isPaid) {
-      return res.status(403).send("Pagamento ainda não confirmado.");
+    const productKey = session.metadata?.product;
+
+    if (!allowedProducts.has(productKey)) {
+      return res.status(403).send("Produto sem acesso ao ebook.");
     }
 
-    if (!isAllowed) {
-      return res.status(403).send("Esta compra não dá acesso ao ebook.");
-    }
-
-    const ebookPath = path.join(
-      PUBLIC_DIR,
-      "ebook",
-      "Investimentos para Iniciantes.pdf"
-    );
+    const ebookPath = path.join(PUBLIC_DIR, "Daniel Ferreira - Ebook de Investimentos para Iniciantes.pdf");
 
     if (!fs.existsSync(ebookPath)) {
       return res.status(404).send("Arquivo do ebook não encontrado.");
     }
 
-    return res.download(ebookPath, "Investimentos-para-Iniciantes.pdf");
-  } catch (err) {
-    console.error("❌ Erro ao liberar download:", err.message);
+    return res.download(
+      ebookPath,
+      "Daniel Ferreira - Ebook de Investimentos para Iniciantes.pdf"
+    );
+  } catch (error) {
+    console.error("Erro no download do ebook:", error);
     return res.status(500).send("Erro ao liberar download.");
   }
 });
 
 // ─────────────────────────────────────────────────────────────
-// ROTAS DE PÁGINAS
+// FALLBACKS
 // ─────────────────────────────────────────────────────────────
-app.get("/", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"))
-);
+app.get("*", (req, res) => {
+  const requested = req.path.replace(/^\/+/, "");
+  const candidate = path.join(PUBLIC_DIR, requested);
 
-app.get("/sucesso", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"))
-);
+  if (requested && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    return res.sendFile(candidate);
+  }
 
-app.get("/entrar", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "entrar.html"))
-);
+  return res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
+});
 
-app.get("/area-investidor", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "area-investidor.html"))
-);
-
-app.get("/politica-de-privacidade", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "politica-de-privacidade.html"))
-);
-
-app.get("/politica-de-cookies", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "politica-de-cookies.html"))
-);
-
-app.get("/termos-de-uso", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "termos-de-uso.html"))
-);
-
-app.get("/ebook", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "ebook.html"))
-);
-
-app.get("/entrar", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "entrar.html"))
-);
 // ─────────────────────────────────────────────────────────────
 // START
 // ─────────────────────────────────────────────────────────────
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`✅ Servidor rodando em ${BASE_URL}`);
-  });
-}
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em ${BASE_URL}`);
+});
