@@ -1510,12 +1510,12 @@ app.post(
       }
 
       const normalizedReturnTo = normalizeReturnPath(returnTo);
-      const successUrl = new URL("/sucesso", BASE_URL);
 
-      successUrl.search = "";
-      successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
-      successUrl.searchParams.set("produto", product);
-      successUrl.searchParams.set("return_to", normalizedReturnTo);
+      const successUrl =
+        `${BASE_URL}/sucesso` +
+        `?session_id={CHECKOUT_SESSION_ID}` +
+        `&produto=${encodeURIComponent(product)}` +
+        `&return_to=${encodeURIComponent(normalizedReturnTo)}`;
 
       const cancelUrlObj = new URL(normalizedReturnTo, BASE_URL);
       cancelUrlObj.searchParams.set("cancelado", "1");
@@ -1538,7 +1538,7 @@ app.post(
         },
         locale: "pt-BR",
         allow_promotion_codes: true,
-        success_url: successUrl.toString(),
+        success_url: successUrl,
         cancel_url: cancelUrlObj.toString(),
         metadata: {
           product,
