@@ -448,7 +448,7 @@ function absoluteUrlFromPath(pathname) {
 // MIDDLEWARES
 // ─────────────────────────────────────────────────────────────
 app.use(
-  "/webhook",
+  ["/webhook", "/api/webhook"],
   express.raw({
     type: "application/json",
   })
@@ -1138,7 +1138,7 @@ app.post("/create-checkout-session", async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // WEBHOOK STRIPE
 // ─────────────────────────────────────────────────────────────
-app.post("/webhook", async (req, res) => {
+app.post(["/webhook", "/api/webhook"], async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -1268,6 +1268,4 @@ app.get("*", (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // START
 // ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em ${BASE_URL}`);
-});
+module.exports = app;
