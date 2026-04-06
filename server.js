@@ -24,6 +24,9 @@ const supabaseAdmin =
       })
     : null;
 
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
 function requireSupabase(req, res, next) {
   if (
     !SUPABASE_URL ||
@@ -239,6 +242,47 @@ function buildRebalancePlan({
   };
 }
 
+function isStripeSessionPaid(session) {
+  if (!session) return false;
+  if (session.payment_status === "paid") return true;
+  if (
+    session.status === "complete" &&
+    session.payment_status === "no_payment_required"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function normalizeReturnPath(input) {
+  if (!input || typeof input !== "string") return "/";
+
+  try {
+    const urlObj = new URL(input, "http://dummy.com");
+
+    let rawPath = urlObj.pathname;
+
+    if (rawPath === "/index") rawPath = "/index.html";
+    if (rawPath === "/consultoria") rawPath = "/consultoria.html";
+    if (rawPath === "/ebook") rawPath = "/ebook.html";
+
+    const safePaths = new Set([
+      "/",
+      "/index.html",
+      "/consultoria.html",
+      "/ebook.html",
+    ]);
+
+    if (!safePaths.has(rawPath)) {
+      return "/";
+    }
+
+    return `${rawPath}${urlObj.search}${urlObj.hash}`;
+  } catch (_) {
+    return "/";
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // CONFIG DOS PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -265,6 +309,9 @@ const products = {
   },
 };
 
+// ─────────────────────────────────────────────────────────────
+// E-MAIL
+// ─────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT || 465),
@@ -294,33 +341,449 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
           </p>
         </td>
       </tr>
+      <tr>
+        <td style="padding:16px 40px 32px;">
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;color:#8a90a2;line-height:1.7;">
+            As informações contidas neste e-mail têm caráter informativo e educacional, não constituindo recomendação de investimento.
+            Investimentos envolvem riscos. Rentabilidade passada não é garantia de rentabilidade futura.
+          </p>
+        </td>
+      </tr>
     </table>
   `;
 
   const wrapEmail = (headerLabel, bodyHtml) => `
     <!DOCTYPE html>
     <html lang="pt-BR">
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
     <body style="margin:0;padding:0;background:#f7f6f3;-webkit-font-smoothing:antialiased;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f6f3;padding:40px 0;">
         <tr>
           <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
               <tr>
-                <td style="background:#0c0e13;padding:18px 40px;border-bottom:1px solid rgba(255,255,255,0.08);">
-                  <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;font-weight:700;">
-                    ${headerLabel}
+                <td style="background:#0c0e13;padding:32px 40px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td>
+                        <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#a07c30;">
+                          ${headerLabel}
+                        </p>
+                        <p style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:0.02em;color:#ffffff;line-height:1.2;">
+                          Daniel<span style="color:#a07c30;">.</span>
+                        </p>
+                      </td>
+                      <td align="right" valign="middle">
+                        <span style="display:inline-block;padding:5px 12px;font-family:Arial,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;border:1px solid rgba(160,124,48,0.4);">
+                          CEA · CVM Nº 003838-5
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:40px 40px 0;">
+                  ${bodyHtml}
+                </td>
+              </tr>
+
+              <tr>
+                <td>${emailFooter}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const guaranteeBlock = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:32px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+            Garantia de 7 dias
+          </p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
+            Depois que o plano for enviado, você terá até <strong style="color:#0c0e13;">7 dias</strong> para avaliar a entrega.
+            Se concluir que ela não gerou valor suficiente para você, basta responder este e-mail dentro desse prazo e solicitar o
+            <strong style="color:#0c0e13;">reembolso</strong>.
+          </p>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  let subject = "Compra confirmada";
+  let html = "";
+
+  if (productKey === "ebook") {
+    subject = "Seu ebook está disponível · Daniel Ferreira";
+    html = wrapEmail(
+      "Confirmação de compra",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Seu ebook está pronto para download
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. O acesso ao <strong style="color:#0c0e13;">${productName}</strong> foi liberado.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Você já pode baixar o material pelo botão abaixo. Em caso de qualquer dificuldade com o acesso,
+        basta responder este e-mail.
+      </p>
+
+      ${guaranteeBlock}
+
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:36px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook agora
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
+  } else if (productKey === "consultoria_avulsa") {
+    subject = "Compra confirmada · Consultoria Inicial";
+    html = wrapEmail(
+      "Confirmação de compra",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Sua consultoria inicial foi confirmada
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. Sua contratação de <strong style="color:#0c0e13;">${productName}</strong> foi confirmada com sucesso.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Nesta etapa, eu vou conduzir a reunião com questionários e testes, analisar seu perfil,
+        seu conhecimento, seu patrimônio e então preparar um <strong style="color:#0c0e13;">plano de investimentos pronto para execução</strong>.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              O que está incluso no seu plano
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Reunião com questionários e testes<br>
+              · Análise do perfil, conhecimento e patrimônio<br>
+              · Plano de investimentos pronto para execução<br>
+              · Upload do plano na área do investidor<br>
+              · Gráfico de acompanhamento e rebalanceamento
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Você também receberá acesso à <strong style="color:#0c0e13;">área do investidor</strong>, onde o plano ficará centralizado para acompanhamento e execução prática.
+      </p>
+
+      ${guaranteeBlock}
+
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Entrar na área do investidor
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
+        O ebook incluído na sua compra também poderá ser baixado pelo link apropriado no seu processo.
+      </p>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
+  } else if (productKey === "consultoria_premium") {
+    subject = "Compra confirmada · Consultoria Premium";
+    html = wrapEmail(
+      "Confirmação de compra",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Sua consultoria premium foi confirmada
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. Sua contratação de <strong style="color:#0c0e13;">${productName}</strong> foi confirmada com sucesso.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        A versão premium inclui <strong style="color:#0c0e13;">tudo o que existe no plano inicial</strong>, com mais profundidade na explicação da carteira e maior apoio na fase de implementação.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              O que está incluso no seu plano premium
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Tudo do plano inicial<br>
+              · Apresentação detalhada dos investimentos<br>
+              · Explicação do papel de cada ativo na carteira<br>
+              · Seção de dúvidas dedicada<br>
+              · Maior acompanhamento na fase de execução
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        O objetivo aqui é que você não apenas receba o plano, mas também entenda melhor a carteira,
+        tire dúvidas com profundidade e implemente tudo com mais segurança.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Você também terá acesso à <strong style="color:#0c0e13;">área do investidor</strong> para acompanhar o plano,
+        visualizar a carteira e usar a ferramenta de rebalanceamento.
+      </p>
+
+      ${guaranteeBlock}
+
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Entrar na área do investidor
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
+        O ebook incluído na sua compra também poderá ser baixado pelo link apropriado no seu processo.
+      </p>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
+  } else if (productKey === "consultoria_mensal") {
+    subject = "Compra confirmada · Acompanhamento Contínuo";
+    html = wrapEmail(
+      "Confirmação de compra",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Sua assinatura foi ativada
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. Sua assinatura de <strong style="color:#0c0e13;">${productName}</strong> foi ativada com sucesso.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Você receberá os próximos passos do acompanhamento contínuo e também poderá utilizar a área do investidor como base da sua execução.
+      </p>
+
+      ${guaranteeBlock}
+
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+        <tr>
+          <td style="background:#a07c30;">
+            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Entrar na área do investidor
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
+        O ebook incluído na sua assinatura também poderá ser baixado conforme o seu processo.
+      </p>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
+  } else {
+    subject = "Compra confirmada";
+    html = wrapEmail(
+      "Confirmação",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Pagamento confirmado
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Sua compra foi confirmada
+      </h1>
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado pela sua compra. Em caso de dúvidas, responda diretamente a este e-mail.
+      </p>
+
+      ${guaranteeBlock}
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
+  }
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: email,
+    subject,
+    html,
+  });
+}
+
+async function sendAdminSaleEmail({
+  buyerEmail,
+  buyerName,
+  buyerPhone,
+  productKey,
+  productName,
+  sessionId,
+  amountTotal,
+  mode,
+}) {
+  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || process.env.EMAIL_USER;
+
+  const amountFormatted =
+    typeof amountTotal === "number"
+      ? new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(amountTotal / 100)
+      : "Não informado";
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+    </head>
+    <body style="margin:0;padding:24px;background:#f7f6f3;font-family:Arial,sans-serif;color:#0c0e13;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center">
+            <table width="640" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:640px;width:100%;background:#ffffff;border:1px solid #d4d1cb;">
+              <tr>
+                <td style="background:#0c0e13;padding:24px 28px;">
+                  <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a07c30;">
+                    Nova venda confirmada
+                  </p>
+                  <p style="margin:0;font-size:28px;font-family:Georgia,serif;color:#ffffff;">
+                    Daniel<span style="color:#a07c30;">.</span>
                   </p>
                 </td>
               </tr>
               <tr>
-                <td style="padding:40px;">
-                  ${bodyHtml}
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  ${emailFooter}
+                <td style="padding:28px;">
+                  <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">Você vendeu.</h1>
+
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Produto</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productName || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Tipo</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${mode || "payment"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Valor</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${amountFormatted}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Nome do comprador</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${buyerName || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>E-mail do comprador</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${buyerEmail || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Telefone</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${buyerPhone || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;"><strong>Product key</strong></td>
+                      <td style="padding:10px 0;border-bottom:1px solid #eee;">${productKey || "Não informado"}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 0;"><strong>Session ID</strong></td>
+                      <td style="padding:10px 0;word-break:break-all;">${sessionId}</td>
+                    </tr>
+                  </table>
+
+                  ${
+                    buyerEmail
+                      ? `
+                    <div style="margin-top:24px;">
+                      <a href="mailto:${buyerEmail}?subject=${encodeURIComponent(
+                        "Agendamento da sua consultoria"
+                      )}"
+                         style="display:inline-block;padding:14px 22px;background:#a07c30;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">
+                        Responder comprador
+                      </a>
+                    </div>
+                  `
+                      : ""
+                  }
+
+                  <p style="margin:24px 0 0;font-size:13px;color:#58607a;line-height:1.7;">
+                    Esse e-mail foi enviado automaticamente pelo webhook da Stripe após confirmação de pagamento.
+                  </p>
                 </td>
               </tr>
             </table>
@@ -331,117 +794,65 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     </html>
   `;
 
-  let subject = "";
-  let html = "";
-
-  if (productKey === "ebook") {
-    subject = "Seu ebook já está disponível";
-    html = wrapEmail(
-      "Compra confirmada",
-      `
-      <h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:28px;line-height:1.25;color:#0c0e13;font-weight:700;">
-        Pagamento confirmado.
-      </h1>
-      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
-        Seu acesso ao <strong>${productName}</strong> foi liberado.
-      </p>
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
-        Para baixar o material, use o botão abaixo.
-      </p>
-      <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-        <tr>
-          <td align="center" style="background:#a07c30;">
-            <a href="${downloadUrl}" style="display:inline-block;padding:14px 24px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook
-            </a>
-          </td>
-        </tr>
-      </table>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;line-height:1.8;color:#58607a;">
-        Se tiver qualquer dificuldade, basta responder este e-mail.
-      </p>
-      `
-    );
-  } else {
-    subject = "Compra confirmada · próximos passos da sua consultoria";
-    html = wrapEmail(
-      "Compra confirmada",
-      `
-      <h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:28px;line-height:1.25;color:#0c0e13;font-weight:700;">
-        Pagamento confirmado.
-      </h1>
-      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
-        Sua compra de <strong>${productName}</strong> foi confirmada.
-      </p>
-      <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#232737;">
-        A partir de agora, o processo segue pela sua área do investidor.
-      </p>
-      <ol style="margin:0 0 24px 18px;padding:0;font-family:Arial,sans-serif;font-size:15px;line-height:1.9;color:#232737;">
-        <li>Você acessa sua área do investidor.</li>
-        <li>Preenche o questionário inicial.</li>
-        <li>Eu analiso suas informações e entro em contato para os próximos passos.</li>
-      </ol>
-      <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-        <tr>
-          <td align="center" style="background:#a07c30;">
-            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 24px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Entrar na área do investidor
-            </a>
-          </td>
-        </tr>
-      </table>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;line-height:1.8;color:#58607a;">
-        O ebook também está incluído e poderá ser acessado conforme a liberação do seu processo.
-      </p>
-      `
-    );
-  }
-
   await transporter.sendMail({
-    from: `"Daniel Ferreira" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-    to: email,
-    subject,
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: adminEmail,
+    subject: `Nova venda confirmada · ${productName || "Produto"} · ${
+      buyerEmail || "sem e-mail"
+    }`,
     html,
   });
 }
 
-function isStripeSessionPaid(session) {
-  if (!session) return false;
+async function handleConfirmedSale(session) {
+  const email = session.customer_details?.email || session.customer_email || null;
+  const buyerName = session.customer_details?.name || null;
+  const buyerPhone = session.customer_details?.phone || null;
+  const productKey =
+    session.metadata?.product ||
+    session.metadata?.product_key ||
+    "desconhecido";
+  const productName =
+    session.metadata?.product_name ||
+    products[productKey]?.productName ||
+    "Produto";
+  const amountTotal = session.amount_total ?? null;
+  const mode = session.mode || "payment";
 
-  if (session.payment_status === "paid") return true;
-  if (session.status === "complete" && session.payment_status === "no_payment_required") {
-    return true;
+  console.log("✅ Venda confirmada:", {
+    sessionId: session.id,
+    email,
+    buyerName,
+    buyerPhone,
+    productKey,
+    productName,
+    paymentStatus: session.payment_status,
+    amountTotal,
+  });
+
+  if (email) {
+    await sendPurchaseEmail({
+      email,
+      productKey,
+      productName,
+      sessionId: session.id,
+    });
+    console.log("📧 E-mail enviado para comprador:", email);
+  } else {
+    console.log("⚠️ Compra confirmada sem e-mail do comprador:", session.id);
   }
 
-  return false;
-}
-
-function normalizeReturnPath(input) {
-  if (!input || typeof input !== "string") return "/";
-
-  try {
-    const urlObj = new URL(input, "http://dummy.com");
-    
-    let rawPath = urlObj.pathname;
-    
-    if (rawPath === "/index") rawPath = "/index.html";
-    if (rawPath === "/consultoria") rawPath = "/consultoria.html";
-    if (rawPath === "/ebook") rawPath = "/ebook.html";
-
-    const safePaths = new Set(["/", "/index.html", "/consultoria.html", "/ebook.html"]);
-
-    if (!safePaths.has(rawPath)) {
-      return "/";
-    }
-
-    return `${rawPath}${urlObj.search}${urlObj.hash}`;
-  } catch (_) {
-    return "/";
-  }
-}
-
-function absoluteUrlFromPath(pathname) {
-  return new URL(pathname, BASE_URL).toString();
+  await sendAdminSaleEmail({
+    buyerEmail: email,
+    buyerName,
+    buyerPhone,
+    productKey,
+    productName,
+    sessionId: session.id,
+    amountTotal,
+    mode,
+  });
+  console.log("📨 E-mail interno enviado para o admin");
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -461,38 +872,27 @@ app.use(express.static(PUBLIC_DIR));
 // ─────────────────────────────────────────────────────────────
 // ROTAS ESTÁTICAS
 // ─────────────────────────────────────────────────────────────
-app.get("/", (req, res) => {
+app.get(["/", "/api"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-app.get("/consultoria", (req, res) => {
+app.get(["/consultoria", "/api/consultoria"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
 });
 
-app.get("/ebook", (req, res) => {
+app.get(["/ebook", "/api/ebook"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "ebook.html"));
 });
 
-app.get("/consultoria", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
-});
-
-app.get("/preview", (req, res) => {
+app.get(["/preview", "/api/preview"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "preview.html"));
 });
 
-app.get("/sucesso", (req, res) => {
+app.get(["/sucesso", "/api/sucesso"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
 });
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
-
-// ─────────────────────────────────────────────────────────────
-// AUTH / INVESTOR AREA
-// ─────────────────────────────────────────────────────────────
-app.get("/entrar", (req, res) => {
+app.get(["/entrar", "/api/entrar"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "entrar.html"));
 });
 
@@ -504,6 +904,36 @@ app.get("/admin-dashboard", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "admin-dashboard.html"));
 });
 
+// ─────────────────────────────────────────────────────────────
+// HEALTHCHECK
+// ─────────────────────────────────────────────────────────────
+app.get(["/health", "/api/health"], (_req, res) => {
+  res.json({
+    ok: true,
+    env: {
+      hasSecretKey: Boolean(process.env.STRIPE_SECRET_KEY),
+      hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      hasPriceEbook: Boolean(process.env.STRIPE_PRICE_EBOOK),
+      hasPriceConsultoriaAvulsa: Boolean(
+        process.env.STRIPE_PRICE_CONSULTORIA_AVULSA
+      ),
+      hasPriceConsultoriaMensal: Boolean(
+        process.env.STRIPE_PRICE_CONSULTORIA_MENSAL
+      ),
+      hasPriceConsultoriaPremium: Boolean(
+        process.env.STRIPE_PRICE_CONSULTORIA_PREMIUM
+      ),
+      hasEmailHost: Boolean(process.env.EMAIL_HOST),
+      hasEmailUser: Boolean(process.env.EMAIL_USER),
+      hasAdminNotifyEmail: Boolean(process.env.ADMIN_NOTIFY_EMAIL),
+      baseUrl: BASE_URL,
+    },
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// AUTH / INVESTOR AREA
+// ─────────────────────────────────────────────────────────────
 const INVESTOR_TABLE = "userData";
 const INVESTOR_PK = "auth_user_id";
 
@@ -537,9 +967,7 @@ app.get(
         .eq(INVESTOR_PK, user.id)
         .maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return res.json({
         authUser: {
@@ -588,9 +1016,7 @@ app.post(
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return res.json({ ok: true, investorData: data });
     } catch (error) {
@@ -623,9 +1049,7 @@ app.post(
           perPage: 1000,
         });
 
-      if (listError) {
-        throw listError;
-      }
+      if (listError) throw listError;
 
       const existingUser = existingUsers?.users?.find(
         (item) => String(item.email || "").toLowerCase() === email
@@ -643,9 +1067,7 @@ app.post(
             email_confirm: true,
           });
 
-        if (createError) {
-          throw createError;
-        }
+        if (createError) throw createError;
 
         userId = newUserData.user.id;
       }
@@ -666,9 +1088,7 @@ app.post(
         .select()
         .single();
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       return res.json({
         ok: true,
@@ -695,9 +1115,7 @@ app.get(
         .select("*")
         .order("updated_at", { ascending: false });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return res.json({ investors: data || [] });
     } catch (error) {
@@ -721,9 +1139,7 @@ app.get(
         .eq(INVESTOR_PK, userId)
         .maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data) {
         return res.status(404).json({ error: "Investidor não encontrado." });
@@ -825,9 +1241,7 @@ app.patch(
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return res.json({ ok: true, investor: data });
     } catch (error) {
@@ -861,9 +1275,7 @@ app.post(
         .eq(INVESTOR_PK, user.id)
         .maybeSingle();
 
-      if (loadError) {
-        throw loadError;
-      }
+      if (loadError) throw loadError;
 
       const allocationHistory = Array.isArray(investorData?.allocation_history)
         ? [...investorData.allocation_history]
@@ -885,7 +1297,9 @@ app.post(
       }
 
       allocationHistory.sort((a, b) =>
-        String(a?.snapshotDate || "").localeCompare(String(b?.snapshotDate || ""))
+        String(a?.snapshotDate || "").localeCompare(
+          String(b?.snapshotDate || "")
+        )
       );
 
       const { data, error } = await supabaseAdmin
@@ -901,9 +1315,7 @@ app.post(
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return res.json({ ok: true, investorData: data });
     } catch (error) {
@@ -931,7 +1343,8 @@ app.post(
           ? Boolean(req.body.allow_sells)
           : true;
 
-      const snapshotDate = req.body?.snapshotDate || req.body?.snapshot_date || null;
+      const snapshotDate =
+        req.body?.snapshotDate || req.body?.snapshot_date || null;
 
       const rawCurrentPositions =
         req.body?.currentPositions || req.body?.current_positions || [];
@@ -942,9 +1355,7 @@ app.post(
         .eq(INVESTOR_PK, user.id)
         .maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (!investorData?.target_micro) {
         return res.status(400).json({
@@ -971,7 +1382,9 @@ app.post(
         ? rebalance.plan
         : rebalance.plan.map((item) => {
             if (Number(item.suggested_sale || 0) <= 0) return item;
-            const adjustedFinalAmount = roundMoney(Number(item.current_amount || 0));
+            const adjustedFinalAmount = roundMoney(
+              Number(item.current_amount || 0)
+            );
             return {
               ...item,
               suggested_sale: 0,
@@ -982,7 +1395,9 @@ app.post(
                   : 0,
               action_label:
                 Number(item.suggested_contribution || 0) > 0
-                  ? `Aportar ${Number(item.suggested_contribution || 0).toLocaleString("pt-BR", {
+                  ? `Aportar ${Number(
+                      item.suggested_contribution || 0
+                    ).toLocaleString("pt-BR", {
                       style: "currency",
                       currency: "BRL",
                     })}.`
@@ -1047,9 +1462,7 @@ app.post(
         .eq(INVESTOR_PK, user.id)
         .maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (!investorData?.target_micro) {
         return res.status(400).json({
@@ -1085,53 +1498,93 @@ app.post(
 // ─────────────────────────────────────────────────────────────
 // STRIPE CHECKOUT
 // ─────────────────────────────────────────────────────────────
-app.post("/create-checkout-session", async (req, res) => {
-  try {
-    const { product, returnTo } = req.body || {};
-    const selected = products[product];
+app.post(
+  ["/create-checkout-session", "/api/create-checkout-session"],
+  async (req, res) => {
+    try {
+      const { product, returnTo } = req.body || {};
+      const selected = products[product];
 
-    if (!selected?.priceId) {
-      return res.status(400).json({ error: "Produto inválido." });
+      if (!selected?.priceId) {
+        return res.status(400).json({ error: "Produto inválido." });
+      }
+
+      const normalizedReturnTo = normalizeReturnPath(returnTo);
+      const successUrl = new URL("/sucesso", BASE_URL);
+
+      successUrl.search = "";
+      successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+      successUrl.searchParams.set("produto", product);
+      successUrl.searchParams.set("return_to", normalizedReturnTo);
+
+      const cancelUrlObj = new URL(normalizedReturnTo, BASE_URL);
+      cancelUrlObj.searchParams.set("cancelado", "1");
+
+      const paymentMethods =
+        selected.mode === "subscription" ? ["card"] : ["card", "boleto"];
+
+      const session = await stripe.checkout.sessions.create({
+        mode: selected.mode,
+        payment_method_types: paymentMethods,
+        line_items: [
+          {
+            price: selected.priceId,
+            quantity: 1,
+          },
+        ],
+        billing_address_collection: "required",
+        phone_number_collection: {
+          enabled: true,
+        },
+        locale: "pt-BR",
+        allow_promotion_codes: true,
+        success_url: successUrl.toString(),
+        cancel_url: cancelUrlObj.toString(),
+        metadata: {
+          product,
+          product_key: product,
+          product_name: selected.productName,
+          return_to: normalizedReturnTo,
+        },
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      console.error("Erro ao criar sessão de checkout:", error);
+      return res.status(500).json({ error: "Erro ao iniciar checkout." });
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICAR SESSÃO
+// ─────────────────────────────────────────────────────────────
+app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
+  try {
+    const { session_id } = req.query;
+
+    if (!session_id) {
+      return res.status(400).json({ error: "session_id obrigatório" });
     }
 
-    const normalizedReturnTo = normalizeReturnPath(returnTo);
-    const successUrl = new URL("/sucesso", BASE_URL);
+    const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    successUrl.search = "";
-    successUrl.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
-    successUrl.searchParams.set("produto", product);
-    successUrl.searchParams.set("return_to", normalizedReturnTo);
-
-    const cancelUrlObj = new URL(normalizedReturnTo, BASE_URL);
-    cancelUrlObj.searchParams.set("cancelado", "1");
-
-    const session = await stripe.checkout.sessions.create({
-      mode: selected.mode,
-      line_items: [
-        {
-          price: selected.priceId,
-          quantity: 1,
-        },
-      ],
-      billing_address_collection: "required",
-      phone_number_collection: {
-        enabled: true,
-      },
-      locale: "pt-BR",
-      allow_promotion_codes: true,
-      success_url: successUrl.toString(),
-      cancel_url: cancelUrlObj.toString(),
-      metadata: {
-        product,
-        product_name: selected.productName,
-        return_to: normalizedReturnTo,
-      },
+    return res.json({
+      id: session.id,
+      status: session.payment_status,
+      checkout_status: session.status,
+      customer_email:
+        session.customer_details?.email || session.customer_email || null,
+      customer_name: session.customer_details?.name || null,
+      customer_phone: session.customer_details?.phone || null,
+      product_key: session.metadata?.product || session.metadata?.product_key || null,
+      product_name: session.metadata?.product_name || null,
+      mode: session.mode || null,
+      amount_total: session.amount_total ?? null,
     });
-
-    return res.json({ url: session.url });
-  } catch (error) {
-    console.error("Erro ao criar sessão de checkout:", error);
-    return res.status(500).json({ error: "Erro ao iniciar checkout." });
+  } catch (err) {
+    console.error("❌ Erro ao verificar sessão:", err.message);
+    return res.status(500).json({ error: "Erro ao verificar sessão." });
   }
 });
 
@@ -1156,46 +1609,73 @@ app.post(["/webhook", "/api/webhook"], async (req, res) => {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
 
-      if (!isStripeSessionPaid(session)) {
-        return res.status(200).json({ received: true });
+        if (isStripeSessionPaid(session)) {
+          await handleConfirmedSale(session);
+        } else {
+          console.log("ℹ️ Checkout concluído, mas ainda não pago:", {
+            sessionId: session.id,
+            paymentStatus: session.payment_status,
+          });
+        }
+        break;
       }
 
-      const customerEmail =
-        session.customer_details?.email || session.customer_email;
-      const productKey = session.metadata?.product;
-      const productName =
-        session.metadata?.product_name || products[productKey]?.productName;
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object;
+        await handleConfirmedSale(session);
+        break;
+      }
 
-      if (customerEmail && productKey && productName) {
-        await sendPurchaseEmail({
-          email: customerEmail,
-          productKey,
-          productName,
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object;
+        console.log("❌ Pagamento assíncrono falhou:", {
           sessionId: session.id,
+          paymentStatus: session.payment_status,
+          customerEmail:
+            session.customer_details?.email || session.customer_email || null,
+          productKey:
+            session.metadata?.product || session.metadata?.product_key || null,
+          productName: session.metadata?.product_name || null,
         });
+        break;
       }
-    }
 
-    if (event.type === "checkout.session.async_payment_succeeded") {
-      const session = event.data.object;
-
-      const customerEmail =
-        session.customer_details?.email || session.customer_email;
-      const productKey = session.metadata?.product;
-      const productName =
-        session.metadata?.product_name || products[productKey]?.productName;
-
-      if (customerEmail && productKey && productName) {
-        await sendPurchaseEmail({
-          email: customerEmail,
-          productKey,
-          productName,
-          sessionId: session.id,
+      case "invoice.payment_failed": {
+        const invoice = event.data.object;
+        console.log("❌ Falha na cobrança recorrente:", {
+          invoiceId: invoice.id,
+          customerId: invoice.customer,
+          subscriptionId: invoice.subscription,
         });
+        break;
       }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object;
+        console.log("ℹ️ Assinatura cancelada:", {
+          subscriptionId: subscription.id,
+          customerId: subscription.customer,
+          status: subscription.status,
+        });
+        break;
+      }
+
+      case "payment_intent.payment_failed": {
+        const paymentIntent = event.data.object;
+        console.log("❌ Pagamento falhou:", {
+          paymentIntentId: paymentIntent.id,
+          status: paymentIntent.status,
+          customerId: paymentIntent.customer,
+        });
+        break;
+      }
+
+      default:
+        console.log("ℹ️ Evento Stripe recebido:", event.type);
     }
 
     return res.json({ received: true });
@@ -1208,7 +1688,7 @@ app.post(["/webhook", "/api/webhook"], async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // DOWNLOAD EBOOK
 // ─────────────────────────────────────────────────────────────
-app.get("/download-ebook", async (req, res) => {
+app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
   try {
     const sessionId = req.query.session_id;
 
@@ -1229,13 +1709,17 @@ app.get("/download-ebook", async (req, res) => {
       "consultoria_premium",
     ]);
 
-    const productKey = session.metadata?.product;
+    const productKey = session.metadata?.product || session.metadata?.product_key;
 
     if (!allowedProducts.has(productKey)) {
       return res.status(403).send("Produto sem acesso ao ebook.");
     }
 
-    const ebookPath = path.join(PUBLIC_DIR, "Daniel Ferreira - Ebook de Investimentos para Iniciantes.pdf");
+    const ebookPath = path.join(
+      PUBLIC_DIR,
+      "downloads",
+      "ebook-investimentos-para-iniciantes.pdf"
+    );
 
     if (!fs.existsSync(ebookPath)) {
       return res.status(404).send("Arquivo do ebook não encontrado.");
@@ -1243,7 +1727,7 @@ app.get("/download-ebook", async (req, res) => {
 
     return res.download(
       ebookPath,
-      "Daniel Ferreira - Ebook de Investimentos para Iniciantes.pdf"
+      "ebook-investimentos-para-iniciantes.pdf"
     );
   } catch (error) {
     console.error("Erro no download do ebook:", error);
@@ -1258,7 +1742,11 @@ app.get("*", (req, res) => {
   const requested = req.path.replace(/^\/+/, "");
   const candidate = path.join(PUBLIC_DIR, requested);
 
-  if (requested && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+  if (
+    requested &&
+    fs.existsSync(candidate) &&
+    fs.statSync(candidate).isFile()
+  ) {
     return res.sendFile(candidate);
   }
 
@@ -1266,6 +1754,12 @@ app.get("*", (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// START
+// START / EXPORT
 // ─────────────────────────────────────────────────────────────
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor rodando em ${BASE_URL}`);
+  });
+}
+
 module.exports = app;

@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/create-checkout-session", "destination": "/api" },
     { "source": "/webhook", "destination": "/api" },
+    { "source": "/verificar-sessao", "destination": "/api" },
     { "source": "/download-ebook", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
     { "source": "/sucesso", "destination": "/api" },
@@ -9,6 +10,9 @@
     { "source": "/entrar", "destination": "/api" },
     { "source": "/consultoria", "destination": "/api" },
     { "source": "/preview", "destination": "/api" },
+    { "source": "/politica-de-privacidade", "destination": "/api" },
+    { "source": "/politica-de-cookies", "destination": "/api" },
+    { "source": "/termos-de-uso", "destination": "/api" },
     { "source": "/", "destination": "/api" }
   ]
 }
