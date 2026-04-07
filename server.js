@@ -513,16 +513,16 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
 
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
         <tr>
-          <td style="background:#a07c30;">
-            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Entrar na área do investidor
+          <td style="background:#0c0e13;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook incluso
             </a>
           </td>
         </tr>
       </table>
 
       <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
-        O ebook incluído na sua compra também poderá ser baixado pelo link apropriado no seu processo.
+        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
       </p>
 
       <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
@@ -585,16 +585,16 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
 
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
         <tr>
-          <td style="background:#a07c30;">
-            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Entrar na área do investidor
+          <td style="background:#0c0e13;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook incluso
             </a>
           </td>
         </tr>
       </table>
 
       <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
-        O ebook incluído na sua compra também poderá ser baixado pelo link apropriado no seu processo.
+        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
       </p>
 
       <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
@@ -629,16 +629,16 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
 
       <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
         <tr>
-          <td style="background:#a07c30;">
-            <a href="${investorAreaUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Entrar na área do investidor
+          <td style="background:#0c0e13;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook incluso
             </a>
           </td>
         </tr>
       </table>
 
       <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
-        O ebook incluído na sua assinatura também poderá ser baixado conforme o seu processo.
+        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
       </p>
 
       <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
