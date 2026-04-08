@@ -444,21 +444,13 @@ function markWebhookPaymentProcessed(paymentId) {
   processedWebhookPayments.add(String(paymentId));
 }
 
-async function hasProcessedPaymentInDB(paymentId) {
-  if (!supabaseAdmin) return false;
-  const { data } = await supabaseAdmin
+// REMOVE as duas funções antigas e coloca essa no lugar:
+async function tryClaimPayment(paymentId) {
+  if (!supabaseAdmin) return true;
+  const { error } = await supabaseAdmin
     .from("processed_payments")
-    .select("payment_id")
-    .eq("payment_id", String(paymentId))
-    .maybeSingle();
-  return !!data;
-}
-
-async function markPaymentProcessedInDB(paymentId) {
-  if (!supabaseAdmin) return;
-  await supabaseAdmin
-    .from("processed_payments")
-    .upsert({ payment_id: String(paymentId), processed_at: new Date().toISOString() });
+    .insert({ payment_id: String(paymentId), processed_at: new Date().toISOString() });
+  return !error; // true = conseguiu inserir (pode processar), false = já existia (abortar)
 }
 
 function normalizeReturnPath(input) {
@@ -1942,8 +1934,9 @@ app.post(
         return res.json({ received: true, ignored: true });
       }
 
-      if (hasProcessedWebhookPayment(paymentId) || await hasProcessedPaymentInDB(paymentId)) {
-        console.log("ℹ️ Pagamento já processado (banco ou instância local):", paymentId);
+      // DEPOIS
+      if (hasProcessedWebhookPayment(paymentId)) {
+        console.log("ℹ️ Pagamento já processado nesta instância:", paymentId);
         return res.json({ received: true });
       }
 
@@ -1996,8 +1989,13 @@ app.post(
           return res.json({ received: true, pending: true });
         }
 
+      // DEPOIS
+      const claimed = await tryClaimPayment(paymentId);
+      if (!claimed) {
+        console.log("ℹ️ Pagamento já processado por outra instância (race condition bloqueada):", paymentId);
+        return res.json({ received: true });
+      }
       await handleConfirmedSale(session);
-      await markPaymentProcessedInDB(paymentId);
       markWebhookPaymentProcessed(paymentId);
 
         return res.json({ received: true });
