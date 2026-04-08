@@ -1954,6 +1954,19 @@ app.post(
 try {
   const body = req.body || {};
 
+    console.log("MP webhook debug", {
+    hasSecret: !!process.env.MP_WEBHOOK_SECRET,
+    secretPrefix: process.env.MP_WEBHOOK_SECRET?.slice(0, 8),
+    xSignature: req.headers["x-signature"],
+    xRequestId: req.headers["x-request-id"],
+    queryDataId: req.query["data.id"],
+    bodyDataId: req.body?.data?.id,
+    resource: req.body?.resource,
+    liveMode: req.body?.live_mode,
+    action: req.body?.action,
+    type: req.body?.type
+  });
+  
   if (!verifyMercadoPagoWebhookSignature(req)) {
     return res.status(401).json({ error: "Assinatura do webhook inválida." });
   }
