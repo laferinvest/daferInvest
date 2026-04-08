@@ -8,6 +8,7 @@
     { "source": "/sucesso", "destination": "/api" },
     { "source": "/ebook", "destination": "/api" },
     { "source": "/entrar", "destination": "/api" },
+    { "source": "/pre-checkout", "destination": "/api" },
     { "source": "/consultoria", "destination": "/api" },
     { "source": "/preview", "destination": "/api" },
     { "source": "/politica-de-privacidade", "destination": "/api" },
