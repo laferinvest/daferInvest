@@ -444,6 +444,23 @@ function markWebhookPaymentProcessed(paymentId) {
   processedWebhookPayments.add(String(paymentId));
 }
 
+async function hasProcessedPaymentInDB(paymentId) {
+  if (!supabaseAdmin) return false;
+  const { data } = await supabaseAdmin
+    .from("processed_payments")
+    .select("payment_id")
+    .eq("payment_id", String(paymentId))
+    .maybeSingle();
+  return !!data;
+}
+
+async function markPaymentProcessedInDB(paymentId) {
+  if (!supabaseAdmin) return;
+  await supabaseAdmin
+    .from("processed_payments")
+    .upsert({ payment_id: String(paymentId), processed_at: new Date().toISOString() });
+}
+
 function normalizeReturnPath(input) {
   if (!input || typeof input !== "string") return "/";
 
@@ -1925,8 +1942,8 @@ app.post(
         return res.json({ received: true, ignored: true });
       }
 
-      if (hasProcessedWebhookPayment(paymentId)) {
-        console.log("ℹ️ Pagamento já processado anteriormente nesta instância:", paymentId);
+      if (hasProcessedWebhookPayment(paymentId) || await hasProcessedPaymentInDB(paymentId)) {
+        console.log("ℹ️ Pagamento já processado (banco ou instância local):", paymentId);
         return res.json({ received: true });
       }
 
@@ -1979,8 +1996,9 @@ app.post(
           return res.json({ received: true, pending: true });
         }
 
-        await handleConfirmedSale(session);
-        markWebhookPaymentProcessed(paymentId);
+      await handleConfirmedSale(session);
+      await markPaymentProcessedInDB(paymentId);
+      markWebhookPaymentProcessed(paymentId);
 
         return res.json({ received: true });
       } finally {
