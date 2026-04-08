@@ -2003,7 +2003,7 @@
 
         const data = await res.json();
 
-      const checkoutUrl = data.sandbox_init_point || data.init_point || data.url;
+      const checkoutUrl = data.init_point || data.url || data.sandbox_init_point;
 
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
