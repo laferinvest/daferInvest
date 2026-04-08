@@ -1964,7 +1964,7 @@
   </div>
 
   <div class="mobile-sticky-cta">
-    <a href="/pre-checkout.html?product=consultoria_avulsa_entrada">Pagar entrada</a>
+    <a href="/pre-checkout?product=consultoria_avulsa_entrada">Pagar entrada</a>
     <a class="btn-secondary" href="/preview.html" data-track="mobile_demo_click">Ver área</a>
   </div>
 
@@ -1993,7 +1993,7 @@
       overlay.classList.add('active');
       trackEvent('consultoria_cta_click', { product: produto });
       window.location.href =
-        '/pre-checkout.html?product=' + encodeURIComponent(produto);
+        '/pre-checkout?product=' + encodeURIComponent(produto);
     }
 
     document.querySelectorAll('[data-track]').forEach(el => {
