@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finalizar compra · Daniel Ferreira</title>
+  <meta name="description" content="Pré-checkout para coleta de nome, e-mail e telefone antes do pagamento via Mercado Pago." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0c0e13;
+      --ink-2:    #181b24;
+      --ink-soft: #202533;
+      --muted:    #58607a;
+      --line:     #d4d1cb;
+      --bg:       #f7f6f3;
+      --bg-warm:  #edeae3;
+      --gold:     #a07c30;
+      --gold-lt:  #c09a50;
+      --white:    #ffffff;
+      --ff-head:  'Barlow Condensed', sans-serif;
+      --ff-body:  'Barlow', sans-serif;
+      --ff-sans:  'DM Sans', sans-serif;
+      --max-w: 1100px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--ff-sans);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(247,246,243,.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: var(--ff-head);
+      font-size: 1.15rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--ink); text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-badge {
+      font-family: var(--ff-body);
+      font-size: .65rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: .3rem .9rem;
+      border: 1px solid rgba(160,124,48,.35);
+      color: var(--gold);
+    }
+
+    .hero {
+      background: var(--ink);
+      padding-top: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .hero-inner {
+      position: relative; z-index: 1;
+      padding: clamp(3rem, 7vw, 5rem) 0 clamp(2.8rem, 5vw, 4.2rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.1rem;
+    }
+    .hero-icon {
+      width: 72px; height: 72px;
+      border-radius: 999px;
+      border: 1px solid rgba(160,124,48,.7);
+      display: grid; place-items: center;
+      color: var(--gold);
+      background: rgba(160,124,48,.08);
+      box-shadow: inset 0 0 0 8px rgba(160,124,48,.05);
+    }
+    .hero-icon svg { width: 30px; height: 30px; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .65rem;
+      font-family: var(--ff-body);
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold);
+    }
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      width: 22px; height: 2px; background: var(--gold);
+    }
+    .hero-title {
+      font-family: var(--ff-head);
+      font-size: clamp(2.3rem, 5vw, 4rem);
+      font-weight: 700; line-height: 1;
+      letter-spacing: .03em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .hero-title em { font-style: normal; color: var(--gold); }
+    .hero-sub {
+      max-width: 680px;
+      color: rgba(255,255,255,.86);
+      font-size: .96rem;
+      line-height: 1.9;
+    }
+    .hero-sub strong { color: var(--white); font-weight: 700; }
+
+    main { flex: 1; padding: clamp(2.6rem, 6vw, 4.8rem) 0; }
+
+    .info-strip {
+      background: var(--white);
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 2rem;
+    }
+    .info-strip-item {
+      padding: 1.25rem 1.5rem;
+      border-right: 1px solid var(--line);
+    }
+    .info-strip-item:last-child { border-right: none; }
+    .info-strip-label {
+      font-family: var(--ff-body);
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .35rem;
+    }
+    .info-strip-value {
+      font-family: var(--ff-head);
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+    .info-strip-value.gold { color: var(--gold); }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+    }
+    .card-header {
+      padding: 2rem 2rem 1.45rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .card-label {
+      font-family: var(--ff-body);
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .6rem;
+    }
+    .card-title {
+      font-family: var(--ff-head);
+      font-size: 1.55rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .card-body { padding: 1.6rem 2rem 2rem; }
+
+    .field-grid { display: grid; gap: 1rem; }
+    .field {
+      display: grid;
+      gap: .48rem;
+    }
+    .field label {
+      font-family: var(--ff-body);
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: #3e465b;
+    }
+    .field input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--line);
+      background: #fcfbf8;
+      padding: 0 1rem;
+      font-family: var(--ff-sans);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .field input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(160,124,48,.12);
+      background: var(--white);
+    }
+    .field-hint {
+      font-size: .84rem;
+      font-weight: 500;
+      color: #454f66;
+      line-height: 1.6;
+    }
+
+    .checkout-box {
+      margin-top: 1.35rem;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #faf8f4 100%);
+      padding: 1.15rem;
+    }
+    .checkout-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding-bottom: .95rem;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: .9rem;
+    }
+    .checkout-brand {
+      display: flex; align-items: center; gap: .6rem;
+      min-width: 0;
+    }
+    .brand-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      min-height: 34px;
+      padding: .45rem .7rem;
+      border: 1px solid rgba(160,124,48,.18);
+      background: var(--white);
+      color: #1277c5;
+      font-family: var(--ff-body);
+      font-size: .8rem;
+      font-weight: 700;
+    }
+    .brand-chip svg { width: 18px; height: 18px; }
+    .pix-chip {
+      color: #69b6a6;
+    }
+    .parcelas-label {
+      font-family: var(--ff-body);
+      font-size: .82rem;
+      color: #df8a26;
+      white-space: nowrap;
+    }
+    .parcelas-list {
+      display: grid; gap: .25rem;
+      font-size: 1.02rem;
+      font-weight: 500;
+      color: #1d2330;
+      line-height: 1.7;
+      margin-bottom: .95rem;
+    }
+    .parcelas-list strong { color: var(--gold); font-weight: 700; }
+    .cards-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    .card-flags {
+      display: flex; flex-wrap: wrap; gap: .45rem;
+    }
+    .flag {
+      min-width: 54px;
+      height: 28px;
+      padding: 0 .55rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      background: var(--white);
+      font-family: var(--ff-body);
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      color: #1d2330;
+    }
+
+    .pay-option {
+      margin-top: 1rem;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--white);
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+      text-align: left;
+      padding: 0;
+    }
+    .pay-option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(160,124,48,.48);
+      box-shadow: 0 10px 28px rgba(12,14,19,.08);
+    }
+    .pay-option-inner {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 1rem 1.1rem;
+    }
+    .pay-option-left {
+      display: flex; align-items: center; gap: .85rem;
+      min-width: 0;
+    }
+    .pay-option-icon {
+      width: 44px; height: 44px;
+      border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(18,119,197,.08);
+      color: #1277c5;
+      border: 1px solid rgba(18,119,197,.12);
+      flex-shrink: 0;
+    }
+    .pay-option-icon svg { width: 22px; height: 22px; }
+    .pay-option-title {
+      font-family: var(--ff-body);
+      font-size: .74rem; font-weight: 700;
+      letter-spacing: .13em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .15rem;
+    }
+    .pay-option-sub {
+      color: var(--ink-soft);
+      font-size: .95rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+    .pay-option-arrow {
+      color: #df8a26;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .status-box {
+      margin-top: 1rem;
+      padding: .9rem 1rem;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      font-size: .86rem;
+      font-weight: 500;
+      color: #414b61;
+      line-height: 1.7;
+    }
+    .status-box.error {
+      background: rgba(160,50,30,.04);
+      border-color: rgba(160,50,30,.16);
+      color: #7a3520;
+    }
+
+    .side-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      position: sticky;
+      top: 88px;
+    }
+    .side-cover img {
+      display: block;
+      width: 100%;
+      border-bottom: 1px solid var(--line);
+    }
+    .side-meta { padding: 1.2rem 1.25rem 1.35rem; }
+    .side-kicker {
+      font-family: var(--ff-body);
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .45rem;
+    }
+    .side-name {
+      font-family: var(--ff-head);
+      font-size: 1.12rem;
+      line-height: 1.15;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: .85rem;
+    }
+    .side-copy {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .btn-row {
+      display: flex; gap: .8rem; flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    a.btn {
+      display: inline-block;
+      padding: .78rem 1.8rem;
+      font-family: var(--ff-body);
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      text-decoration: none; border: 1px solid var(--line); cursor: pointer;
+      transition: background .2s, transform .15s, border-color .15s;
+      color: var(--ink);
+      background: transparent;
+    }
+    a.btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    footer {
+      background: var(--ink);
+      border-top: 1px solid rgba(255,255,255,.06);
+      margin-top: auto;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .footer-logo {
+      font-family: var(--ff-head);
+      font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-links {
+      display: flex; gap: 2rem; flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-family: var(--ff-body);
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-reg {
+      font-size: .68rem;
+      color: rgba(255,255,255,.4);
+      line-height: 1.8;
+      padding: .8rem 0 1.75rem;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(12,14,19,.78);
+      align-items: center;
+      justify-content: center;
+    }
+    #loading-overlay.active { display: flex; }
+    .loading-box {
+      background: var(--white);
+      padding: 2rem 2.5rem;
+      text-align: center;
+      border: 1px solid var(--line);
+      font-size: .92rem;
+      color: var(--ink-soft);
+      min-width: 280px;
+    }
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--line);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 900px) {
+      .content-layout { grid-template-columns: 1fr; }
+      .side-card { position: static; max-width: 320px; margin: 0 auto; }
+    }
+    @media (max-width: 760px) {
+      .info-strip { grid-template-columns: 1fr; }
+      .info-strip-item { border-right: none; border-bottom: 1px solid var(--line); }
+      .info-strip-item:last-child { border-bottom: none; }
+      .card-header, .card-body { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .hero-title { font-size: 2rem; }
+      .pay-option-inner { align-items: flex-start; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">Daniel<span>.</span></a>
+        <span class="nav-badge">Finalização da Compra</span>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 8.5V7.75C7 5.12665 9.12665 3 11.75 3C14.3734 3 16.5 5.12665 16.5 7.75V8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M5.75 8.5H18.25C18.6642 8.5 19 8.83579 19 9.25V18.25C19 19.2165 18.2165 20 17.25 20H6.75C5.7835 20 5 19.2165 5 18.25V9.25C5 8.83579 5.33579 8.5 5.75 8.5Z" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="12" cy="13.25" r="1.1" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="hero-eyebrow">Etapa anterior ao checkout</div>
+        <h1 class="hero-title">Finalizar<br><em>Compra</em></h1>
+        <p class="hero-sub">
+          Antes de abrir o checkout, preencha seus dados para eu identificar sua compra,
+          enviar confirmação e manter a entrega organizada. Depois disso, você segue para o
+          <strong>Mercado Pago</strong> para pagar com cartão ou Pix.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="container">
+      <div class="info-strip fade-up">
+        <div class="info-strip-item">
+          <div class="info-strip-label">Produto</div>
+          <div class="info-strip-value" id="strip-product">Consultoria Inicial - Entrada 50%</div>
+        </div>
+        <div class="info-strip-item">
+          <div class="info-strip-label">Métodos</div>
+          <div class="info-strip-value gold">Cartão e Pix</div>
+        </div>
+        <div class="info-strip-item">
+          <div class="info-strip-label">Ambiente</div>
+          <div class="info-strip-value">Checkout Mercado Pago</div>
+        </div>
+      </div>
+
+      <div class="content-layout">
+        <section class="card fade-up" style="transition-delay:.05s;">
+          <div class="card-header">
+            <div class="card-label">Seus dados</div>
+            <div class="card-title">Preencha antes de pagar</div>
+          </div>
+          <div class="card-body">
+            <form id="pre-checkout-form" novalidate>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="full-name">Nome completo</label>
+                  <input id="full-name" name="fullName" type="text" autocomplete="name" placeholder="Digite seu nome completo" required />
+                </div>
+
+                <div class="field">
+                  <label for="email">E-mail</label>
+                  <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required />
+                  <div class="field-hint">Este e-mail será usado para confirmação da compra e contato posterior.</div>
+                </div>
+
+                <div class="field">
+                  <label for="phone">Telefone / WhatsApp</label>
+                  <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="(00) 00000-0000" required />
+                  <div class="field-hint">Peço esse contato para facilitar a comunicação da consultoria, caso necessário.</div>
+                </div>
+              </div>
+
+              <div class="checkout-box">
+                <div class="checkout-head">
+                  <div class="checkout-brand">
+                    <span class="brand-chip">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 11.4C6.3 9 8.5 7.5 11 7.5C13.2 7.5 15.2 8.5 16.6 10.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M7.2 16.2C8.5 17.7 10.1 18.5 12 18.5C14.7 18.5 17 16.9 18.3 14.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M8.3 12.9C9 12.1 9.9 11.7 11 11.7C12 11.7 12.9 12 13.6 12.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                      mercado pago
+                    </span>
+                    <span class="brand-chip pix-chip">pix</span>
+                  </div>
+                  <div class="parcelas-label">Parcelas ▾</div>
+                </div>
+
+                <div class="parcelas-list" id="parcelas-list">
+                  <div>1x de <strong>R$ 198,50</strong></div>
+                  <div>2x de <strong>R$ 99,25</strong></div>
+                  <div>3x de <strong>R$ 66,17</strong></div>
+                </div>
+
+                <div class="cards-row">
+                  <div class="card-flags">
+                    <span class="flag">VISA</span>
+                    <span class="flag">MASTERCARD</span>
+                    <span class="flag">ELO</span>
+                    <span class="flag">AMEX</span>
+                  </div>
+                  <div class="parcelas-label">Pix e cartões ▾</div>
+                </div>
+              </div>
+
+              <button class="pay-option" type="submit">
+                <div class="pay-option-inner">
+                  <div class="pay-option-left">
+                    <div class="pay-option-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 11.4C6.3 9 8.5 7.5 11 7.5C13.2 7.5 15.2 8.5 16.6 10.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M7.2 16.2C8.5 17.7 10.1 18.5 12 18.5C14.7 18.5 17 16.9 18.3 14.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M8.3 12.9C9 12.1 9.9 11.7 11 11.7C12 11.7 12.9 12 13.6 12.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="pay-option-title">Pagar via Mercado Pago</div>
+                      <div class="pay-option-sub">Abrir checkout com cartão, Pix e parcelamento disponível conforme o Mercado Pago.</div>
+                    </div>
+                  </div>
+                  <div class="pay-option-arrow">›</div>
+                </div>
+              </button>
+
+              <div id="form-status" class="status-box" style="display:none;"></div>
+            </form>
+
+            <div class="btn-row">
+              <a class="btn" id="back-link" href="/consultoria">← Voltar para a oferta</a> 
+            </div>
+          </div>
+        </section>
+
+        <aside class="side-card fade-up" style="transition-delay:.14s;">
+          <div class="side-cover">
+            <img src="img/capa-ebook.png" alt="O Essencial dos Investimentos" />
+          </div>
+          <div class="side-meta">
+            <div class="side-kicker">Resumo do pedido</div>
+            <div class="side-name" id="summary-title">Consultoria Inicial<br>Entrada 50%</div>
+            <p class="side-copy" id="summary-copy">
+              Você preenche seus dados primeiro e, em seguida, segue para o checkout do Mercado Pago com Pix e cartões.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-logo">Daniel<span>.</span></span>
+        <div class="footer-links">
+          <a href="/">Início</a>
+          <a href="/consultoria">Consultoria</a>
+          <a href="/termos-de-uso">Termos</a>
+          <a href="/politica-de-privacidade">Privacidade</a>
+        </div>
+      </div>
+      <div class="footer-reg">
+        Daniel Oliveira Ferreira · Consultor de Valores Mobiliários Autônomo registrado na CVM sob o nº 003838-5 · CEA certificado pela ANBIMA.<br>
+        As informações contidas neste site têm caráter meramente informativo e educacional, não constituindo recomendação de investimento.
+      </div>
+    </div>
+  </footer>
+
+  <div id="loading-overlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      Redirecionando para o pagamento...
+    </div>
+  </div>
+
+  <script>
+    const PRODUCT_MAP = {
+      ebook: {
+        label: 'Ebook Investimentos para Iniciantes',
+        price: 39.90,
+        parcelText: ['1x de R$ 39,90'],
+        summary: 'Compra direta do ebook com checkout via Mercado Pago.',
+        backHref: '/ebook.html'
+      },
+      consultoria_avulsa: {
+        label: 'Consultoria Inicial',
+        price: 397.00,
+        parcelText: ['1x de R$ 397,00', '2x de R$ 198,50', '3x de R$ 132,34'],
+        summary: 'Plano inicial completo com reunião, diagnóstico e plano personalizado.',
+        backHref: '/consultoria'
+      },
+      consultoria_avulsa_entrada: {
+        label: 'Consultoria Inicial - Entrada 50%',
+        price: 198.50,
+        parcelText: ['1x de R$ 198,50', '2x de R$ 99,25', '3x de R$ 66,17'],
+        summary: 'Entrada de 50% para iniciar a consultoria e estruturar o plano antes da liberação final.',
+        backHref: '/consultoria'
+      },
+      consultoria_premium: {
+        label: 'Consultoria Premium',
+        price: 797.00,
+        parcelText: ['1x de R$ 797,00', '2x de R$ 398,50', '3x de R$ 265,67'],
+        summary: 'Versão premium com mais profundidade na explicação e apoio na implementação.',
+        backHref: '/consultoria'
+      },
+      consultoria_premium_entrada: {
+        label: 'Consultoria Premium - Entrada 50%',
+        price: 398.50,
+        parcelText: ['1x de R$ 398,50', '2x de R$ 199,25', '3x de R$ 132,84'],
+        summary: 'Entrada de 50% da versão premium para iniciar a montagem da estratégia.',
+        backHref: '/consultoria'
+      }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const productKey = params.get('product') || 'consultoria_avulsa_entrada';
+    const selected = PRODUCT_MAP[productKey] || PRODUCT_MAP.consultoria_avulsa_entrada;
+
+    document.getElementById('strip-product').textContent = selected.label;
+    document.getElementById('summary-title').innerHTML = selected.label.replace(' - ', '<br>');
+    document.getElementById('summary-copy').textContent = selected.summary;
+    document.getElementById('back-link').href = selected.backHref;
+
+    const parcelasList = document.getElementById('parcelas-list');
+    parcelasList.innerHTML = selected.parcelText.map(text => `<div>${text.replace('R$', '<strong>R$')}</strong></div>`).join('');
+
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')),
+      { threshold: 0.06 }
+    );
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    function showStatus(message, isError = false) {
+      const box = document.getElementById('form-status');
+      box.style.display = 'block';
+      box.className = isError ? 'status-box error' : 'status-box';
+      box.textContent = message;
+    }
+
+    function trackEvent(eventName, params = {}) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: eventName,
+        page_type: 'pre_checkout',
+        product: productKey,
+        ...params
+      });
+    }
+
+    document.getElementById('pre-checkout-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const fullName = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      if (!fullName || !email || !phone) {
+        showStatus('Preencha nome completo, e-mail e telefone antes de seguir para o pagamento.', true);
+        return;
+      }
+
+      const overlay = document.getElementById('loading-overlay');
+      overlay.classList.add('active');
+      trackEvent('pre_checkout_submit', { email_domain: email.split('@')[1] || null });
+
+      try {
+        const returnTo = selected.backHref;
+        const res = await fetch('/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product: productKey,
+            returnTo,
+            customerEmail: email,
+            customerName: fullName,
+            customerPhone: phone
+          })
+        });
+
+        const data = await res.json();
+        const checkoutUrl = data.init_point || data.url || data.sandbox_init_point;
+
+        if (!res.ok || !checkoutUrl) {
+          overlay.classList.remove('active');
+          showStatus(data.error || 'Não foi possível iniciar o checkout agora. Tente novamente.', true);
+          return;
+        }
+
+        window.location.href = checkoutUrl;
+      } catch (error) {
+        overlay.classList.remove('active');
+        showStatus('Erro de conexão ao abrir o checkout. Tente novamente em instantes.', true);
+      }
+    });
+  </script>
+</body>
+</html>
