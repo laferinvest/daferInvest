@@ -302,19 +302,31 @@ function verifyMercadoPagoWebhookSignature(req) {
 
   const xSignature = req.headers["x-signature"];
   const xRequestId = req.headers["x-request-id"];
-  const dataId =
-    req.query["data.id"] ||
-    req.body?.data?.id ||
-    req.body?.resource?.split("/").pop() ||
-    "";
 
-  if (!xSignature || !xRequestId || !dataId) return false;
-
-  const parsed = parseMpSignature(xSignature);
+  const parsed = parseMpSignature(xSignature || "");
   const ts = parsed.ts;
   const v1 = parsed.v1;
 
-  if (!ts || !v1) return false;
+  // MP pode mandar o id em formatos diferentes
+  const dataId =
+    req.query["data.id"] ||
+    req.query.id ||
+    req.body?.data?.id ||
+    req.body?.id ||
+    "";
+
+  if (!xSignature || !xRequestId || !ts || !v1 || !dataId) {
+    console.log("⚠️ Assinatura MP sem campos mínimos:", {
+      hasXSignature: !!xSignature,
+      hasXRequestId: !!xRequestId,
+      hasTs: !!ts,
+      hasV1: !!v1,
+      dataId,
+      query: req.query,
+      body: req.body,
+    });
+    return false;
+  }
 
   const manifest =
     `id:${dataId};` +
@@ -328,8 +340,8 @@ function verifyMercadoPagoWebhookSignature(req) {
 
   try {
     return crypto.timingSafeEqual(
-      Buffer.from(expected),
-      Buffer.from(v1)
+      Buffer.from(expected, "utf8"),
+      Buffer.from(v1, "utf8")
     );
   } catch (_) {
     return false;
@@ -1954,26 +1966,33 @@ app.post(
 try {
   const body = req.body || {};
 
-    console.log("MP webhook debug", {
+  console.log("MP webhook debug", {
     hasSecret: !!process.env.MP_WEBHOOK_SECRET,
     secretPrefix: process.env.MP_WEBHOOK_SECRET?.slice(0, 8),
     xSignature: req.headers["x-signature"],
     xRequestId: req.headers["x-request-id"],
-    queryDataId: req.query["data.id"],
-    bodyDataId: req.body?.data?.id,
+    query: req.query,
+    body: req.body,
     resource: req.body?.resource,
+    bodyId: req.body?.id,
+    bodyDataId: req.body?.data?.id,
+    queryId: req.query?.id,
+    queryDataId: req.query?.["data.id"],
     liveMode: req.body?.live_mode,
     action: req.body?.action,
     type: req.body?.type
   });
-  
+
   if (!verifyMercadoPagoWebhookSignature(req)) {
     return res.status(401).json({ error: "Assinatura do webhook inválida." });
   }
 
   const action = body.action || null;
   const type = body.type || null;
-  const topic = req.query.topic || null;
+  const topic =
+    req.query.topic ||
+    req.body?.topic ||
+    (String(body.resource || "").includes("/merchant_orders/") ? "merchant_order" : null);
 
   const isSupportedEvent =
     type === "payment" ||
@@ -1990,21 +2009,26 @@ try {
       body,
       query: req.query,
     });
-    return;
+    return res.json({ received: true, ignored: true });
   }
 
   let paymentId =
     body.data?.id ||
     req.query["data.id"] ||
-    body.resource?.split("/").pop() ||
+    req.query.id ||
+    body.id ||
     null;
+
+  if (!paymentId && body.resource) {
+    paymentId = String(body.resource).split("/").pop() || null;
+  }
 
   if (topic === "merchant_order") {
     const merchantOrderId = paymentId;
 
     if (!merchantOrderId) {
       console.log("⚠️ Webhook merchant_order sem id:", body);
-      return;
+      return res.json({ received: true, ignored: true });
     }
 
     const merchantOrder = await getMercadoPagoMerchantOrder(merchantOrderId);
@@ -2018,7 +2042,7 @@ try {
         merchantOrderId,
         payments: merchantOrder.payments || [],
       });
-      return;
+      return res.json({ received: true, ignored: true });
     }
 
     paymentId = approvedPayment.id;
@@ -2026,7 +2050,7 @@ try {
 
   if (!paymentId) {
     console.log("⚠️ Webhook Mercado Pago sem payment id:", body);
-    return;
+    return res.json({ received: true, ignored: true });
   }
 
   if (hasProcessedWebhookPayment(paymentId)) {
@@ -2064,7 +2088,7 @@ try {
 
   if (!payment) {
     console.log("⚠️ Não foi possível consultar o pagamento no webhook:", paymentId);
-    return;
+    return res.json({ received: true, ignored: true });;
   }
 
   const session = buildSessionFromMpPayment(payment);
@@ -2096,6 +2120,7 @@ try {
     status: error.status,
     data: error.data,
   });
+  return res.status(500).json({ error: "Erro ao processar webhook." });
 }
   }
 );
