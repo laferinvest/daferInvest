@@ -614,7 +614,7 @@ function trackPurchase(data) {
   if (window.__purchaseTracked) return;
   if (!data) return;
 
-  if (!(data.status === 'paid' || data.status === 'no_payment_required')) {
+  if (!data.status === 'approved') {
     return;
   }
 
@@ -675,7 +675,7 @@ function trackPurchase(data) {
       renderNextSteps(data);
       trackPurchase(data);
 
-      if (data.status === 'paid' || data.status === 'no_payment_required') {
+      if (data.status === 'approved') {
         stopPolling();
       } else {
         startPolling();
@@ -738,7 +738,7 @@ function trackPurchase(data) {
     const ns = document.getElementById('next-steps');
     ns.style.display = 'flex';
 
-    if (!data || (data.status !== 'paid' && data.status !== 'no_payment_required')) {
+    if (!data || data.status === 'approved') {
       renderPendingBlock(data || {});
       return;
     }
