@@ -1829,11 +1829,20 @@ app.post(
         },
       };
 
-      const preference = await mpRequest("/checkout/preferences", {
-        method: "POST",
-        body: JSON.stringify(preferencePayload),
-      });
+const preference = await mpRequest("/checkout/preferences", {
+  method: "POST",
+  body: JSON.stringify(preferencePayload),
+});
 
+console.log("MP preference result:", {
+  id: preference.id,
+  init_point: preference.init_point,
+  sandbox_init_point: preference.sandbox_init_point,
+  api_base: getMercadoPagoApiBaseUrl(),
+  token_prefix: process.env.MP_ACCESS_TOKEN?.slice(0, 12)
+});
+
+      
       return res.json({
         url: preference.init_point,
         init_point: preference.init_point,
