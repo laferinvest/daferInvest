@@ -1153,6 +1153,10 @@ app.get(["/consultoria", "/api/consultoria"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "consultoria.html"));
 });
 
+app.get(["/pre-checkout", "/api/pre-checkout"], (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "pre-checkout.html"));
+});
+
 app.get(["/ebook", "/api/ebook"], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "ebook.html"));
 });
