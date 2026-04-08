@@ -388,9 +388,22 @@ function sleep(ms) {
 }
 
 const processedWebhookPayments = new Set();
+const processingWebhookPayments = new Set();
 
 function hasProcessedWebhookPayment(paymentId) {
   return processedWebhookPayments.has(String(paymentId));
+}
+
+function isProcessingWebhookPayment(paymentId) {
+  return processingWebhookPayments.has(String(paymentId));
+}
+
+function markWebhookPaymentProcessing(paymentId) {
+  processingWebhookPayments.add(String(paymentId));
+}
+
+function unmarkWebhookPaymentProcessing(paymentId) {
+  processingWebhookPayments.delete(String(paymentId));
 }
 
 function markWebhookPaymentProcessed(paymentId) {
@@ -1983,8 +1996,15 @@ try {
 
   if (hasProcessedWebhookPayment(paymentId)) {
     console.log("ℹ️ Pagamento já processado anteriormente nesta instância:", paymentId);
-    return;
+    return res.json({ received: true });
   }
+
+  if (isProcessingWebhookPayment(paymentId)) {
+    console.log("ℹ️ Pagamento já está em processamento nesta instância:", paymentId);
+    return res.json({ received: true });
+  }
+
+  markWebhookPaymentProcessing(paymentId);
 
   let payment = null;
 
@@ -2027,10 +2047,14 @@ try {
     return;
   }
 
-  await handleConfirmedSale(session);
-  markWebhookPaymentProcessed(paymentId);
-
-  return res.json({ received: true });
+  try {
+    await handleConfirmedSale(session);
+    markWebhookPaymentProcessed(paymentId);
+    return res.json({ received: true });
+  } finally {
+    unmarkWebhookPaymentProcessing(paymentId);
+  }
+  
 } catch (error) {
   console.error("Erro ao processar webhook Mercado Pago:", {
     message: error.message,
