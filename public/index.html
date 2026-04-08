@@ -1833,6 +1833,15 @@
     observer.observe(el);
   });
 
+  function trackEvent(eventName, params = {}) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: eventName,
+    page_type: 'index',
+    ...params
+  });
+}
+
   /* ── Checkout ── */
 function comprar(produto) {
   const overlay = document.getElementById('loading-overlay');
@@ -1841,7 +1850,6 @@ function comprar(produto) {
 
   window.location.href = '/pre-checkout?product=' + encodeURIComponent(produto);
 }
-
 
   const previewImages = [
     'img/page1.webp',
