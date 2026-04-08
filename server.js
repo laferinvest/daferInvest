@@ -1920,23 +1920,27 @@ app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
 
     return res.json({
       id: session.id,
-      status: session.payment_status,
-      checkout_status: session.status,
+      status: payment.status || session.status || null,
+      payment_status: payment.status || null,
       customer_email:
         session.customer_details?.email || session.customer_email || null,
-      customer_name: session.customer_details?.name || null,
-      customer_phone: session.customer_details?.phone || null,
       product_key:
         session.metadata?.product || session.metadata?.product_key || null,
-      product_name: session.metadata?.product_name || null,
-      mode: session.mode || null,
+      product_name:
+        session.metadata?.product_name ||
+        products[
+          session.metadata?.product || session.metadata?.product_key || ""
+        ]?.productName ||
+        "Produto",
       amount_total: session.amount_total ?? null,
-      raw_status_detail: payment.status_detail || null,
-      payment_method_id: payment.payment_method_id || null,
-      payment_type_id: payment.payment_type_id || null,
+      mode: session.mode || "payment",
     });
-  } catch (err) {
-    console.error("❌ Erro ao verificar pagamento:", err.message, err.data);
+  } catch (error) {
+    console.error("Erro ao verificar sessão:", {
+      message: error.message,
+      status: error.status,
+      data: error.data,
+    });
     return res.status(500).json({ error: "Erro ao verificar sessão." });
   }
 });
