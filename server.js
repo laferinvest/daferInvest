@@ -377,6 +377,16 @@ async function getMercadoPagoPayment(paymentId) {
   });
 }
 
+const processedWebhookPayments = new Set();
+
+function hasProcessedWebhookPayment(paymentId) {
+  return processedWebhookPayments.has(String(paymentId));
+}
+
+function markWebhookPaymentProcessed(paymentId) {
+  processedWebhookPayments.add(String(paymentId));
+}
+
 function normalizeReturnPath(input) {
   if (!input || typeof input !== "string") return "/";
 
@@ -1905,21 +1915,22 @@ app.post(
 
       res.json({ received: true });
 
-      const isPaymentEvent =
-        body.type === "payment" ||
-        body.action === "payment.created" ||
-        body.action === "payment.updated" ||
-        req.query.type === "payment" ||
-        req.query.topic === "payment";
+      const action = body.action || null;
+      const type = body.type || null;
+      const topic = req.query.topic || null;
 
-      if (!isPaymentEvent) {
+      const isPaymentUpdatedEvent =
+        action === "payment.updated" ||
+        (type === "payment" && topic === "payment");
+
+      if (!isPaymentUpdatedEvent) {
         console.log("ℹ️ Evento Mercado Pago ignorado:", {
-          type: body.type || null,
-          action: body.action || null,
-          topic: req.query.topic || null,
+          type,
+          action,
+          topic,
         });
         return;
-      }
+}
 
       const paymentId =
         body.data?.id ||
@@ -1932,12 +1943,20 @@ app.post(
         return;
       }
 
+      if (!paymentId) {
+          console.log("ℹ️ Webhook sem paymentId.");
+          return;
+        }
+
+        if (hasProcessedWebhookPayment(paymentId)) {
+          console.log("ℹ️ Pagamento já processado anteriormente nesta instância:", paymentId);
+          return;
+        }
+
       const payment = await getMercadoPagoPayment(paymentId);
       const session = buildSessionFromMpPayment(payment);
 
-      if (isApprovedPaymentStatus(payment.status)) {
-        await handleConfirmedSale(session);
-      } else {
+      if (!isApprovedPaymentStatus(payment.status)) {
         console.log("ℹ️ Pagamento recebido, mas ainda não aprovado:", {
           paymentId: payment.id,
           status: payment.status,
@@ -1948,6 +1967,9 @@ app.post(
             session.customer_details?.email || session.customer_email || null,
         });
       }
+
+      await handleConfirmedSale(session);
+      markWebhookPaymentProcessed(paymentId);
     } catch (error) {
       console.error("Erro ao processar webhook Mercado Pago:", {
         message: error.message,
