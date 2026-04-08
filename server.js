@@ -1934,9 +1934,8 @@ app.post(
         return res.json({ received: true, ignored: true });
       }
 
-      // DEPOIS
-      if (hasProcessedWebhookPayment(paymentId)) {
-        console.log("ℹ️ Pagamento já processado nesta instância:", paymentId);
+      if (hasProcessedWebhookPayment(paymentId) || !(await tryClaimPayment(paymentId))) {
+        console.log("ℹ️ Pagamento já processado (banco ou instância local):", paymentId);
         return res.json({ received: true });
       }
 
@@ -1989,12 +1988,6 @@ app.post(
           return res.json({ received: true, pending: true });
         }
 
-      // DEPOIS
-      const claimed = await tryClaimPayment(paymentId);
-      if (!claimed) {
-        console.log("ℹ️ Pagamento já processado por outra instância (race condition bloqueada):", paymentId);
-        return res.json({ received: true });
-      }
       await handleConfirmedSale(session);
       markWebhookPaymentProcessed(paymentId);
 
@@ -2027,6 +2020,12 @@ app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
     const payment = await getMercadoPagoPayment(paymentId);
     const session = buildSessionFromMpPayment(payment);
 
+    const productKey = session.metadata?.product || session.metadata?.product_key;
+    if (!productKey || productKey === "desconhecido") {
+      console.log("⚠️ Webhook aprovado mas sem external_reference ainda, ignorando sem marcar:", paymentId);
+      return res.json({ received: true, ignored: true });
+    }
+
     if (!isApprovedPaymentStatus(payment.status)) {
       return res.status(403).send("Pagamento ainda não confirmado.");
     }
@@ -2036,9 +2035,6 @@ app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
       "consultoria_avulsa",
       "consultoria_premium",
     ]);
-
-    const productKey =
-      session.metadata?.product || session.metadata?.product_key;
 
     if (!allowedProducts.has(productKey)) {
       return res.status(403).send("Produto sem acesso ao ebook.");
