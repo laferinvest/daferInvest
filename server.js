@@ -487,20 +487,10 @@ const products = {
     mode: "payment",
     productName: "Ebook + Consultoria Individual",
   },
-  consultoria_avulsa_entrada: {
-    unitPrice: Number(process.env.PRICE_CONSULTORIA_AVULSA_ENTRADA || 198.5),
-    mode: "payment",
-    productName: "Consultoria Inicial - Entrada 50%",
-  },
   consultoria_premium: {
     unitPrice: Number(process.env.PRICE_CONSULTORIA_PREMIUM || 797),
     mode: "payment",
     productName: "Ebook + Consultoria Premium",
-  },
-  consultoria_premium_entrada: {
-    unitPrice: Number(process.env.PRICE_CONSULTORIA_PREMIUM_ENTRADA || 398.5),
-    mode: "payment",
-    productName: "Consultoria Premium - Entrada 50%",
   },
 };
 
@@ -729,75 +719,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
     `
     );
-  } else if (productKey === "consultoria_avulsa_entrada") {
-    subject = "Entrada confirmada · Consultoria Inicial";
-    html = wrapEmail(
-      "Confirmação da entrada",
-      `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Entrada confirmada
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
-        Sua consultoria inicial foi iniciada
-      </h1>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado. O pagamento da <strong style="color:#0c0e13;">entrada de 50%</strong> da sua consultoria foi confirmado com sucesso.
-      </p>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        A partir daqui, seguimos com a reunião, o diagnóstico do seu perfil, patrimônio, objetivos e restrições,
-        e então eu monto a estrutura do seu plano de investimentos na área do investidor.
-      </p>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              Como funciona a partir de agora
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
-              · Fazemos a reunião e o diagnóstico técnico<br>
-              · Eu estruturo o plano e faço o upload na área do investidor<br>
-              · Você visualiza a lógica da carteira e a construção da estratégia<br>
-              · Os valores exatos por ativo ficam bloqueados nessa etapa<br>
-              · Se você aprovar, eu envio o link para pagamento da segunda metade<br>
-              · Após esse pagamento, libero os valores finais para execução
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Seu acesso à <strong style="color:#0c0e13;">área do investidor</strong> continuará sendo a base da entrega.
-        É lá que a estrutura do plano ficará organizada até a liberação final.
-      </p>
-
-      ${guaranteeBlock}
-
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
-        <tr>
-          <td style="background:#0c0e13;">
-            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook incluso
-            </a>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
-        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
-      </p>
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `
-    );
+  
   } else if (productKey === "consultoria_premium") {
     subject = "Compra confirmada · Consultoria Premium";
     html = wrapEmail(
@@ -870,76 +792,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
     `
     );
-  } else if (productKey === "consultoria_premium_entrada") {
-    subject = "Entrada confirmada · Consultoria Premium";
-    html = wrapEmail(
-      "Confirmação da entrada",
-      `
-      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Entrada confirmada
-      </p>
-      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
-        Sua consultoria premium foi iniciada
-      </h1>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado. O pagamento da <strong style="color:#0c0e13;">entrada de 50%</strong> da sua consultoria premium foi confirmado com sucesso.
-      </p>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Agora seguimos com a reunião, o diagnóstico do seu perfil e a construção do plano.
-        Na versão premium, você também terá uma apresentação mais aprofundada da lógica da carteira,
-        dos ativos e do papel de cada parte da estratégia.
-      </p>
-
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-              Como funciona a partir de agora
-            </p>
-            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
-              · Fazemos a reunião e o diagnóstico técnico<br>
-              · Eu estruturo o plano premium e faço o upload na área do investidor<br>
-              · Você visualiza a lógica da carteira e recebe explicação aprofundada<br>
-              · Os valores exatos por ativo ficam bloqueados nessa etapa<br>
-              · Se você aprovar, eu envio o link para pagamento da segunda metade<br>
-              · Após esse pagamento, libero os valores finais para execução completa
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Seu acesso à <strong style="color:#0c0e13;">área do investidor</strong> continuará sendo a base da entrega.
-        É lá que a estrutura do plano ficará organizada até a liberação final.
-      </p>
-
-      ${guaranteeBlock}
-
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
-        <tr>
-          <td style="background:#0c0e13;">
-            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
-              Baixar ebook incluso
-            </a>
-          </td>
-        </tr>
-      </table>
-
-      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
-        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
-      </p>
-
-      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
-        Daniel Ferreira
-      </p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
-        Consultor CEA · CVM Nº 003838-5
-      </p>
-    `
-    );
+  
   } else {
     subject = "Compra confirmada";
     html = wrapEmail(
@@ -995,17 +848,9 @@ async function sendAdminSaleEmail({
         }).format(amountTotal / 100)
       : "Não informado";
 
-  const isEntryPayment =
-    productKey === "consultoria_avulsa_entrada" ||
-    productKey === "consultoria_premium_entrada";
-
-  const title = isEntryPayment
-    ? "Você recebeu uma entrada de consultoria."
-    : "Você vendeu.";
-
-  const headerLabel = isEntryPayment
-    ? "Nova entrada confirmada"
-    : "Nova venda confirmada";
+  const title = "Nova venda confirmada.";
+  const headerLabel = "Nova venda confirmada";
+  const subjectPrefix = "Nova venda confirmada";
 
   const html = `
     <!DOCTYPE html>
@@ -1065,7 +910,7 @@ async function sendAdminSaleEmail({
                     </tr>
                     <tr>
                       <td style="padding:10px 0;"><strong>Session ID</strong></td>
-                      <td style="padding:10px 0;word-break:break-all;">${sessionId}</td>
+                      <td style="padding:10px 0;word-break:break-all;">${sessionId || "Não informado"}</td>
                     </tr>
                   </table>
 
@@ -1096,10 +941,6 @@ async function sendAdminSaleEmail({
     </body>
     </html>
   `;
-
-  const subjectPrefix = isEntryPayment
-    ? "Entrada confirmada"
-    : "Nova venda confirmada";
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
@@ -1257,14 +1098,8 @@ app.get(["/health", "/api/health"], (_req, res) => {
       hasPriceConsultoriaAvulsa: Boolean(
         process.env.PRICE_CONSULTORIA_AVULSA || 397
       ),
-      hasPriceConsultoriaAvulsaEntrada: Boolean(
-        process.env.PRICE_CONSULTORIA_AVULSA_ENTRADA || 198.5
-      ),
       hasPriceConsultoriaPremium: Boolean(
         process.env.PRICE_CONSULTORIA_PREMIUM || 797
-      ),
-      hasPriceConsultoriaPremiumEntrada: Boolean(
-        process.env.PRICE_CONSULTORIA_PREMIUM_ENTRADA || 398.5
       ),
       hasEmailHost: Boolean(process.env.EMAIL_HOST),
       hasEmailUser: Boolean(process.env.EMAIL_USER),
@@ -2183,9 +2018,7 @@ app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
     const allowedProducts = new Set([
       "ebook",
       "consultoria_avulsa",
-      "consultoria_avulsa_entrada",
       "consultoria_premium",
-      "consultoria_premium_entrada",
     ]);
 
     const productKey =

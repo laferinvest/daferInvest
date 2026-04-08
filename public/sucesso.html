@@ -755,9 +755,7 @@ function renderNextSteps(data) {
   const downloadUrl = `/download-ebook?session_id=${encodeURIComponent(data.id || '')}`;
   const isConsulting =
     data.product_key === 'consultoria_avulsa' ||
-    data.product_key === 'consultoria_avulsa_entrada' ||
-    data.product_key === 'consultoria_premium' ||
-    data.product_key === 'consultoria_premium_entrada';
+    data.product_key === 'consultoria_premium';
 
   if (isConsulting) {
     ns.innerHTML = `

@@ -567,7 +567,7 @@
       <div class="info-strip fade-up">
         <div class="info-strip-item">
           <div class="info-strip-label">Produto</div>
-          <div class="info-strip-value" id="strip-product">Consultoria Inicial - Entrada 50%</div>
+          <div class="info-strip-value" id="strip-product">Consultoria Inicial</div>
         </div>
         <div class="info-strip-item">
           <div class="info-strip-label">Métodos</div>
@@ -575,7 +575,7 @@
         </div>
         <div class="info-strip-item">
           <div class="info-strip-label">Ambiente</div>
-          <div class="info-strip-value">Checkout Mercado Pago</div>
+          <div class="info-strip-value">Mercado Pago</div>
         </div>
       </div>
 
@@ -596,46 +596,11 @@
                 <div class="field">
                   <label for="email">E-mail</label>
                   <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required />
-                  <div class="field-hint">Este e-mail será usado para confirmação da compra e contato posterior.</div>
                 </div>
 
                 <div class="field">
                   <label for="phone">Telefone / WhatsApp</label>
                   <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="(00) 00000-0000" required />
-                  <div class="field-hint">Peço esse contato para facilitar a comunicação da consultoria, caso necessário.</div>
-                </div>
-              </div>
-
-              <div class="checkout-box">
-                <div class="checkout-head">
-                  <div class="checkout-brand">
-                    <span class="brand-chip">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 11.4C6.3 9 8.5 7.5 11 7.5C13.2 7.5 15.2 8.5 16.6 10.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        <path d="M7.2 16.2C8.5 17.7 10.1 18.5 12 18.5C14.7 18.5 17 16.9 18.3 14.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        <path d="M8.3 12.9C9 12.1 9.9 11.7 11 11.7C12 11.7 12.9 12 13.6 12.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      </svg>
-                      mercado pago
-                    </span>
-                    <span class="brand-chip pix-chip">pix</span>
-                  </div>
-                  <div class="parcelas-label">Parcelas ▾</div>
-                </div>
-
-                <div class="parcelas-list" id="parcelas-list">
-                  <div>1x de <strong>R$ 198,50</strong></div>
-                  <div>2x de <strong>R$ 99,25</strong></div>
-                  <div>3x de <strong>R$ 66,17</strong></div>
-                </div>
-
-                <div class="cards-row">
-                  <div class="card-flags">
-                    <span class="flag">VISA</span>
-                    <span class="flag">MASTERCARD</span>
-                    <span class="flag">ELO</span>
-                    <span class="flag">AMEX</span>
-                  </div>
-                  <div class="parcelas-label">Pix e cartões ▾</div>
                 </div>
               </div>
 
@@ -673,7 +638,7 @@
           </div>
           <div class="side-meta">
             <div class="side-kicker">Resumo do pedido</div>
-            <div class="side-name" id="summary-title">Consultoria Inicial<br>Entrada 50%</div>
+            <div class="side-name" id="summary-title">Consultoria Inicial</div>
             <p class="side-copy" id="summary-copy">
               Você preenche seus dados primeiro e, em seguida, segue para o checkout do Mercado Pago com Pix e cartões.
             </p>
@@ -724,40 +689,23 @@
         summary: 'Plano inicial completo com reunião, diagnóstico e plano personalizado.',
         backHref: '/consultoria'
       },
-      consultoria_avulsa_entrada: {
-        label: 'Consultoria Inicial - Entrada 50%',
-        price: 198.50,
-        parcelText: ['1x de R$ 198,50', '2x de R$ 99,25', '3x de R$ 66,17'],
-        summary: 'Entrada de 50% para iniciar a consultoria e estruturar o plano antes da liberação final.',
-        backHref: '/consultoria'
-      },
       consultoria_premium: {
         label: 'Consultoria Premium',
         price: 797.00,
         parcelText: ['1x de R$ 797,00', '2x de R$ 398,50', '3x de R$ 265,67'],
         summary: 'Versão premium com mais profundidade na explicação e apoio na implementação.',
         backHref: '/consultoria'
-      },
-      consultoria_premium_entrada: {
-        label: 'Consultoria Premium - Entrada 50%',
-        price: 398.50,
-        parcelText: ['1x de R$ 398,50', '2x de R$ 199,25', '3x de R$ 132,84'],
-        summary: 'Entrada de 50% da versão premium para iniciar a montagem da estratégia.',
-        backHref: '/consultoria'
       }
     };
 
     const params = new URLSearchParams(window.location.search);
-    const productKey = params.get('product') || 'consultoria_avulsa_entrada';
-    const selected = PRODUCT_MAP[productKey] || PRODUCT_MAP.consultoria_avulsa_entrada;
+    const productKey = params.get('product') || 'consultoria_avulsa';
+    const selected = PRODUCT_MAP[productKey] || PRODUCT_MAP.consultoria_avulsa;
 
     document.getElementById('strip-product').textContent = selected.label;
     document.getElementById('summary-title').innerHTML = selected.label.replace(' - ', '<br>');
     document.getElementById('summary-copy').textContent = selected.summary;
     document.getElementById('back-link').href = selected.backHref;
-
-    const parcelasList = document.getElementById('parcelas-list');
-    parcelasList.innerHTML = selected.parcelText.map(text => `<div>${text.replace('R$', '<strong>R$')}</strong></div>`).join('');
 
     const observer = new IntersectionObserver(
       entries => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')),
