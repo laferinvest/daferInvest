@@ -902,7 +902,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
 
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to: email,
+    to: [email, "daniel@daferinvest.com.br"].filter(Boolean).join(", "),
     subject,
     html,
   });
