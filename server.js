@@ -345,22 +345,27 @@ function buildSessionFromMpPayment(payment) {
     payment_status: payment.status || null,
     status: payment.status === "approved" ? "complete" : payment.status || null,
     customer_details: {
-      email: payment.payer?.email || null,
+      email: payment.metadata?.customer_email || payment.payer?.email || null,
       name:
+        payment.metadata?.customer_name ||
         payment.additional_info?.payer?.first_name ||
         payment.card?.cardholder?.name ||
         null,
       phone:
+        payment.metadata?.customer_phone ||
         payment.additional_info?.payer?.phone?.number ||
         payment.payer?.phone?.number ||
         null,
     },
-    customer_email: payment.payer?.email || null,
+    customer_email: payment.metadata?.customer_email || payment.payer?.email || null,
     metadata: {
       product: productKey,
       product_key: productKey,
       product_name: productName,
-      return_to: null,
+      return_to: payment.metadata?.return_to || null,
+      customer_email: payment.metadata?.customer_email || null,
+      customer_name: payment.metadata?.customer_name || null,
+      customer_phone: payment.metadata?.customer_phone || null,
     },
     mode: "payment",
     amount_total:
@@ -1813,7 +1818,7 @@ app.post(
   ],
   async (req, res) => {
     try {
-      const { product, productKey, returnTo, customerEmail } = req.body || {};
+      const { product, productKey, returnTo, customerEmail, customerName, customerPhone } = req.body || {};
       const selectedProductKey = productKey || product;
       const selected = products[selectedProductKey];
 
@@ -1847,7 +1852,13 @@ app.post(
             currency_id: "BRL",
           },
         ],
-        payer: customerEmail ? { email: customerEmail } : undefined,
+        payer: customerEmail
+          ? {
+              email: customerEmail,
+              first_name: customerName || undefined,
+              phone: customerPhone ? { number: customerPhone } : undefined,
+            }
+          : undefined,
         external_reference: selectedProductKey,
         notification_url: `${BASE_URL}/webhook`,
         back_urls: {
@@ -1861,6 +1872,9 @@ app.post(
           product_key: selectedProductKey,
           product_name: selected.productName,
           return_to: normalizedReturnTo,
+          customer_email: customerEmail || null,
+          customer_name: customerName || null,
+          customer_phone: customerPhone || null,
         },
       };
 
@@ -2054,7 +2068,7 @@ try {
   } finally {
     unmarkWebhookPaymentProcessing(paymentId);
   }
-  
+
 } catch (error) {
   console.error("Erro ao processar webhook Mercado Pago:", {
     message: error.message,
