@@ -177,7 +177,6 @@
     .old-price {
       font-size: .95rem;
       color: var(--muted);
-      text-decoration: line-through;
       margin-bottom: .15rem;
       display: block;
     }
@@ -947,6 +946,18 @@
 
     .plan-card.featured .plan-sub { color: rgba(255,255,255,.58); }
 
+    .payment-split-note {
+      margin-bottom: 1rem;
+      color: #0c0e13;
+      font-size: .9rem;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
+    .plan-card.featured .payment-split-note {
+      color: #ffffff;
+    }
+
     .plan-list {
       list-style: none;
       display: grid;
@@ -1521,7 +1532,7 @@
         <li><a href="#faq">Dúvidas</a></li>
       </ul>
 
-      <a href="#planos" class="btn nav-cta">Ver planos e valores</a>
+      <a href="#planos" class="btn nav-cta" data-track="nav_pricing_click">Ver planos e valores</a>
     </div>
   </nav>
 
@@ -1556,11 +1567,11 @@
           </div>
 
           <p class="hero-method-note">
-            Como funciona: você agenda a sessão individual, eu faço o diagnóstico financeiro e a análise da sua carteira, e depois preparo o seu plano de investimentos personalizado. Nos planos elegíveis, você ainda acompanha tudo pela área do investidor, com histórico, plano carregado e ferramenta de rebalanceamento.
+            Como funciona: você paga <strong>50% para iniciar</strong>, fazemos a reunião e eu monto o plano na sua área do investidor. Primeiro, libero toda a estrutura e a lógica da carteira <strong>sem mostrar os valores por ativo</strong>. Se você gostar do que entreguei, paga a outra metade e eu libero os valores de alocação para execução.
           </p>
 
           <div class="stack-cta">
-            <a class="btn-outline" href="#planos">Ver planos de consultoria</a>
+            <a class="btn-outline" href="#planos" data-track="hero_pricing_click">Ver planos de consultoria</a>
             <a class="btn-secondary" href="/preview.html" data-track="investor_area_demo_click">Conhecer a área do investidor</a>
           </div>
 
@@ -1624,28 +1635,28 @@
         <div class="organic-flow fade-up" style="transition-delay:.08s;">
           <article class="organic-flow-card">
             <div class="organic-flow-number">01</div>
-            <h3>Leitura completa do investidor</h3>
+            <h3>Você entra com metade e faz a reunião</h3>
             <p>
-              Na sessão individual, eu levanto perfil de risco, conhecimento prévio, experiência prática,
-              patrimônio atual, objetivos, passivos, horizonte de tempo e restrições relevantes.
+              No primeiro passo, você paga 50% da consultoria. Depois disso, fazemos a sessão individual e eu levanto perfil,
+              experiência, patrimônio, objetivos, passivos, horizonte de tempo e restrições relevantes.
             </p>
           </article>
 
           <article class="organic-flow-card highlighted">
             <div class="organic-flow-number">02</div>
-            <h3>Diagnóstico financeiro e estruturação do plano</h3>
+            <h3>Eu entrego o plano sem abrir os valores por ativo</h3>
             <p>
-              A partir dessa leitura, eu organizo sua capacidade de risco, sua tolerância, a lógica da carteira
-              e o formato de plano mais adequado ao seu caso.
+              Eu estruturo sua carteira, faço o upload do plano na área do investidor e apresento a lógica completa da estratégia,
+              mas os valores exatos de alocação em cada investimento ainda ficam bloqueados nessa etapa.
             </p>
           </article>
 
           <article class="organic-flow-card">
             <div class="organic-flow-number">03</div>
-            <h3>Plano pronto para execução</h3>
+            <h3>Se aprovar, você paga a outra metade e libera a execução</h3>
             <p>
-              Você recebe uma estratégia coerente, com alocação proposta, investimentos selecionados
-              e próximos passos claros para investir com mais segurança e clareza.
+              Se a entrega fizer sentido para você, entra o pagamento final de 50% e eu libero os valores por ativo,
+              deixando a carteira pronta para implementação com mais segurança e clareza.
             </p>
           </article>
         </div>
@@ -1653,11 +1664,11 @@
         <div class="organic-flow-footer fade-up" style="transition-delay:.14s;">
           <div class="organic-footer-note">
             <strong>Resultado prático</strong>
-            <span>Menos decisão emocional, mais coerência entre patrimônio, objetivos, prazo e carteira.</span>
+            <span>Você vê a qualidade da estrutura antes de liberar a etapa final de execução.</span>
           </div>
           <div class="organic-footer-note">
             <strong>Entrega</strong>
-            <span>Reunião, diagnóstico, plano por escrito e, nos planos elegíveis, acesso à área do investidor.</span>
+            <span>Reunião, diagnóstico, plano carregado na área e liberação dos valores por ativo após a segunda metade.</span>
           </div>
         </div>
       </div>
@@ -1698,19 +1709,99 @@
       </div>
     </section>
 
+
+    <section id="garantia" class="section" style="padding-top:0;">
+      <div class="container">
+        <div class="guarantee-box fade-up">
+          <div class="seal">
+            <div>
+              <span>7<br>dias</span>
+              <small>Garantia total</small>
+            </div>
+          </div>
+
+          <div>
+            <p class="section-label" style="color:var(--gold-2); margin-bottom:.7rem;">Compromisso com valor real</p>
+            <h2 style="color:var(--white); margin-bottom:.85rem;">Depois que eu enviar o plano, você tem 7 dias para pedir reembolso caso entenda que não valeu a pena.</h2>
+            <p>
+              A proposta é simples: eu me comprometo a entregar algo que faça sentido para você e que seja percebido como valioso.
+              Se, após receber o plano, você concluir que a entrega não justificou o valor, pode solicitar o reembolso dentro desse prazo.
+            </p>
+
+            <div class="stack-cta">
+              <button class="btn" type="button" onclick="comprar('consultoria_avulsa_entrada')">Quero iniciar a consultoria</button>
+              <a class="btn-secondary" href="#faq">Como funciona a garantia</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="planos" class="section">
+      <div class="container">
+        <p class="section-label fade-up">Planos</p>
+        <h2 class="fade-up">Escolha o nível de profundidade que faz mais sentido para o seu momento.</h2>
+        <p class="lead fade-up">
+          Os dois planos incluem reunião, análise, preparação do plano e acesso à área do investidor. Agora, a entrada é de 50% no início e a outra metade só é paga se você aprovar a entrega parcial e quiser liberar os valores finais de alocação.
+        </p>
+
+        <div class="plan-grid fade-up" style="transition-delay:.1s;">
+          <div class="plan-card">
+            <div class="plan-kicker">Plano inicial</div>
+            <h3>Consultoria Inicial</h3>
+            <p class="plan-copy">Para quem quer um diagnóstico individual e um plano pronto para começar a investir com clareza.</p>
+            <div class="old-price">Pagamento total do plano</div>
+            <div class="plan-price">R$ 397,00</div>
+            <div class="payment-split-note">Metade para iniciar: R$ 198,50. A outra metade é paga só depois que você aprovar o plano e quiser liberar os valores finais.</div>
+            <ul class="plan-list">
+              <li>Ebook incluso</li>
+              <li>Reunião com questionários e testes</li>
+              <li>Análise do perfil, conhecimento e patrimônio</li>
+              <li>Plano estruturado e carregado na área do investidor</li>
+              <li>Visualização da estratégia antes da liberação final</li>
+              <li>Valores por ativo liberados após a segunda metade</li>
+              <li>Garantia de 7 dias após o envio do plano final</li>
+            </ul>
+            <button class="btn" type="button" onclick="comprar('consultoria_avulsa_entrada')">Pagar entrada da consultoria inicial</button>
+          </div>
+
+          <div class="plan-card featured">
+            <div class="featured-badge">Mais completa</div>
+            <div class="plan-kicker">Plano premium</div>
+            <h3 style="color:var(--white);">Consultoria Premium</h3>
+            <p class="plan-copy2">Para quem quer entender melhor a carteira, tirar dúvidas com profundidade e ter maior suporte na implementação.</p>
+            <div class="old-price">Pagamento total do plano</div>
+            <div class="plan-price">R$ 797,00</div>
+            <div class="payment-split-note">Metade para iniciar: R$ 398,50. A outra metade é paga só depois que você aprovar o plano e quiser liberar os valores finais.</div>
+            <ul class="plan-list">
+              <li>Ebook incluso</li>
+              <li>Tudo do plano inicial</li>
+              <li>Apresentação detalhada dos investimentos</li>
+              <li>Explicação do papel de cada ativo na carteira</li>
+              <li>Seção de dúvidas dedicada</li>
+              <li>Maior acompanhamento na fase de execução</li>
+              <li>Valores por ativo liberados após a segunda metade</li>
+              <li>Garantia de 7 dias após o envio do plano final</li>
+            </ul>
+            <button class="btn" type="button" onclick="comprar('consultoria_premium_entrada')">Pagar entrada da consultoria premium</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="ferramenta" class="section" style="padding-top:0;">
       <div class="container">
         <div class="tools-preview fade-up">
           <p class="section-label">Área do investidor</p>
           <h2>Nos dois planos, o cliente acessa uma área para acompanhar o plano na prática.</h2>
           <p class="lead">
-            Tanto na consultoria inicial quanto na premium, o cliente recebe acesso à área do investidor. É ali que eu faço o upload do plano, organizo o que deve ser investido, deixo o histórico da carteira e disponibilizo a ferramenta de rebalanceamento.
+            Tanto na consultoria inicial quanto na premium, o cliente recebe acesso à área do investidor. É ali que eu faço o upload do plano, apresento a estrutura da carteira, deixo o histórico e disponibilizo a ferramenta de rebalanceamento. Os valores por ativo são liberados depois da aprovação final, com o pagamento da segunda metade.
           </p>
 
           <div class="tool-grid">
             <div class="tool-card">
               <h3>Plano centralizado</h3>
-              <p>O cliente encontra em um só lugar a estratégia, os ativos, a alocação alvo e as observações relevantes para execução.</p>
+              <p>O cliente encontra em um só lugar a estratégia, os ativos, a lógica da carteira e as observações relevantes da consultoria.</p>
             </div>
 
             <div class="tool-card">
@@ -1720,13 +1811,13 @@
 
             <div class="tool-card">
               <h3>Rebalanceamento guiado</h3>
-              <p>A ferramenta informa exatamente como rebalancear a carteira quando necessário, inclusive quanto comprar ou vender em cada ativo.</p>
+              <p>Depois da liberação final, a ferramenta passa a mostrar exatamente quanto comprar ou vender em cada ativo para executar e rebalancear a carteira.</p>
             </div>
           </div>
 
           <div class="stack-cta">
             <a class="btn" href="/preview.html" data-track="investor_area_demo_click">Conhecer a área do cliente</a>
-            <a class="btn-outline" href="#planos">Ver planos de consultoria</a>
+            <a class="btn-outline" href="#planos" data-track="area_pricing_click">Ver planos de consultoria</a>
           </div>
         </div>
       </div>
@@ -1754,83 +1845,6 @@
             <div class="deliverable-number">03</div>
             <h3>Execução acompanhável</h3>
             <p>Área do investidor com o plano carregado, acompanhamento visual e ferramenta de rebalanceamento.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="garantia" class="section" style="padding-top:0;">
-      <div class="container">
-        <div class="guarantee-box fade-up">
-          <div class="seal">
-            <div>
-              <span>7<br>dias</span>
-              <small>Garantia total</small>
-            </div>
-          </div>
-
-          <div>
-            <p class="section-label" style="color:var(--gold-2); margin-bottom:.7rem;">Compromisso com valor real</p>
-            <h2 style="color:var(--white); margin-bottom:.85rem;">Depois que eu enviar o plano, você tem 7 dias para pedir reembolso caso entenda que não valeu a pena.</h2>
-            <p>
-              A proposta é simples: eu me comprometo a entregar algo que faça sentido para você e que seja percebido como valioso.
-              Se, após receber o plano, você concluir que a entrega não justificou o valor, pode solicitar o reembolso dentro desse prazo.
-            </p>
-
-            <div class="stack-cta">
-              <button class="btn" type="button" onclick="comprar('consultoria_avulsa')">Quero contratar a consultoria</button>
-              <a class="btn-secondary" href="#faq">Como funciona a garantia</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="planos" class="section">
-      <div class="container">
-        <p class="section-label fade-up">Planos</p>
-        <h2 class="fade-up">Escolha o nível de profundidade que faz mais sentido para o seu momento.</h2>
-        <p class="lead fade-up">
-          Os dois planos incluem reunião, análise, preparação do plano e acesso à área do investidor. A principal diferença está no nível de explicação e acompanhamento posterior.
-        </p>
-
-        <div class="plan-grid fade-up" style="transition-delay:.1s;">
-          <div class="plan-card">
-            <div class="plan-kicker">Plano inicial</div>
-            <h3>Consultoria Inicial</h3>
-            <p class="plan-copy">Para quem quer um diagnóstico individual e um plano pronto para começar a investir com clareza.</p>
-            <div class="old-price">R$ 497,00</div>
-            <div class="plan-price">R$ 397,00</div>
-            <div class="plan-sub">Pagamento único · reunião + plano + área do investidor</div>
-            <ul class="plan-list">
-              <li>Ebook incluso</li>
-              <li>Reunião com questionários e testes</li>
-              <li>Análise do perfil, conhecimento e patrimônio</li>
-              <li>Plano de investimentos pronto para execução</li>
-              <li>Upload do plano na área do investidor</li>
-              <li>Gráfico de acompanhamento e rebalanceamento</li>
-              <li>Garantia de 7 dias após o envio do plano</li>
-            </ul>
-            <button class="btn" type="button" onclick="comprar('consultoria_avulsa')">Contratar consultoria inicial</button>
-          </div>
-
-          <div class="plan-card featured">
-            <div class="featured-badge">Mais completa</div>
-            <div class="plan-kicker">Plano premium</div>
-            <h3 style="color:var(--white);">Consultoria Premium</h3>
-            <p class="plan-copy2">Para quem quer entender melhor a carteira, tirar dúvidas com profundidade e ter maior suporte na implementação.</p>
-            <div class="plan-price">R$ 797,00</div>
-            <div class="plan-sub">Pagamento único · explicação detalhada + acompanhamento maior</div>
-            <ul class="plan-list">
-              <li>Ebook incluso</li>
-              <li>Tudo do plano inicial</li>
-              <li>Apresentação detalhada dos investimentos</li>
-              <li>Explicação do papel de cada ativo na carteira</li>
-              <li>Seção de dúvidas dedicada</li>
-              <li>Maior acompanhamento na fase de execução</li>
-              <li>Garantia de 7 dias após o envio do plano</li>
-            </ul>
-            <button class="btn" type="button" onclick="comprar('consultoria_premium')">Contratar consultoria premium</button>
           </div>
         </div>
       </div>
@@ -1888,7 +1902,7 @@
         <div class="faq-grid fade-up" style="transition-delay:.08s;">
           <details>
             <summary>Como funciona a consultoria inicial?</summary>
-            <p>Primeiro acontece a reunião com os questionários e testes. Depois eu preparo a análise e envio o plano de investimentos pronto para execução, além de liberar o acesso à área do investidor.</p>
+            <p>Primeiro você paga a entrada de 50% e acontece a reunião com os questionários e testes. Depois eu preparo a análise, subo o plano na área do investidor e mostro a estrutura da carteira sem liberar ainda os valores por ativo. Se você aprovar, paga a outra metade e eu libero a execução completa.</p>
           </details>
 
           <details>
@@ -1900,10 +1914,15 @@
             <summary>Nos dois planos eu tenho acesso à área do investidor?</summary>
             <p>Sim. Em ambos os casos, o cliente acessa a área do investidor para visualizar o plano, acompanhar a carteira e usar a ferramenta de rebalanceamento.</p>
           </details>
+          <details>
+            <summary>O que fica bloqueado antes da segunda metade?</summary>
+            <p>Antes do pagamento final, você já vê a estrutura da carteira, a lógica do plano e o material carregado na área do investidor. O que permanece bloqueado são os valores exatos de alocação em cada ativo e a liberação completa da execução.</p>
+          </details>
+
 
           <details>
             <summary>Como funciona a garantia de 7 dias?</summary>
-            <p>Depois que o plano é enviado, você tem 7 dias para avaliar a entrega. Se concluir que não percebeu valor suficiente no que foi entregue, pode solicitar o reembolso dentro desse prazo.</p>
+            <p>Depois que o plano final é enviado, com os valores por ativo liberados, você tem 7 dias para avaliar a entrega. Se concluir que não percebeu valor suficiente no que foi entregue, pode solicitar o reembolso dentro desse prazo.</p>
           </details>
 
           <details>
@@ -1945,7 +1964,7 @@
   </div>
 
   <div class="mobile-sticky-cta">
-    <button class="btn" type="button" onclick="comprar('consultoria_avulsa')">Contratar</button>
+    <button class="btn" type="button" onclick="comprar('consultoria_avulsa_entrada')">Pagar entrada</button>
     <a class="btn-secondary" href="/preview.html" data-track="mobile_demo_click">Ver área</a>
   </div>
 
@@ -1984,12 +2003,14 @@
 
         const data = await res.json();
 
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          overlay.classList.remove('active');
-          alert('Erro ao iniciar o pagamento. Tente novamente.');
-        }
+      const checkoutUrl = data.sandbox_init_point || data.init_point || data.url;
+
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        overlay.classList.remove('active');
+        alert('Erro ao iniciar o pagamento. Tente novamente.');
+      }
       } catch (err) {
         overlay.classList.remove('active');
         alert('Erro de conexão. Verifique sua internet e tente novamente.');
@@ -1998,16 +2019,38 @@
 
     document.querySelectorAll('[data-track]').forEach(el => {
       el.addEventListener('click', () => {
+        const sectionId = el.closest('section')?.id || el.closest('nav')?.tagName?.toLowerCase() || 'global';
         trackEvent(el.getAttribute('data-track'), {
           target: el.getAttribute('href') || null,
-          text: (el.textContent || '').trim()
+          text: (el.textContent || '').trim(),
+          section: sectionId
         });
       });
     });
 
     document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', () => {
-        trackEvent('landing_nav_click', { target: link.getAttribute('href') });
+        trackEvent('landing_nav_click', {
+          target: link.getAttribute('href'),
+          section: link.closest('section')?.id || link.closest('nav')?.tagName?.toLowerCase() || 'global'
+        });
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      const element = event.target.closest('a, button');
+      if (!element) return;
+
+      const sectionId = element.closest('section')?.id || element.closest('nav')?.tagName?.toLowerCase() || 'global';
+      const href = element.getAttribute('href');
+      const text = (element.textContent || '').trim();
+
+      trackEvent('landing_element_click', {
+        element_type: element.tagName.toLowerCase(),
+        element_role: element.className || null,
+        section: sectionId,
+        target: href || null,
+        text
       });
     });
 

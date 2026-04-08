@@ -4,7 +4,7 @@ const nodemailer = require("nodemailer");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -242,16 +242,139 @@ function buildRebalancePlan({
   };
 }
 
-function isStripeSessionPaid(session) {
-  if (!session) return false;
-  if (session.payment_status === "paid") return true;
-  if (
-    session.status === "complete" &&
-    session.payment_status === "no_payment_required"
-  ) {
-    return true;
+function isApprovedPaymentStatus(status) {
+  return status === "approved";
+}
+
+function getMercadoPagoApiBaseUrl() {
+  return process.env.MP_API_BASE_URL || "https://api.mercadopago.com";
+}
+
+async function mpRequest(endpoint, options = {}) {
+  if (!process.env.MP_ACCESS_TOKEN) {
+    throw new Error("MP_ACCESS_TOKEN não configurado.");
   }
-  return false;
+
+  const url = `${getMercadoPagoApiBaseUrl()}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  const text = await response.text();
+  let data = null;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (_) {
+    data = text;
+  }
+
+  if (!response.ok) {
+    const error = new Error(`Mercado Pago API error ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+}
+
+function parseMpSignature(headerValue = "") {
+  const result = {};
+  String(headerValue)
+    .split(",")
+    .map((part) => part.trim())
+    .forEach((part) => {
+      const [key, value] = part.split("=");
+      if (key && value) result[key] = value;
+    });
+  return result;
+}
+
+function verifyMercadoPagoWebhookSignature(req) {
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) return true;
+
+  const xSignature = req.headers["x-signature"];
+  const xRequestId = req.headers["x-request-id"];
+  const dataId =
+    req.query["data.id"] ||
+    req.body?.data?.id ||
+    req.body?.resource?.split("/").pop() ||
+    "";
+
+  if (!xSignature || !xRequestId || !dataId) return false;
+
+  const parsed = parseMpSignature(xSignature);
+  const ts = parsed.ts;
+  const v1 = parsed.v1;
+
+  if (!ts || !v1) return false;
+
+  const manifest =
+    `id:${dataId};` +
+    `request-id:${xRequestId};` +
+    `ts:${ts};`;
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(manifest)
+    .digest("hex");
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(v1)
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+function buildSessionFromMpPayment(payment) {
+  const productKey = payment.external_reference || "desconhecido";
+  const productName = products[productKey]?.productName || "Produto";
+
+  return {
+    id: String(payment.id),
+    payment_status: payment.status || null,
+    status: payment.status === "approved" ? "complete" : payment.status || null,
+    customer_details: {
+      email: payment.payer?.email || null,
+      name:
+        payment.additional_info?.payer?.first_name ||
+        payment.card?.cardholder?.name ||
+        null,
+      phone:
+        payment.additional_info?.payer?.phone?.number ||
+        payment.payer?.phone?.number ||
+        null,
+    },
+    customer_email: payment.payer?.email || null,
+    metadata: {
+      product: productKey,
+      product_key: productKey,
+      product_name: productName,
+      return_to: null,
+    },
+    mode: "payment",
+    amount_total:
+      payment.transaction_amount !== undefined &&
+      payment.transaction_amount !== null
+        ? Math.round(Number(payment.transaction_amount) * 100)
+        : null,
+  };
+}
+
+async function getMercadoPagoPayment(paymentId) {
+  return await mpRequest(`/v1/payments/${encodeURIComponent(paymentId)}`, {
+    method: "GET",
+  });
 }
 
 function normalizeReturnPath(input) {
@@ -288,24 +411,29 @@ function normalizeReturnPath(input) {
 // ─────────────────────────────────────────────────────────────
 const products = {
   ebook: {
-    priceId: process.env.STRIPE_PRICE_EBOOK,
+    unitPrice: Number(process.env.PRICE_EBOOK || 39.9),
     mode: "payment",
     productName: "Ebook Investimentos para Iniciantes",
   },
   consultoria_avulsa: {
-    priceId: process.env.STRIPE_PRICE_CONSULTORIA_AVULSA,
+    unitPrice: Number(process.env.PRICE_CONSULTORIA_AVULSA || 397),
     mode: "payment",
     productName: "Ebook + Consultoria Individual",
   },
-  consultoria_mensal: {
-    priceId: process.env.STRIPE_PRICE_CONSULTORIA_MENSAL,
-    mode: "subscription",
-    productName: "Ebook + Consultoria Contínua",
+  consultoria_avulsa_entrada: {
+    unitPrice: Number(process.env.PRICE_CONSULTORIA_AVULSA_ENTRADA || 198.5),
+    mode: "payment",
+    productName: "Consultoria Inicial - Entrada 50%",
   },
   consultoria_premium: {
-    priceId: process.env.STRIPE_PRICE_CONSULTORIA_PREMIUM,
+    unitPrice: Number(process.env.PRICE_CONSULTORIA_PREMIUM || 797),
     mode: "payment",
     productName: "Ebook + Consultoria Premium",
+  },
+  consultoria_premium_entrada: {
+    unitPrice: Number(process.env.PRICE_CONSULTORIA_PREMIUM_ENTRADA || 398.5),
+    mode: "payment",
+    productName: "Consultoria Premium - Entrada 50%",
   },
 };
 
@@ -413,7 +541,8 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
             Garantia de 7 dias
           </p>
           <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.8;">
-            Depois que o plano for enviado, você terá até <strong style="color:#0c0e13;">7 dias</strong> para avaliar a entrega.
+            Depois que o plano final for enviado, com os valores de alocação liberados, você terá até
+            <strong style="color:#0c0e13;">7 dias</strong> para avaliar a entrega.
             Se concluir que ela não gerou valor suficiente para você, basta responder este e-mail dentro desse prazo e solicitar o
             <strong style="color:#0c0e13;">reembolso</strong>.
           </p>
@@ -533,6 +662,75 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
     `
     );
+  } else if (productKey === "consultoria_avulsa_entrada") {
+    subject = "Entrada confirmada · Consultoria Inicial";
+    html = wrapEmail(
+      "Confirmação da entrada",
+      `
+      <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+        Entrada confirmada
+      </p>
+      <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
+        Sua consultoria inicial foi iniciada
+      </h1>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Obrigado. O pagamento da <strong style="color:#0c0e13;">entrada de 50%</strong> da sua consultoria foi confirmado com sucesso.
+      </p>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        A partir daqui, seguimos com a reunião, o diagnóstico do seu perfil, patrimônio, objetivos e restrições,
+        e então eu monto a estrutura do seu plano de investimentos na área do investidor.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              Como funciona a partir de agora
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Fazemos a reunião e o diagnóstico técnico<br>
+              · Eu estruturo o plano e faço o upload na área do investidor<br>
+              · Você visualiza a lógica da carteira e a construção da estratégia<br>
+              · Os valores exatos por ativo ficam bloqueados nessa etapa<br>
+              · Se você aprovar, eu envio o link para pagamento da segunda metade<br>
+              · Após esse pagamento, libero os valores finais para execução
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Seu acesso à <strong style="color:#0c0e13;">área do investidor</strong> continuará sendo a base da entrega.
+        É lá que a estrutura do plano ficará organizada até a liberação final.
+      </p>
+
+      ${guaranteeBlock}
+
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+        <tr>
+          <td style="background:#0c0e13;">
+            <a href="${downloadUrl}" style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+              Baixar ebook incluso
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:13px;color:#58607a;line-height:1.8;">
+        Seu ebook já está liberado e pode ser baixado diretamente pelo botão acima.
+      </p>
+
+      <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:15px;color:#0c0e13;font-weight:600;">
+        Daniel Ferreira
+      </p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#58607a;">
+        Consultor CEA · CVM Nº 003838-5
+      </p>
+    `
+    );
   } else if (productKey === "consultoria_premium") {
     subject = "Compra confirmada · Consultoria Premium";
     html = wrapEmail(
@@ -605,24 +803,50 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
     `
     );
-  } else if (productKey === "consultoria_mensal") {
-    subject = "Compra confirmada · Acompanhamento Contínuo";
+  } else if (productKey === "consultoria_premium_entrada") {
+    subject = "Entrada confirmada · Consultoria Premium";
     html = wrapEmail(
-      "Confirmação de compra",
+      "Confirmação da entrada",
       `
       <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
-        Pagamento confirmado
+        Entrada confirmada
       </p>
       <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
-        Sua assinatura foi ativada
+        Sua consultoria premium foi iniciada
       </h1>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Obrigado pela sua compra. Sua assinatura de <strong style="color:#0c0e13;">${productName}</strong> foi ativada com sucesso.
+        Obrigado. O pagamento da <strong style="color:#0c0e13;">entrada de 50%</strong> da sua consultoria premium foi confirmado com sucesso.
       </p>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        Você receberá os próximos passos do acompanhamento contínuo e também poderá utilizar a área do investidor como base da sua execução.
+        Agora seguimos com a reunião, o diagnóstico do seu perfil e a construção do plano.
+        Na versão premium, você também terá uma apresentação mais aprofundada da lógica da carteira,
+        dos ativos e do papel de cada parte da estratégia.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="background:#f7f6f3;border-left:3px solid #a07c30;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a07c30;">
+              Como funciona a partir de agora
+            </p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
+              · Fazemos a reunião e o diagnóstico técnico<br>
+              · Eu estruturo o plano premium e faço o upload na área do investidor<br>
+              · Você visualiza a lógica da carteira e recebe explicação aprofundada<br>
+              · Os valores exatos por ativo ficam bloqueados nessa etapa<br>
+              · Se você aprovar, eu envio o link para pagamento da segunda metade<br>
+              · Após esse pagamento, libero os valores finais para execução completa
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
+        Seu acesso à <strong style="color:#0c0e13;">área do investidor</strong> continuará sendo a base da entrega.
+        É lá que a estrutura do plano ficará organizada até a liberação final.
       </p>
 
       ${guaranteeBlock}
@@ -704,6 +928,18 @@ async function sendAdminSaleEmail({
         }).format(amountTotal / 100)
       : "Não informado";
 
+  const isEntryPayment =
+    productKey === "consultoria_avulsa_entrada" ||
+    productKey === "consultoria_premium_entrada";
+
+  const title = isEntryPayment
+    ? "Você recebeu uma entrada de consultoria."
+    : "Você vendeu.";
+
+  const headerLabel = isEntryPayment
+    ? "Nova entrada confirmada"
+    : "Nova venda confirmada";
+
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -720,7 +956,7 @@ async function sendAdminSaleEmail({
               <tr>
                 <td style="background:#0c0e13;padding:24px 28px;">
                   <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a07c30;">
-                    Nova venda confirmada
+                    ${headerLabel}
                   </p>
                   <p style="margin:0;font-size:28px;font-family:Georgia,serif;color:#ffffff;">
                     Daniel<span style="color:#a07c30;">.</span>
@@ -729,7 +965,7 @@ async function sendAdminSaleEmail({
               </tr>
               <tr>
                 <td style="padding:28px;">
-                  <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">Você vendeu.</h1>
+                  <h1 style="margin:0 0 20px;font-size:24px;font-family:Georgia,serif;">${title}</h1>
 
                   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                     <tr>
@@ -782,7 +1018,7 @@ async function sendAdminSaleEmail({
                   }
 
                   <p style="margin:24px 0 0;font-size:13px;color:#58607a;line-height:1.7;">
-                    Esse e-mail foi enviado automaticamente pelo webhook da Stripe após confirmação de pagamento.
+                    Esse e-mail foi enviado automaticamente pelo webhook do Mercado Pago após confirmação de pagamento.
                   </p>
                 </td>
               </tr>
@@ -794,10 +1030,14 @@ async function sendAdminSaleEmail({
     </html>
   `;
 
+  const subjectPrefix = isEntryPayment
+    ? "Entrada confirmada"
+    : "Nova venda confirmada";
+
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to: adminEmail,
-    subject: `Nova venda confirmada · ${productName || "Produto"} · ${
+    subject: `${subjectPrefix} · ${productName || "Produto"} · ${
       buyerEmail || "sem e-mail"
     }`,
     html,
@@ -858,13 +1098,6 @@ async function handleConfirmedSale(session) {
 // ─────────────────────────────────────────────────────────────
 // MIDDLEWARES
 // ─────────────────────────────────────────────────────────────
-app.use(
-  ["/webhook", "/api/webhook"],
-  express.raw({
-    type: "application/json",
-  })
-);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
@@ -889,7 +1122,41 @@ app.get(["/preview", "/api/preview"], (req, res) => {
 });
 
 app.get(["/sucesso", "/api/sucesso"], (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
+  const paymentId =
+    req.query.session_id ||
+    req.query.payment_id ||
+    req.query.collection_id ||
+    null;
+
+  if (
+    paymentId &&
+    String(req.query.session_id || "") !== String(paymentId)
+  ) {
+    const redirectUrl = new URL("/sucesso", BASE_URL);
+    redirectUrl.searchParams.set("session_id", String(paymentId));
+
+    if (req.query.status) {
+      redirectUrl.searchParams.set("status", String(req.query.status));
+    }
+
+    if (req.query.external_reference) {
+      redirectUrl.searchParams.set(
+        "produto",
+        String(req.query.external_reference)
+      );
+    }
+
+    if (req.query.preference_id) {
+      redirectUrl.searchParams.set(
+        "preference_id",
+        String(req.query.preference_id)
+      );
+    }
+
+    return res.redirect(302, redirectUrl.toString());
+  }
+
+  return res.sendFile(path.join(PUBLIC_DIR, "sucesso.html"));
 });
 
 app.get(["/entrar", "/api/entrar"], (req, res) => {
@@ -911,22 +1178,26 @@ app.get(["/health", "/api/health"], (_req, res) => {
   res.json({
     ok: true,
     env: {
-      hasSecretKey: Boolean(process.env.STRIPE_SECRET_KEY),
-      hasWebhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-      hasPriceEbook: Boolean(process.env.STRIPE_PRICE_EBOOK),
+      hasMpAccessToken: Boolean(process.env.MP_ACCESS_TOKEN),
+      hasMpWebhookSecret: Boolean(process.env.MP_WEBHOOK_SECRET),
+      hasPriceEbook: Boolean(process.env.PRICE_EBOOK || 39.9),
       hasPriceConsultoriaAvulsa: Boolean(
-        process.env.STRIPE_PRICE_CONSULTORIA_AVULSA
+        process.env.PRICE_CONSULTORIA_AVULSA || 397
       ),
-      hasPriceConsultoriaMensal: Boolean(
-        process.env.STRIPE_PRICE_CONSULTORIA_MENSAL
+      hasPriceConsultoriaAvulsaEntrada: Boolean(
+        process.env.PRICE_CONSULTORIA_AVULSA_ENTRADA || 198.5
       ),
       hasPriceConsultoriaPremium: Boolean(
-        process.env.STRIPE_PRICE_CONSULTORIA_PREMIUM
+        process.env.PRICE_CONSULTORIA_PREMIUM || 797
+      ),
+      hasPriceConsultoriaPremiumEntrada: Boolean(
+        process.env.PRICE_CONSULTORIA_PREMIUM_ENTRADA || 398.5
       ),
       hasEmailHost: Boolean(process.env.EMAIL_HOST),
       hasEmailUser: Boolean(process.env.EMAIL_USER),
       hasAdminNotifyEmail: Boolean(process.env.ADMIN_NOTIFY_EMAIL),
       baseUrl: BASE_URL,
+      mpApiBaseUrl: getMercadoPagoApiBaseUrl(),
     },
   });
 });
@@ -1496,16 +1767,22 @@ app.post(
 );
 
 // ─────────────────────────────────────────────────────────────
-// STRIPE CHECKOUT
+// MERCADO PAGO CHECKOUT PRO
 // ─────────────────────────────────────────────────────────────
 app.post(
-  ["/create-checkout-session", "/api/create-checkout-session"],
+  [
+    "/create-checkout-session",
+    "/api/create-checkout-session",
+    "/create-mp-preference",
+    "/api/create-mp-preference",
+  ],
   async (req, res) => {
     try {
-      const { product, returnTo } = req.body || {};
-      const selected = products[product];
+      const { product, productKey, returnTo, customerEmail } = req.body || {};
+      const selectedProductKey = productKey || product;
+      const selected = products[selectedProductKey];
 
-      if (!selected?.priceId) {
+      if (!selected?.unitPrice) {
         return res.status(400).json({ error: "Produto inválido." });
       }
 
@@ -1513,44 +1790,62 @@ app.post(
 
       const successUrl =
         `${BASE_URL}/sucesso` +
-        `?session_id={CHECKOUT_SESSION_ID}` +
-        `&produto=${encodeURIComponent(product)}` +
+        `?produto=${encodeURIComponent(selectedProductKey)}` +
         `&return_to=${encodeURIComponent(normalizedReturnTo)}`;
 
-      const cancelUrlObj = new URL(normalizedReturnTo, BASE_URL);
-      cancelUrlObj.searchParams.set("cancelado", "1");
+      const failureUrlObj = new URL(normalizedReturnTo, BASE_URL);
+      failureUrlObj.searchParams.set("cancelado", "1");
 
-      const paymentMethods =
-        selected.mode === "subscription" ? ["card"] : ["card", "boleto"];
+      const pendingUrl =
+        `${BASE_URL}/sucesso` +
+        `?pendente=1` +
+        `&produto=${encodeURIComponent(selectedProductKey)}` +
+        `&return_to=${encodeURIComponent(normalizedReturnTo)}`;
 
-      const session = await stripe.checkout.sessions.create({
-        mode: selected.mode,
-        payment_method_types: paymentMethods,
-        line_items: [
+      const preferencePayload = {
+        items: [
           {
-            price: selected.priceId,
+            id: selectedProductKey,
+            title: selected.productName,
             quantity: 1,
+            unit_price: Number(selected.unitPrice),
+            currency_id: "BRL",
           },
         ],
-        billing_address_collection: "required",
-        phone_number_collection: {
-          enabled: true,
+        payer: customerEmail ? { email: customerEmail } : undefined,
+        external_reference: selectedProductKey,
+        notification_url: `${BASE_URL}/webhook`,
+        back_urls: {
+          success: successUrl,
+          failure: failureUrlObj.toString(),
+          pending: pendingUrl,
         },
-        locale: "pt-BR",
-        allow_promotion_codes: true,
-        success_url: successUrl,
-        cancel_url: cancelUrlObj.toString(),
+        auto_return: "approved",
         metadata: {
-          product,
-          product_key: product,
+          product: selectedProductKey,
+          product_key: selectedProductKey,
           product_name: selected.productName,
           return_to: normalizedReturnTo,
         },
+      };
+
+      const preference = await mpRequest("/checkout/preferences", {
+        method: "POST",
+        body: JSON.stringify(preferencePayload),
       });
 
-      return res.json({ url: session.url });
+      return res.json({
+        url: preference.init_point,
+        init_point: preference.init_point,
+        sandbox_init_point: preference.sandbox_init_point || null,
+        preference_id: preference.id,
+      });
     } catch (error) {
-      console.error("Erro ao criar sessão de checkout:", error);
+      console.error("Erro ao criar preferência do Mercado Pago:", {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+      });
       return res.status(500).json({ error: "Erro ao iniciar checkout." });
     }
   }
@@ -1561,13 +1856,14 @@ app.post(
 // ─────────────────────────────────────────────────────────────
 app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
   try {
-    const { session_id } = req.query;
+    const sessionId = req.query.session_id || req.query.payment_id;
 
-    if (!session_id) {
+    if (!sessionId) {
       return res.status(400).json({ error: "session_id obrigatório" });
     }
 
-    const session = await stripe.checkout.sessions.retrieve(session_id);
+    const payment = await getMercadoPagoPayment(sessionId);
+    const session = buildSessionFromMpPayment(payment);
 
     return res.json({
       id: session.id,
@@ -1577,139 +1873,117 @@ app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
         session.customer_details?.email || session.customer_email || null,
       customer_name: session.customer_details?.name || null,
       customer_phone: session.customer_details?.phone || null,
-      product_key: session.metadata?.product || session.metadata?.product_key || null,
+      product_key:
+        session.metadata?.product || session.metadata?.product_key || null,
       product_name: session.metadata?.product_name || null,
       mode: session.mode || null,
       amount_total: session.amount_total ?? null,
+      raw_status_detail: payment.status_detail || null,
+      payment_method_id: payment.payment_method_id || null,
+      payment_type_id: payment.payment_type_id || null,
     });
   } catch (err) {
-    console.error("❌ Erro ao verificar sessão:", err.message);
+    console.error("❌ Erro ao verificar pagamento:", err.message, err.data);
     return res.status(500).json({ error: "Erro ao verificar sessão." });
   }
 });
 
 // ─────────────────────────────────────────────────────────────
-// WEBHOOK STRIPE
+// WEBHOOK MERCADO PAGO
 // ─────────────────────────────────────────────────────────────
-app.post(["/webhook", "/api/webhook"], async (req, res) => {
-  const sig = req.headers["stripe-signature"];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+app.post(
+  ["/webhook", "/api/webhook", "/mp-webhook", "/api/mp-webhook"],
+  async (req, res) => {
+    try {
+      const body = req.body || {};
 
-  let event;
-
-  try {
-    if (endpointSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } else {
-      event = JSON.parse(req.body.toString());
-    }
-  } catch (err) {
-    console.error("⚠️ Erro na assinatura do webhook:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  try {
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object;
-
-        if (isStripeSessionPaid(session)) {
-          await handleConfirmedSale(session);
-        } else {
-          console.log("ℹ️ Checkout concluído, mas ainda não pago:", {
-            sessionId: session.id,
-            paymentStatus: session.payment_status,
-          });
-        }
-        break;
+      if (!verifyMercadoPagoWebhookSignature(req)) {
+        return res.status(401).json({ error: "Assinatura do webhook inválida." });
       }
 
-      case "checkout.session.async_payment_succeeded": {
-        const session = event.data.object;
+      res.json({ received: true });
+
+      const isPaymentEvent =
+        body.type === "payment" ||
+        body.action === "payment.created" ||
+        body.action === "payment.updated" ||
+        req.query.type === "payment" ||
+        req.query.topic === "payment";
+
+      if (!isPaymentEvent) {
+        console.log("ℹ️ Evento Mercado Pago ignorado:", {
+          type: body.type || null,
+          action: body.action || null,
+          topic: req.query.topic || null,
+        });
+        return;
+      }
+
+      const paymentId =
+        body.data?.id ||
+        req.query["data.id"] ||
+        body.resource?.split("/").pop() ||
+        null;
+
+      if (!paymentId) {
+        console.log("⚠️ Webhook Mercado Pago sem payment id:", body);
+        return;
+      }
+
+      const payment = await getMercadoPagoPayment(paymentId);
+      const session = buildSessionFromMpPayment(payment);
+
+      if (isApprovedPaymentStatus(payment.status)) {
         await handleConfirmedSale(session);
-        break;
-      }
-
-      case "checkout.session.async_payment_failed": {
-        const session = event.data.object;
-        console.log("❌ Pagamento assíncrono falhou:", {
-          sessionId: session.id,
-          paymentStatus: session.payment_status,
-          customerEmail:
-            session.customer_details?.email || session.customer_email || null,
+      } else {
+        console.log("ℹ️ Pagamento recebido, mas ainda não aprovado:", {
+          paymentId: payment.id,
+          status: payment.status,
+          statusDetail: payment.status_detail,
           productKey:
             session.metadata?.product || session.metadata?.product_key || null,
-          productName: session.metadata?.product_name || null,
+          customerEmail:
+            session.customer_details?.email || session.customer_email || null,
         });
-        break;
       }
-
-      case "invoice.payment_failed": {
-        const invoice = event.data.object;
-        console.log("❌ Falha na cobrança recorrente:", {
-          invoiceId: invoice.id,
-          customerId: invoice.customer,
-          subscriptionId: invoice.subscription,
-        });
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object;
-        console.log("ℹ️ Assinatura cancelada:", {
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-          status: subscription.status,
-        });
-        break;
-      }
-
-      case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object;
-        console.log("❌ Pagamento falhou:", {
-          paymentIntentId: paymentIntent.id,
-          status: paymentIntent.status,
-          customerId: paymentIntent.customer,
-        });
-        break;
-      }
-
-      default:
-        console.log("ℹ️ Evento Stripe recebido:", event.type);
+    } catch (error) {
+      console.error("Erro ao processar webhook Mercado Pago:", {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+      });
     }
-
-    return res.json({ received: true });
-  } catch (error) {
-    console.error("Erro ao processar webhook:", error);
-    return res.status(500).json({ error: "Erro ao processar webhook." });
   }
-});
+);
 
 // ─────────────────────────────────────────────────────────────
 // DOWNLOAD EBOOK
 // ─────────────────────────────────────────────────────────────
 app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
   try {
-    const sessionId = req.query.session_id;
+    const paymentId = req.query.session_id || req.query.payment_id;
 
-    if (!sessionId) {
+    if (!paymentId) {
       return res.status(400).send("Sessão não informada.");
     }
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const payment = await getMercadoPagoPayment(paymentId);
+    const session = buildSessionFromMpPayment(payment);
 
-    if (!isStripeSessionPaid(session)) {
+    if (!isApprovedPaymentStatus(payment.status)) {
       return res.status(403).send("Pagamento ainda não confirmado.");
     }
 
     const allowedProducts = new Set([
       "ebook",
       "consultoria_avulsa",
-      "consultoria_mensal",
+      "consultoria_avulsa_entrada",
       "consultoria_premium",
+      "consultoria_premium_entrada",
     ]);
 
-    const productKey = session.metadata?.product || session.metadata?.product_key;
+    const productKey =
+      session.metadata?.product || session.metadata?.product_key;
 
     if (!allowedProducts.has(productKey)) {
       return res.status(403).send("Produto sem acesso ao ebook.");
@@ -1730,7 +2004,11 @@ app.get(["/download-ebook", "/api/download-ebook"], async (req, res) => {
       "ebook-investimentos-para-iniciantes.pdf"
     );
   } catch (error) {
-    console.error("Erro no download do ebook:", error);
+    console.error("Erro no download do ebook:", {
+      message: error.message,
+      status: error.status,
+      data: error.data,
+    });
     return res.status(500).send("Erro ao liberar download.");
   }
 });
