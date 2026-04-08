@@ -2027,11 +2027,14 @@ app.post(
         return res.json({ received: true, ignored: true });
       }
 
-      // Valida assinatura apenas para eventos de payment.
-      // merchant_order costuma vir em formato diferente e não deve derrubar o fluxo.
       if (topic !== "merchant_order") {
-        if (!verifyMercadoPagoWebhookSignature(req)) {
-          return res.status(401).json({ error: "Assinatura inválida." });
+        const signatureOk = verifyMercadoPagoWebhookSignature(req);
+
+        if (!signatureOk) {
+          console.warn("⚠️ Assinatura do webhook não bateu; seguindo com validação via API do Mercado Pago.", {
+            query: req.query,
+            body,
+          });
         }
       } else {
         console.log("ℹ️ merchant_order recebido sem validar assinatura:", {
