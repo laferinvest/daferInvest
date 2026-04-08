@@ -377,6 +377,12 @@ async function getMercadoPagoPayment(paymentId) {
   });
 }
 
+async function getMercadoPagoMerchantOrder(orderId) {
+  return await mpRequest(`/merchant_orders/${encodeURIComponent(orderId)}`, {
+    method: "GET",
+  });
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -1919,27 +1925,58 @@ try {
 
   res.json({ received: true });
 
-  const isPaymentEvent =
-    body.type === "payment" ||
-    body.action === "payment.created" ||
-    body.action === "payment.updated" ||
-    req.query.type === "payment" ||
-    req.query.topic === "payment";
+  const action = body.action || null;
+  const type = body.type || null;
+  const topic = req.query.topic || null;
 
-  if (!isPaymentEvent) {
+  const isSupportedEvent =
+    type === "payment" ||
+    action === "payment.created" ||
+    action === "payment.updated" ||
+    topic === "payment" ||
+    topic === "merchant_order";
+
+  if (!isSupportedEvent) {
     console.log("ℹ️ Evento Mercado Pago ignorado:", {
-      type: body.type || null,
-      action: body.action || null,
-      topic: req.query.topic || null,
+      type,
+      action,
+      topic,
+      body,
+      query: req.query,
     });
     return;
   }
 
-  const paymentId =
+  let paymentId =
     body.data?.id ||
     req.query["data.id"] ||
     body.resource?.split("/").pop() ||
     null;
+
+  if (topic === "merchant_order") {
+    const merchantOrderId = paymentId;
+
+    if (!merchantOrderId) {
+      console.log("⚠️ Webhook merchant_order sem id:", body);
+      return;
+    }
+
+    const merchantOrder = await getMercadoPagoMerchantOrder(merchantOrderId);
+
+    const approvedPayment = Array.isArray(merchantOrder.payments)
+      ? merchantOrder.payments.find((p) => p.status === "approved")
+      : null;
+
+    if (!approvedPayment?.id) {
+      console.log("ℹ️ Merchant order recebida sem pagamento aprovado ainda:", {
+        merchantOrderId,
+        payments: merchantOrder.payments || [],
+      });
+      return;
+    }
+
+    paymentId = approvedPayment.id;
+  }
 
   if (!paymentId) {
     console.log("⚠️ Webhook Mercado Pago sem payment id:", body);
@@ -1968,7 +2005,7 @@ try {
     }
 
     if (attempt < 4) {
-      await sleep(2500);
+      await new Promise((resolve) => setTimeout(resolve, 2500));
     }
   }
 
@@ -1980,7 +2017,7 @@ try {
   const session = buildSessionFromMpPayment(payment);
 
   if (!isApprovedPaymentStatus(payment.status)) {
-    console.log("ℹ️ Pagamento recebido, mas não ficou aprovado após as tentativas:", {
+    console.log("ℹ️ Pagamento recebido, mas ainda não aprovado:", {
       paymentId: payment.id,
       status: payment.status,
       statusDetail: payment.status_detail,
