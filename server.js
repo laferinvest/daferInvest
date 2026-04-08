@@ -1980,165 +1980,176 @@ app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
 app.post(
   ["/webhook", "/api/webhook", "/mp-webhook", "/api/mp-webhook"],
   async (req, res) => {
-try {
-  const body = req.body || {};
+    try {
+      const body = req.body || {};
 
-  console.log("MP webhook debug", {
-    hasSecret: !!process.env.MP_WEBHOOK_SECRET,
-    secretPrefix: process.env.MP_WEBHOOK_SECRET?.slice(0, 8),
-    xSignature: req.headers["x-signature"],
-    xRequestId: req.headers["x-request-id"],
-    query: req.query,
-    body: req.body,
-    resource: req.body?.resource,
-    bodyId: req.body?.id,
-    bodyDataId: req.body?.data?.id,
-    queryId: req.query?.id,
-    queryDataId: req.query?.["data.id"],
-    liveMode: req.body?.live_mode,
-    action: req.body?.action,
-    type: req.body?.type
-  });
-
-  if (!verifyMercadoPagoWebhookSignature(req)) {
-    return res.status(401).json({ error: "Assinatura do webhook inválida." });
-  }
-
-  const action = body.action || null;
-  const type = body.type || null;
-  const topic =
-    req.query.topic ||
-    req.body?.topic ||
-    (String(body.resource || "").includes("/merchant_orders/") ? "merchant_order" : null);
-
-  const isSupportedEvent =
-    type === "payment" ||
-    action === "payment.created" ||
-    action === "payment.updated" ||
-    topic === "payment" ||
-    topic === "merchant_order";
-
-  if (!isSupportedEvent) {
-    console.log("ℹ️ Evento Mercado Pago ignorado:", {
-      type,
-      action,
-      topic,
-      body,
-      query: req.query,
-    });
-    return res.json({ received: true, ignored: true });
-  }
-
-  let paymentId =
-    body.data?.id ||
-    req.query["data.id"] ||
-    req.query.id ||
-    body.id ||
-    null;
-
-  if (!paymentId && body.resource) {
-    paymentId = String(body.resource).split("/").pop() || null;
-  }
-
-  if (topic === "merchant_order") {
-    const merchantOrderId = paymentId;
-
-    if (!merchantOrderId) {
-      console.log("⚠️ Webhook merchant_order sem id:", body);
-      return res.json({ received: true, ignored: true });
-    }
-
-    const merchantOrder = await getMercadoPagoMerchantOrder(merchantOrderId);
-
-    const approvedPayment = Array.isArray(merchantOrder.payments)
-      ? merchantOrder.payments.find((p) => p.status === "approved")
-      : null;
-
-    if (!approvedPayment?.id) {
-      console.log("ℹ️ Merchant order recebida sem pagamento aprovado ainda:", {
-        merchantOrderId,
-        payments: merchantOrder.payments || [],
+      console.log("MP webhook debug", {
+        hasSecret: !!process.env.MP_WEBHOOK_SECRET,
+        secretPrefix: process.env.MP_WEBHOOK_SECRET?.slice(0, 8),
+        xSignature: req.headers["x-signature"],
+        xRequestId: req.headers["x-request-id"],
+        query: req.query,
+        body,
+        resource: body?.resource,
+        bodyId: body?.id,
+        bodyDataId: body?.data?.id,
+        queryId: req.query?.id,
+        queryDataId: req.query?.["data.id"],
+        liveMode: body?.live_mode,
+        action: body?.action,
+        type: body?.type,
       });
-      return res.json({ received: true, ignored: true });
+
+      const action = body.action || null;
+      const type = body.type || null;
+      const topic =
+        req.query.topic ||
+        body.topic ||
+        (String(body.resource || "").includes("/merchant_orders/")
+          ? "merchant_order"
+          : null);
+
+      const isSupportedEvent =
+        type === "payment" ||
+        action === "payment.created" ||
+        action === "payment.updated" ||
+        topic === "payment" ||
+        topic === "merchant_order";
+
+      if (!isSupportedEvent) {
+        console.log("ℹ️ Evento Mercado Pago ignorado:", {
+          type,
+          action,
+          topic,
+          body,
+          query: req.query,
+        });
+        return res.json({ received: true, ignored: true });
+      }
+
+      // Valida assinatura apenas para eventos de payment.
+      // merchant_order costuma vir em formato diferente e não deve derrubar o fluxo.
+      if (topic !== "merchant_order") {
+        if (!verifyMercadoPagoWebhookSignature(req)) {
+          return res.status(401).json({ error: "Assinatura inválida." });
+        }
+      } else {
+        console.log("ℹ️ merchant_order recebido sem validar assinatura:", {
+          query: req.query,
+          body,
+        });
+      }
+
+      let paymentId =
+        body.data?.id ||
+        req.query["data.id"] ||
+        req.query.id ||
+        body.id ||
+        null;
+
+      if (!paymentId && body.resource) {
+        paymentId = String(body.resource).split("/").pop() || null;
+      }
+
+      if (topic === "merchant_order") {
+        const merchantOrderId = paymentId;
+
+        if (!merchantOrderId) {
+          console.log("⚠️ Webhook merchant_order sem id:", body);
+          return res.json({ received: true, ignored: true });
+        }
+
+        const merchantOrder = await getMercadoPagoMerchantOrder(merchantOrderId);
+
+        const approvedPayment = Array.isArray(merchantOrder.payments)
+          ? merchantOrder.payments.find((p) => p.status === "approved")
+          : null;
+
+        if (!approvedPayment?.id) {
+          console.log("ℹ️ Merchant order recebida sem pagamento aprovado ainda:", {
+            merchantOrderId,
+            payments: merchantOrder.payments || [],
+          });
+          return res.json({ received: true, ignored: true });
+        }
+
+        paymentId = approvedPayment.id;
+      }
+
+      if (!paymentId) {
+        console.log("⚠️ Webhook Mercado Pago sem payment id:", body);
+        return res.json({ received: true, ignored: true });
+      }
+
+      if (hasProcessedWebhookPayment(paymentId)) {
+        console.log("ℹ️ Pagamento já processado anteriormente nesta instância:", paymentId);
+        return res.json({ received: true });
+      }
+
+      if (isProcessingWebhookPayment(paymentId)) {
+        console.log("ℹ️ Pagamento já está em processamento nesta instância:", paymentId);
+        return res.json({ received: true });
+      }
+
+      markWebhookPaymentProcessing(paymentId);
+
+      try {
+        let payment = null;
+
+        for (let attempt = 1; attempt <= 4; attempt += 1) {
+          payment = await getMercadoPagoPayment(paymentId);
+
+          console.log("🔎 Tentativa de confirmar pagamento no webhook:", {
+            paymentId,
+            attempt,
+            status: payment?.status || null,
+            statusDetail: payment?.status_detail || null,
+          });
+
+          if (isApprovedPaymentStatus(payment?.status)) {
+            break;
+          }
+
+          if (attempt < 4) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+          }
+        }
+
+        if (!payment) {
+          console.log("⚠️ Não foi possível consultar o pagamento no webhook:", paymentId);
+          return res.json({ received: true, ignored: true });
+        }
+
+        const session = buildSessionFromMpPayment(payment);
+
+        if (!isApprovedPaymentStatus(payment.status)) {
+          console.log("ℹ️ Pagamento recebido, mas ainda não aprovado:", {
+            paymentId: payment.id,
+            status: payment.status,
+            statusDetail: payment.status_detail,
+            productKey:
+              session.metadata?.product || session.metadata?.product_key || null,
+            customerEmail:
+              session.customer_details?.email || session.customer_email || null,
+          });
+          return res.json({ received: true, pending: true });
+        }
+
+        await handleConfirmedSale(session);
+        markWebhookPaymentProcessed(paymentId);
+
+        return res.json({ received: true });
+      } finally {
+        unmarkWebhookPaymentProcessing(paymentId);
+      }
+    } catch (error) {
+      console.error("Erro ao processar webhook Mercado Pago:", {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+      });
+      return res.status(500).json({ error: "Erro ao processar webhook." });
     }
-
-    paymentId = approvedPayment.id;
-  }
-
-  if (!paymentId) {
-    console.log("⚠️ Webhook Mercado Pago sem payment id:", body);
-    return res.json({ received: true, ignored: true });
-  }
-
-  if (hasProcessedWebhookPayment(paymentId)) {
-    console.log("ℹ️ Pagamento já processado anteriormente nesta instância:", paymentId);
-    return res.json({ received: true });
-  }
-
-  if (isProcessingWebhookPayment(paymentId)) {
-    console.log("ℹ️ Pagamento já está em processamento nesta instância:", paymentId);
-    return res.json({ received: true });
-  }
-
-  markWebhookPaymentProcessing(paymentId);
-
-  let payment = null;
-
-  for (let attempt = 1; attempt <= 4; attempt += 1) {
-    payment = await getMercadoPagoPayment(paymentId);
-
-    console.log("🔎 Tentativa de confirmar pagamento no webhook:", {
-      paymentId,
-      attempt,
-      status: payment?.status || null,
-      statusDetail: payment?.status_detail || null,
-    });
-
-    if (isApprovedPaymentStatus(payment?.status)) {
-      break;
-    }
-
-    if (attempt < 4) {
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-    }
-  }
-
-  if (!payment) {
-    console.log("⚠️ Não foi possível consultar o pagamento no webhook:", paymentId);
-    return res.json({ received: true, ignored: true });;
-  }
-
-  const session = buildSessionFromMpPayment(payment);
-
-  if (!isApprovedPaymentStatus(payment.status)) {
-    console.log("ℹ️ Pagamento recebido, mas ainda não aprovado:", {
-      paymentId: payment.id,
-      status: payment.status,
-      statusDetail: payment.status_detail,
-      productKey:
-        session.metadata?.product || session.metadata?.product_key || null,
-      customerEmail:
-        session.customer_details?.email || session.customer_email || null,
-    });
-    return;
-  }
-
-  try {
-    await handleConfirmedSale(session);
-    markWebhookPaymentProcessed(paymentId);
-    return res.json({ received: true });
-  } finally {
-    unmarkWebhookPaymentProcessing(paymentId);
-  }
-
-} catch (error) {
-  console.error("Erro ao processar webhook Mercado Pago:", {
-    message: error.message,
-    status: error.status,
-    data: error.data,
-  });
-  return res.status(500).json({ error: "Erro ao processar webhook." });
-}
   }
 );
 
