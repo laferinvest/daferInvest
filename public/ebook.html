@@ -669,6 +669,73 @@
 
     .plan-card.featured .plan-sub { color: rgba(255,255,255,.58); }
 
+    .pricing-stack {
+      display: grid;
+      gap: .4rem;
+      margin-bottom: 1rem;
+    }
+
+    .installment-price {
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+      flex-wrap: wrap;
+      line-height: 1;
+    }
+
+    .installment-prefix {
+      font-family: var(--ff-body);
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .installment-value {
+      font-family: var(--ff-head);
+      font-size: clamp(2.3rem, 4vw, 3.15rem);
+      line-height: .92;
+      color: var(--ink);
+      letter-spacing: .01em;
+    }
+
+    .price-meta-row {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      flex-wrap: wrap;
+      min-height: 22px;
+    }
+
+    .full-price-note {
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .price-divider {
+      width: 20px;
+      height: 1px;
+      background: rgba(12,14,19,.22);
+      display: inline-block;
+    }
+
+    .single-pay .price-meta-row {
+      gap: 0;
+    }
+
+    .single-pay .price-divider,
+    .single-pay .installment-prefix {
+      display: none;
+    }
+
+    .plan-card.featured .installment-prefix { color: var(--gold-2); }
+    .plan-card.featured .installment-value  { color: var(--white); }
+    .plan-card.featured .full-price-note    { color: rgba(255,255,255,.62); }
+    .plan-card.featured .price-divider      { background: rgba(255,255,255,.28); }
+
+
     .plan-list {
       list-style: none;
       display: grid;
@@ -1477,11 +1544,14 @@
                 <div class="price-row">
                   <span class="old-price">De R$ 64,90</span>
                 </div>
-                <div class="price-row" style="margin-bottom:.28rem;">
-                  <span class="price-prefix">R$</span>
-                  <span class="price">39,90</span>
+                <div class="pricing-stack single-pay">
+                  <div class="installment-price">
+                    <span class="installment-value">R$&nbsp;39,90</span>
+                  </div>
+                  <div class="price-meta-row">
+                    <span class="full-price-note">Pagamento único · sem assinatura</span>
+                  </div>
                 </div>
-                <div class="price-note">Pagamento único · sem assinatura</div>
                 <ul class="mini-list">
                   <li>Material em PDF</li>
                   <li>Acesso em qualquer dispositivo</li>
@@ -1662,8 +1732,14 @@
             <div class="plan-kicker">Plano base</div>
             <h3>Ebook</h3>
             <p class="plan-copy">Ideal para aprender no próprio ritmo e construir uma base mais sólida antes de tomar decisões de investimento.</p>
-            <div class="plan-price">R$ 39,90</div>
-            <div class="plan-sub">Pagamento único · acesso imediato</div>
+            <div class="pricing-stack single-pay">
+              <div class="installment-price">
+                <span class="installment-value">R$&nbsp;39,90</span>
+              </div>
+              <div class="price-meta-row">
+                <span class="full-price-note">Pagamento único · acesso imediato</span>
+              </div>
+            </div>
             <ul class="plan-list">
               <li>Ebook completo para iniciantes</li>
               <li>Prévia gratuita antes da compra</li>
@@ -1678,8 +1754,17 @@
             <div class="plan-kicker">Próximo passo</div>
             <h3 style="color:var(--white);">Ebook + Consultoria Estratégica</h3>
             <p class="plan-copy">Para quem quer sair do conteúdo educacional e avançar para um diagnóstico mais individualizado.</p>
-            <div class="plan-price">R$ 497</div>
-            <div class="plan-sub">Pagamento único · sessão agendada</div>
+            <div class="pricing-stack">
+              <div class="installment-price">
+                <span class="installment-prefix">8x</span>
+                <span class="installment-value">R$&nbsp;62,13</span>
+              </div>
+              <div class="price-meta-row">
+                <span class="full-price-note">ou R$&nbsp;497,00 à vista</span>
+                <span class="price-divider"></span>
+                <span class="full-price-note">parcelado em até 3x sem juros</span>
+              </div>
+            </div>
             <ul class="plan-list">
               <li>Ebook incluso</li>
               <li>Reunião com questionários e testes</li>
@@ -1696,8 +1781,17 @@
             <div class="plan-kicker">Implementação</div>
             <h3>Ebook + Consultoria Premium</h3>
             <p class="plan-copy">Para quem quer uma construção mais aprofundada e acompanhamento na execução da estratégia.</p>
-            <div class="plan-price">R$ 797</div>
-            <div class="plan-sub">Pagamento único · suporte ampliado</div>
+            <div class="pricing-stack">
+              <div class="installment-price">
+                <span class="installment-prefix">8x</span>
+                <span class="installment-value">R$&nbsp;99,63</span>
+              </div>
+              <div class="price-meta-row">
+                <span class="full-price-note">ou R$&nbsp;797,00 à vista</span>
+                <span class="price-divider"></span>
+                <span class="full-price-note">parcelado em até 3x sem juros</span>
+              </div>
+            </div>
             <ul class="plan-list">
               <li>Ebook incluso</li>
               <li>Tudo do plano inicial</li>

@@ -100,6 +100,99 @@
       border: 1px solid rgba(160,124,48,.28);
     }
 
+    .pricing-stack {
+      display: grid;
+      gap: .45rem;
+      margin: .2rem 0 .85rem;
+    }
+
+    .installment-price {
+      display: flex;
+      align-items: baseline;
+      gap: .45rem;
+      flex-wrap: wrap;
+      line-height: 1;
+    }
+
+    .installment-prefix {
+      font-family: var(--ff-body);
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .installment-value {
+      font-family: var(--ff-head);
+      font-size: clamp(2.25rem, 4vw, 3rem);
+      line-height: .92;
+      letter-spacing: .01em;
+      color: inherit;
+    }
+
+    .price-meta-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .full-price-note {
+      font-family: var(--ff-sans);
+      font-size: .86rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .price-divider {
+      width: 18px;
+      height: 1px;
+      background: rgba(12,14,19,.22);
+      display: inline-block;
+    }
+
+    .single-pay .price-meta-row {
+      gap: 0;
+    }
+
+    .single-pay .price-divider,
+    .single-pay .installment-prefix {
+      display: none;
+    }
+
+    .pac-card .installment-value {
+      color: var(--white);
+    }
+
+    .pac-card .installment-prefix,
+    .pac-card-featured .installment-prefix {
+      color: var(--gold-lt);
+    }
+
+    .pac-card .full-price-note {
+      color: rgba(255,255,255,.86);
+    }
+
+    .pac-card .price-divider {
+      background: rgba(255,255,255,.28);
+    }
+
+    
+    .pac-card-featured .full-price-note,
+    .pac-card-featured .installment-value {
+      color: var(--white);
+    }
+
+    .pac-card-featured .full-price-note {
+      color: rgba(255,255,255,.9);
+    }
+
+    .pac-card-featured .price-divider {
+      background: rgba(255,255,255,.34);
+    }
+
+
     /* ── Nav ────────────────────────────────────────────────── */
       nav {
         position: fixed;
@@ -1429,13 +1522,16 @@
 
     <div class="pac-price-wrap">
       <div class="pac-price-old">De R$ 64,90</div>
-      <div class="pac-price">
-        <sup>R$</sup>39<sup style="font-size:.85rem; margin-top:.55rem;">,90</sup>
+      <div class="pricing-stack single-pay">
+        <div class="installment-price">
+          <span class="installment-value">R$&nbsp;62,13</span>
+        </div>
+        <div class="price-meta-row">
+          <span class="full-price-note">Pagamento único · acesso imediato</span>
+        </div>
       </div>
       <div class="pac-discount-badge">Condição especial</div>
     </div>
-
-    <p class="pac-price-note">Pagamento único · acesso imediato</p>
 
     <ul class="pac-includes">
       <li class="highlight">Ebook "Investimentos para Iniciantes" (PDF)</li>
@@ -1458,11 +1554,17 @@
       e um plano claro para começar ou reorganizar os investimentos com segurança.
     </p>
 
-    <div class="pac-price">
-      <sup>R$</sup>497<sup style="font-size:.85rem; margin-top:.55rem;">,00</sup>
+    <div class="pricing-stack">
+      <div class="installment-price">
+        <span class="installment-prefix">8x</span>
+        <span class="installment-value">R$&nbsp;62,13</span>
+      </div>
+      <div class="price-meta-row">
+        <span class="full-price-note">ou R$&nbsp;497,00 à vista</span>
+        <span class="price-divider"></span>
+        <span class="full-price-note">parcelado em até 3x sem juros</span>
+      </div>
     </div>
-
-    <p class="pac-price-note">Pagamento único · sessão agendada</p>
 
     <ul class="pac-includes">
       <li class="highlight">Ebook incluso</li>
@@ -1489,11 +1591,17 @@
       acompanhamento direto e acesso contínuo durante toda a execução.
     </p>
 
-    <div class="pac-price">
-      <sup>R$</sup>797<sup style="font-size:.85rem; margin-top:.55rem;">,00</sup>
+    <div class="pricing-stack">
+      <div class="installment-price">
+        <span class="installment-prefix">8x</span>
+        <span class="installment-value">R$&nbsp;99,63</span>
+      </div>
+      <div class="price-meta-row">
+        <span class="full-price-note">ou R$&nbsp;797,00 à vista</span>
+        <span class="price-divider"></span>
+        <span class="full-price-note">parcelado em até 3x sem juros</span>
+      </div>
     </div>
-
-    <p class="pac-price-note">Pagamento único · implementação acompanhada</p>
 
     <ul class="pac-includes">
       <li class="highlight">Ebook incluso</li>

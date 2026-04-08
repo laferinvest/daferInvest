@@ -946,17 +946,89 @@
 
     .plan-card.featured .plan-sub { color: rgba(255,255,255,.58); }
 
-    .payment-split-note {
-      margin-bottom: 1rem;
-      color: #0c0e13;
-      font-size: .9rem;
-      line-height: 1.6;
-      font-weight: 700;
+    /* payment-split-note removed – replaced by price-meta-row */
+
+
+    /* ── PRICING STACK ──────────────────────────────────────── */
+    .pricing-stack {
+      display: grid;
+      gap: .45rem;
+      margin: .2rem 0 .85rem;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
-    .plan-card.featured .payment-split-note {
-      color: #ffffff;
+    /* "8x R$ 49,63" — linha principal */
+    .installment-price {
+      display: flex;
+      align-items: baseline;
+      gap: .3rem;
+      line-height: 1;
     }
+
+    .installment-prefix {
+      font-family: var(--ff-head);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--gold);
+      white-space: nowrap;
+      padding-bottom: .12rem;
+    }
+
+    .installment-value {
+      font-family: var(--ff-head);
+      font-size: 2.55rem;
+      line-height: .92;
+      letter-spacing: .01em;
+      color: var(--ink);
+    }
+
+    /* "ou R$ X à vista · 3x sem juros" — linha secundária */
+    .price-meta-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-top: 0;
+    }
+
+    .full-price-note {
+      font-family: var(--ff-sans);
+      font-size: .82rem;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .price-divider {
+      width: 18px;
+      height: 1px;
+      background: rgba(12,14,19,.22);
+      display: inline-block;
+      border-radius: 0;
+      flex-shrink: 0;
+    }
+
+    /* overrides para card featured (dark) */
+    .plan-card.featured .pricing-stack {
+      background: transparent;
+      border: none;
+    }
+
+    .plan-card.featured .installment-prefix { color: var(--gold-2); }
+    .plan-card.featured .installment-value  { color: var(--white); }
+    .plan-card.featured .full-price-note    { color: rgba(255,255,255,.90); }
+    .plan-card.featured .price-divider      { background: rgba(255,255,255,.34); }
+
+    @media (max-width: 640px) {
+      .installment-value { font-size: 2.2rem; }
+    }
+
+    /* remove o badge pill antigo — não é mais usado */
+    .payment-split-note { display: none; }
 
     .plan-list {
       list-style: none;
@@ -1567,7 +1639,7 @@
           </div>
 
           <p class="hero-method-note">
-            Como funciona: você paga <strong>50% para iniciar</strong>, fazemos a reunião e eu monto o plano na sua área do investidor. Primeiro, libero toda a estrutura e a lógica da carteira <strong>sem mostrar os valores por ativo</strong>. Se você gostar do que entreguei, paga a outra metade e eu libero os valores de alocação para execução.
+            Você faz a compra, agenda a sessão individual e eu preparo um plano de investimentos personalizado, já estruturado para execução. Para facilitar o pagamento, a consultoria pode ser feita em <strong>3x sem juros</strong> ou em <strong>até 8x no cartão</strong>.
           </p>
 
           <div class="stack-cta">
@@ -1635,28 +1707,28 @@
         <div class="organic-flow fade-up" style="transition-delay:.08s;">
           <article class="organic-flow-card">
             <div class="organic-flow-number">01</div>
-            <h3>Você entra com metade e faz a reunião</h3>
+            <h3>Você agenda e faz a sessão individual</h3>
             <p>
-              No primeiro passo, você paga 50% da consultoria. Depois disso, fazemos a sessão individual e eu levanto perfil,
+              Depois da contratação, fazemos a sessão individual e eu levanto perfil,
               experiência, patrimônio, objetivos, passivos, horizonte de tempo e restrições relevantes.
             </p>
           </article>
 
           <article class="organic-flow-card highlighted">
             <div class="organic-flow-number">02</div>
-            <h3>Eu entrego o plano sem abrir os valores por ativo</h3>
+            <h3>Eu estruturo a estratégia e preparo o plano</h3>
             <p>
-              Eu estruturo sua carteira, faço o upload do plano na área do investidor e apresento a lógica completa da estratégia,
-              mas os valores exatos de alocação em cada investimento ainda ficam bloqueados nessa etapa.
+              Eu organizo a carteira, preparo a lógica completa da estratégia e deixo o plano pronto de forma clara,
+              alinhada ao seu perfil, aos seus objetivos e ao seu momento patrimonial.
             </p>
           </article>
 
           <article class="organic-flow-card">
             <div class="organic-flow-number">03</div>
-            <h3>Se aprovar, você paga a outra metade e libera a execução</h3>
+            <h3>Você recebe tudo pronto para executar</h3>
             <p>
-              Se a entrega fizer sentido para você, entra o pagamento final de 50% e eu libero os valores por ativo,
-              deixando a carteira pronta para implementação com mais segurança e clareza.
+              Ao final, você recebe o plano completo, com a estrutura da carteira, os valores de alocação,
+              a lógica de cada etapa e a base necessária para implementar com mais segurança e clareza.
             </p>
           </article>
         </div>
@@ -1664,11 +1736,11 @@
         <div class="organic-flow-footer fade-up" style="transition-delay:.14s;">
           <div class="organic-footer-note">
             <strong>Resultado prático</strong>
-            <span>Você vê a qualidade da estrutura antes de liberar a etapa final de execução.</span>
+            <span>Você passa por um processo técnico, claro e pensado para transformar contexto pessoal em estratégia prática.</span>
           </div>
           <div class="organic-footer-note">
             <strong>Entrega</strong>
-            <span>Reunião, diagnóstico, plano carregado na área e liberação dos valores por ativo após a segunda metade.</span>
+            <span>Reunião, diagnóstico, plano estruturado na área do investidor e carteira pronta para implementação.</span>
           </div>
         </div>
       </div>
@@ -1729,7 +1801,7 @@
             </p>
 
             <div class="stack-cta">
-              <button class="btn" type="button" onclick="comprar('consultoria_avulsa_entrada')">Quero iniciar a consultoria</button>
+              <button class="btn" type="button" onclick="comprar('consultoria_avulsa')">Quero iniciar a consultoria</button>
               <a class="btn-secondary" href="#faq">Como funciona a garantia</a>
             </div>
           </div>
@@ -1742,7 +1814,7 @@
         <p class="section-label fade-up">Planos</p>
         <h2 class="fade-up">Escolha o nível de profundidade que faz mais sentido para o seu momento.</h2>
         <p class="lead fade-up">
-          Os dois planos incluem reunião, análise, preparação do plano e acesso à área do investidor. Agora, a entrada é de 50% no início e a outra metade só é paga se você aprovar a entrega parcial e quiser liberar os valores finais de alocação.
+          Os dois planos incluem reunião, análise, preparação do plano e acesso à área do investidor. Para facilitar a contratação, o pagamento pode ser feito em <strong>3x sem juros</strong> ou em <strong>até 8x no cartão</strong>, mantendo uma apresentação clara, profissional e objetiva.
         </p>
 
         <div class="plan-grid fade-up" style="transition-delay:.1s;">
@@ -1750,19 +1822,27 @@
             <div class="plan-kicker">Plano inicial</div>
             <h3>Consultoria Inicial</h3>
             <p class="plan-copy">Para quem quer um diagnóstico individual e um plano pronto para começar a investir com clareza.</p>
-            <div class="old-price">Pagamento total do plano</div>
-            <div class="plan-price">R$ 397,00</div>
-            <div class="payment-split-note">Metade para iniciar: R$ 198,50. A outra metade é paga só depois que você aprovar o plano e quiser liberar os valores finais.</div>
+            <div class="pricing-stack">
+              <div class="installment-price">
+                <span class="installment-prefix">8x</span>
+                <span class="installment-value">R$&nbsp;49,63</span>
+              </div>
+              <div class="price-meta-row">
+                <span class="full-price-note">ou R$&nbsp;397,00 à vista</span>
+                <span class="price-divider"></span>
+                <span class="full-price-note">parcelado em até 3x sem juros</span>
+              </div>
+            </div>
             <ul class="plan-list">
               <li>Ebook incluso</li>
               <li>Reunião com questionários e testes</li>
               <li>Análise do perfil, conhecimento e patrimônio</li>
               <li>Plano estruturado e carregado na área do investidor</li>
-              <li>Visualização da estratégia antes da liberação final</li>
-              <li>Valores por ativo liberados após a segunda metade</li>
+              <li>Plano estruturado para execução com clareza</li>
+              <li>Área do investidor com visão consolidada da estratégia</li>
               <li>Garantia de 7 dias após o envio do plano final</li>
             </ul>
-            <button class="btn" type="button" onclick="comprar('consultoria_avulsa_entrada')">Pagar entrada da consultoria inicial</button>
+            <button class="btn" type="button" onclick="comprar('consultoria_avulsa')">Contratar consultoria inicial</button>
           </div>
 
           <div class="plan-card featured">
@@ -1770,9 +1850,17 @@
             <div class="plan-kicker">Plano premium</div>
             <h3 style="color:var(--white);">Consultoria Premium</h3>
             <p class="plan-copy2">Para quem quer entender melhor a carteira, tirar dúvidas com profundidade e ter maior suporte na implementação.</p>
-            <div class="old-price">Pagamento total do plano</div>
-            <div class="plan-price">R$ 797,00</div>
-            <div class="payment-split-note">Metade para iniciar: R$ 398,50. A outra metade é paga só depois que você aprovar o plano e quiser liberar os valores finais.</div>
+            <div class="pricing-stack">
+              <div class="installment-price">
+                <span class="installment-prefix">8x</span>
+                <span class="installment-value">R$&nbsp;99,63</span>
+              </div>
+              <div class="price-meta-row">
+                <span class="full-price-note">ou R$&nbsp;797,00 à vista</span>
+                <span class="price-divider"></span>
+                <span class="full-price-note">parcelado em até 3x sem juros</span>
+              </div>
+            </div>
             <ul class="plan-list">
               <li>Ebook incluso</li>
               <li>Tudo do plano inicial</li>
@@ -1780,10 +1868,10 @@
               <li>Explicação do papel de cada ativo na carteira</li>
               <li>Seção de dúvidas dedicada</li>
               <li>Maior acompanhamento na fase de execução</li>
-              <li>Valores por ativo liberados após a segunda metade</li>
+              <li>Implementação com mais contexto e segurança</li>
               <li>Garantia de 7 dias após o envio do plano final</li>
             </ul>
-            <button class="btn" type="button" onclick="comprar('consultoria_premium_entrada')">Pagar entrada da consultoria premium</button>
+            <button class="btn" type="button" onclick="comprar('consultoria_premium')">Contratar consultoria premium</button>
           </div>
         </div>
       </div>
@@ -1795,7 +1883,7 @@
           <p class="section-label">Área do investidor</p>
           <h2>Nos dois planos, o cliente acessa uma área para acompanhar o plano na prática.</h2>
           <p class="lead">
-            Tanto na consultoria inicial quanto na premium, o cliente recebe acesso à área do investidor. É ali que eu faço o upload do plano, apresento a estrutura da carteira, deixo o histórico e disponibilizo a ferramenta de rebalanceamento. Os valores por ativo são liberados depois da aprovação final, com o pagamento da segunda metade.
+            Tanto na consultoria inicial quanto na premium, o cliente recebe acesso à área do investidor. É ali que eu faço o upload do plano, apresento a estrutura da carteira, deixo o histórico e disponibilizo a ferramenta de rebalanceamento para acompanhamento e execução com mais organização.
           </p>
 
           <div class="tool-grid">
@@ -1811,7 +1899,7 @@
 
             <div class="tool-card">
               <h3>Rebalanceamento guiado</h3>
-              <p>Depois da liberação final, a ferramenta passa a mostrar exatamente quanto comprar ou vender em cada ativo para executar e rebalancear a carteira.</p>
+              <p>A ferramenta mostra exatamente quanto comprar ou vender em cada ativo para executar e rebalancear a carteira com mais clareza.</p>
             </div>
           </div>
 
@@ -1885,7 +1973,7 @@
               </div>
 
               <div class="contact-links">
-                <a href="mailto:daniel@daferinvest.com.br">daniel@daferinvest.com.br</a>
+                <a href="/cdn-cgi/l/email-protection#284c4946414d44684c494e4d5a41465e4d5b5c064b4745064a5a"><span class="__cf_email__" data-cfemail="b6d2d7d8dfd3daf6d2d7d0d3c4dfd8c0d3c5c298d5d9db98d4c4">[email&#160;protected]</span></a>
                 <a href="https://wa.me/553597024283" target="_blank" rel="noopener">WhatsApp</a>
                 <a href="https://www.linkedin.com/in/danielferreira1997/" target="_blank" rel="noopener">LinkedIn</a>
               </div>
@@ -1902,7 +1990,7 @@
         <div class="faq-grid fade-up" style="transition-delay:.08s;">
           <details>
             <summary>Como funciona a consultoria inicial?</summary>
-            <p>Primeiro você paga a entrada de 50% e acontece a reunião com os questionários e testes. Depois eu preparo a análise, subo o plano na área do investidor e mostro a estrutura da carteira sem liberar ainda os valores por ativo. Se você aprovar, paga a outra metade e eu libero a execução completa.</p>
+            <p>Depois da contratação, acontece a reunião com os questionários e testes. Em seguida, eu preparo a análise, estruturo o plano e organizo a carteira na área do investidor para deixar a execução mais clara e objetiva.</p>
           </details>
 
           <details>
@@ -1915,8 +2003,8 @@
             <p>Sim. Em ambos os casos, o cliente acessa a área do investidor para visualizar o plano, acompanhar a carteira e usar a ferramenta de rebalanceamento.</p>
           </details>
           <details>
-            <summary>O que fica bloqueado antes da segunda metade?</summary>
-            <p>Antes do pagamento final, você já vê a estrutura da carteira, a lógica do plano e o material carregado na área do investidor. O que permanece bloqueado são os valores exatos de alocação em cada ativo e a liberação completa da execução.</p>
+            <summary>Quais formas de pagamento estão disponíveis?</summary>
+            <p>Na consultoria, você pode pagar em até 3x sem juros ou parcelar em até 8x no cartão, conforme as condições exibidas no checkout.</p>
           </details>
 
 
@@ -1943,7 +2031,7 @@
           <a href="/termos-de-uso">Termos</a>
           <a href="/politica-de-privacidade">Privacidade</a>
           <a href="/politica-de-cookies">Cookies</a>
-          <a href="mailto:daniel@daferinvest.com.br">Contato</a>
+          <a href="/cdn-cgi/l/email-protection#1f7b7e71767a735f7b7e797a6d7671697a6c6b317c7072317d6d">Contato</a>
         </div>
         <span>© 2026 · Todos os direitos reservados</span>
       </div>
@@ -1964,11 +2052,11 @@
   </div>
 
   <div class="mobile-sticky-cta">
-    <a href="/pre-checkout?product=consultoria_avulsa_entrada">Pagar entrada</a>
+    <a href="/pre-checkout?product=consultoria_avulsa">Contratar</a>
     <a class="btn-secondary" href="/preview.html" data-track="mobile_demo_click">Ver área</a>
   </div>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')),
       { threshold: 0.08 }

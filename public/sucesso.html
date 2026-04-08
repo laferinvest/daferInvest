@@ -752,59 +752,35 @@ function renderNextSteps(data) {
     return;
   }
 
-  const isEntryPayment =
-    data.product_key === 'consultoria_avulsa_entrada' ||
-    data.product_key === 'consultoria_premium_entrada';
-
+  const downloadUrl = `/download-ebook?session_id=${encodeURIComponent(data.id || '')}`;
   const isConsulting =
     data.product_key === 'consultoria_avulsa' ||
     data.product_key === 'consultoria_avulsa_entrada' ||
     data.product_key === 'consultoria_premium' ||
     data.product_key === 'consultoria_premium_entrada';
 
-  if (isEntryPayment) {
-    ns.innerHTML = `
-      <div class="step">
-        <span class="step-num">01</span>
-        <span class="step-text">
-          <strong>Seu pagamento foi confirmado com sucesso.</strong>
-        </span>
-      </div>
-      <div class="step">
-        <span class="step-num">02</span>
-        <span class="step-text">
-          Agora seguimos com a etapa inicial da consultoria: reunião, diagnóstico e montagem da estrutura do plano.
-        </span>
-      </div>
-      <div class="step">
-        <span class="step-num">03</span>
-        <span class="step-text">
-          Após a entrega parcial e sua aprovação, a segunda metade será solicitada para liberar os valores finais por ativo.
-        </span>
-      </div>
-    `;
-    return;
-  }
-
   if (isConsulting) {
     ns.innerHTML = `
       <div class="step">
         <span class="step-num">01</span>
         <span class="step-text">
-          <strong>Seu pagamento foi confirmado com sucesso.</strong>
+          <strong>Baixe o seu ebook agora.</strong> Ele já está liberado e o link abaixo leva direto para o download.
         </span>
       </div>
       <div class="step">
         <span class="step-num">02</span>
         <span class="step-text">
-          Você receberá a condução da consultoria e o material correspondente conforme o plano contratado.
+          <strong>Eu vou entrar em contato para marcar a reunião.</strong> Nela, vou levantar seu perfil, contexto e objetivos para estruturar a estratégia.
         </span>
       </div>
       <div class="step">
         <span class="step-num">03</span>
         <span class="step-text">
-          Se precisar falar comigo, use o e-mail <strong>daniel@daferinvest.com.br</strong>.
+          <strong>Depois disso, eu preparo o seu plano de investimentos.</strong> A entrega será feita com a carteira organizada e pronta para execução.
         </span>
+      </div>
+      <div class="btn-row-card">
+        <a class="btn btn-primary" href="${downloadUrl}">Baixar ebook</a>
       </div>
     `;
     return;
@@ -814,14 +790,23 @@ function renderNextSteps(data) {
     <div class="step">
       <span class="step-num">01</span>
       <span class="step-text">
-        <strong>Seu pagamento foi confirmado com sucesso.</strong>
+        <strong>Baixe o seu ebook agora.</strong> O acesso já foi liberado e o botão abaixo leva direto para o download.
       </span>
     </div>
     <div class="step">
       <span class="step-num">02</span>
       <span class="step-text">
-        O acesso ao material comprado será liberado conforme a entrega prevista para este produto.
+        Leia com calma e use o material como base para organizar melhor o seu entendimento sobre investimentos.
       </span>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <span class="step-text">
+        Se precisar falar comigo, use o e-mail <strong>daniel@daferinvest.com.br</strong>.
+      </span>
+    </div>
+    <div class="btn-row-card">
+      <a class="btn btn-primary" href="${downloadUrl}">Baixar ebook</a>
     </div>
   `;
 }
