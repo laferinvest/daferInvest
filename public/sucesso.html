@@ -614,7 +614,7 @@ function trackPurchase(data) {
   if (window.__purchaseTracked) return;
   if (!data) return;
 
-  if (!data.status === 'approved') {
+  if (data.status !== 'approved') {
     return;
   }
 
@@ -663,10 +663,13 @@ function trackPurchase(data) {
       }
 
       const statusMap = {
-        paid: 'Confirmado',
-        unpaid: 'Pendente',
-        no_payment_required: 'Confirmado',
-        expired: 'Expirado'
+        approved: 'Confirmado',
+        pending: 'Pendente',
+        in_process: 'Em processamento',
+        rejected: 'Recusado',
+        cancelled: 'Cancelado',
+        refunded: 'Reembolsado',
+        charged_back: 'Chargeback'
       };
 
       document.getElementById('strip-status').textContent =
@@ -675,7 +678,7 @@ function trackPurchase(data) {
       renderNextSteps(data);
       trackPurchase(data);
 
-      if (data.status === 'approved') {
+      if (data.status === 'approved' || data.status === 'rejected' || data.status === 'cancelled' || data.status === 'refunded' || data.status === 'charged_back') {
         stopPolling();
       } else {
         startPolling();
@@ -703,108 +706,125 @@ function trackPurchase(data) {
     ns.innerHTML = `<div class="error-block">${msg}</div>`;
   }
 
-  function renderPendingBlock(data) {
-    const ns = document.getElementById('next-steps');
-    const isBoletoLike = data.status !== 'paid';
+function renderPendingBlock(data) {
+  const ns = document.getElementById('next-steps');
+  const isPending = data.status === 'pending' || data.status === 'in_process';
 
+  ns.innerHTML = `
+    <div class="step">
+      <span class="step-num">01</span>
+      <span class="step-text">
+        <strong>${
+          isPending
+            ? 'Seu pagamento ainda está sendo processado.'
+            : 'Seu pagamento ainda não foi concluído.'
+        }</strong>
+      </span>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <span class="step-text">
+        ${
+          isPending
+            ? 'Assim que o Mercado Pago confirmar a aprovação, o sistema atualizará o status e seguirá com a entrega automaticamente.'
+            : 'Verifique a forma de pagamento escolhida ou tente novamente em instantes.'
+        }
+      </span>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <span class="step-text">
+        Você também pode deixar esta página aberta. O status será atualizado automaticamente.
+      </span>
+    </div>
+  `;
+}
+
+function renderNextSteps(data) {
+  const skeleton = document.getElementById('steps-skeleton');
+  const ns = document.getElementById('next-steps');
+
+  skeleton.style.display = 'none';
+  ns.style.display = 'flex';
+
+  if (!data || data.status !== 'approved') {
+    renderPendingBlock(data || {});
+    return;
+  }
+
+  const isEntryPayment =
+    data.product_key === 'consultoria_avulsa_entrada' ||
+    data.product_key === 'consultoria_premium_entrada';
+
+  const isConsulting =
+    data.product_key === 'consultoria_avulsa' ||
+    data.product_key === 'consultoria_avulsa_entrada' ||
+    data.product_key === 'consultoria_premium' ||
+    data.product_key === 'consultoria_premium_entrada';
+
+  if (isEntryPayment) {
     ns.innerHTML = `
       <div class="step">
         <span class="step-num">01</span>
         <span class="step-text">
-          <strong>Seu pagamento ainda está pendente de confirmação.</strong>
+          <strong>Seu pagamento foi confirmado com sucesso.</strong>
         </span>
       </div>
       <div class="step">
         <span class="step-num">02</span>
         <span class="step-text">
-          ${
-            isBoletoLike
-              ? 'Se você escolheu boleto, a compensação pode levar algum tempo. Assim que o pagamento for confirmado, o sistema enviará automaticamente um e-mail para você.'
-              : 'A confirmação ainda está sendo processada. Assim que o pagamento for confirmado, o sistema enviará automaticamente um e-mail para você.'
-          }
+          Agora seguimos com a etapa inicial da consultoria: reunião, diagnóstico e montagem da estrutura do plano.
         </span>
       </div>
       <div class="step">
         <span class="step-num">03</span>
         <span class="step-text">
-          Você também pode deixar esta página aberta. O status será atualizado automaticamente.
+          Após a entrega parcial e sua aprovação, a segunda metade será solicitada para liberar os valores finais por ativo.
         </span>
       </div>
     `;
+    return;
   }
 
-  function renderNextSteps(data) {
-    document.getElementById('steps-skeleton').style.display = 'none';
-    const ns = document.getElementById('next-steps');
-    ns.style.display = 'flex';
-
-    if (!data || data.status === 'approved') {
-      renderPendingBlock(data || {});
-      return;
-    }
-
-    if (data.product_key === 'ebook') {
-      ns.innerHTML = `
-        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-        <div class="step"><span class="step-num">02</span><span class="step-text">Use o botão abaixo para baixá-lo agora. O link também foi enviado ao seu e-mail.</span></div>
-        <div class="step" style="animation-delay:.25s;">
-          <div class="btn-row-card">
-            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (data.product_key === 'consultoria_avulsa') {
-      ns.innerHTML = `
-        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria individual</strong> em até 1 dia útil.</span></div>
-        <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, você já pode baixar o ebook pelo botão abaixo.</span></div>
-        <div class="step" style="animation-delay:.3s;">
-          <div class="btn-row-card">
-            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (data.product_key === 'consultoria_premium') {
-      ns.innerHTML = `
-        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Seu ebook está liberado</strong> para download imediato.</span></div>
-        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail as instruções para <strong>agendamento da consultoria premium</strong> em até 1 dia útil.</span></div>
-        <div class="step"><span class="step-num">03</span><span class="step-text">Enquanto isso, você já pode baixar o ebook pelo botão abaixo.</span></div>
-        <div class="step" style="animation-delay:.3s;">
-          <div class="btn-row-card">
-            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (data.product_key === 'consultoria_mensal') {
-      ns.innerHTML = `
-        <div class="step"><span class="step-num">01</span><span class="step-text"><strong>Sua assinatura foi ativada</strong> com sucesso.</span></div>
-        <div class="step"><span class="step-num">02</span><span class="step-text">Você receberá por e-mail os <strong>próximos passos do acompanhamento contínuo</strong>.</span></div>
-        <div class="step"><span class="step-num">03</span><span class="step-text">Seu ebook também está liberado para download imediato.</span></div>
-        <div class="step" style="animation-delay:.3s;">
-          <div class="btn-row-card">
-            <a class="btn btn-primary" href="/download-ebook?session_id=${encodeURIComponent(sessionId)}">Baixar ebook agora</a>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
+  if (isConsulting) {
     ns.innerHTML = `
       <div class="step">
         <span class="step-num">01</span>
-        <span class="step-text"><strong>Pagamento confirmado com sucesso.</strong> Você receberá um e-mail em breve.</span>
+        <span class="step-text">
+          <strong>Seu pagamento foi confirmado com sucesso.</strong>
+        </span>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <span class="step-text">
+          Você receberá a condução da consultoria e o material correspondente conforme o plano contratado.
+        </span>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <span class="step-text">
+          Se precisar falar comigo, use o e-mail <strong>daniel@daferinvest.com.br</strong>.
+        </span>
       </div>
     `;
+    return;
   }
+
+  ns.innerHTML = `
+    <div class="step">
+      <span class="step-num">01</span>
+      <span class="step-text">
+        <strong>Seu pagamento foi confirmado com sucesso.</strong>
+      </span>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <span class="step-text">
+        O acesso ao material comprado será liberado conforme a entrega prevista para este produto.
+      </span>
+    </div>
+  `;
+}
 
   verificar();
 </script>
