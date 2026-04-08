@@ -298,6 +298,13 @@ function parseMpSignature(headerValue = "") {
 
 function verifyMercadoPagoWebhookSignature(req) {
   const secret = process.env.MP_WEBHOOK_SECRET;
+
+  console.log("MP secret raw debug", {
+  len: process.env.MP_WEBHOOK_SECRET?.length,
+  startsWith: process.env.MP_WEBHOOK_SECRET?.slice(0, 12),
+  endsWith: process.env.MP_WEBHOOK_SECRET?.slice(-12),
+});
+
   if (!secret) return true;
 
   const xSignature = req.headers["x-signature"];
@@ -337,6 +344,16 @@ function verifyMercadoPagoWebhookSignature(req) {
     .createHmac("sha256", secret)
     .update(manifest)
     .digest("hex");
+
+    console.log("MP signature compare", {
+  dataId,
+  xRequestId,
+  ts,
+  receivedV1: v1,
+  expectedV1: expected,
+  manifest,
+  matches: expected === v1,
+});
 
   try {
     return crypto.timingSafeEqual(
