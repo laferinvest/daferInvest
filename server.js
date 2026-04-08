@@ -662,7 +662,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
     `
     );
   } else if (productKey === "consultoria_avulsa") {
-    subject = "Compra confirmada · Consultoria Inicial";
+    subject = "Compra confirmada · Consultoria Individual";
     html = wrapEmail(
       "Confirmação de compra",
       `
@@ -670,7 +670,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
         Pagamento confirmado
       </p>
       <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0c0e13;line-height:1.3;">
-        Sua consultoria inicial foi confirmada
+        Sua consultoria individual foi confirmada
       </h1>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
@@ -746,7 +746,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
       </p>
 
       <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#2a2f42;line-height:1.8;">
-        A versão premium inclui <strong style="color:#0c0e13;">tudo o que existe no plano inicial</strong>, com mais profundidade na explicação da carteira e maior apoio na fase de implementação.
+        A versão premium inclui <strong style="color:#0c0e13;">tudo o que existe no plano individual</strong>, com mais profundidade na explicação da carteira e maior apoio na fase de implementação.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -757,7 +757,7 @@ async function sendPurchaseEmail({ email, productKey, productName, sessionId }) 
               O que está incluso no seu plano premium
             </p>
             <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#2a2f42;line-height:1.9;">
-              · Tudo do plano inicial<br>
+              · Tudo do plano individual<br>
               · Apresentação detalhada dos investimentos<br>
               · Explicação do papel de cada ativo na carteira<br>
               · Seção de dúvidas dedicada<br>
