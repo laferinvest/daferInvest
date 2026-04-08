@@ -1923,8 +1923,6 @@ try {
     return res.status(401).json({ error: "Assinatura do webhook inválida." });
   }
 
-  res.json({ received: true });
-
   const action = body.action || null;
   const type = body.type || null;
   const topic = req.query.topic || null;
@@ -2031,6 +2029,8 @@ try {
 
   await handleConfirmedSale(session);
   markWebhookPaymentProcessed(paymentId);
+
+  return res.json({ received: true });
 } catch (error) {
   console.error("Erro ao processar webhook Mercado Pago:", {
     message: error.message,
