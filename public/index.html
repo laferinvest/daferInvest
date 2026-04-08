@@ -1834,35 +1834,13 @@
   });
 
   /* ── Checkout ── */
-  async function comprar(produto) {
-    const overlay = document.getElementById('loading-overlay');
-    overlay.classList.add('active');
+function comprar(produto) {
+  const overlay = document.getElementById('loading-overlay');
+  overlay.classList.add('active');
+  trackEvent('ebook_cta_click', { cta_location: 'primary_purchase', product: produto });
 
-    try {
-      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-
-      const res = await fetch('/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product: produto,
-          returnTo: currentPath
-        })
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        overlay.classList.remove('active');
-        alert('Erro ao iniciar o pagamento. Tente novamente.');
-      }
-    } catch (err) {
-      overlay.classList.remove('active');
-      alert('Erro de conexão. Verifique sua internet e tente novamente.');
-    }
-  }
+  window.location.href = '/pre-checkout?product=' + encodeURIComponent(produto);
+}
 
 
   const previewImages = [
