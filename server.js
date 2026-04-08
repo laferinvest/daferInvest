@@ -377,16 +377,6 @@ async function getMercadoPagoPayment(paymentId) {
   });
 }
 
-const processedConfirmedSales = new Set();
-
-function markSaleAsProcessed(sessionId) {
-  processedConfirmedSales.add(String(sessionId));
-}
-
-function hasSaleBeenProcessed(sessionId) {
-  return processedConfirmedSales.has(String(sessionId));
-}
-
 function normalizeReturnPath(input) {
   if (!input || typeof input !== "string") return "/";
 
@@ -1055,10 +1045,7 @@ async function sendAdminSaleEmail({
 }
 
 async function handleConfirmedSale(session) {
-if (hasSaleBeenProcessed(session.id)) {
-  console.log("ℹ️ Venda já processada anteriormente nesta instância:", session.id);
-  return;
-}
+
   const email = session.customer_details?.email || session.customer_email || null;
   const buyerName = session.customer_details?.name || null;
   const buyerPhone = session.customer_details?.phone || null;
@@ -1106,7 +1093,7 @@ if (hasSaleBeenProcessed(session.id)) {
     amountTotal,
     mode,
   });
-  markSaleAsProcessed(session.id);
+  
   console.log("📨 E-mail interno enviado para o admin");
 }
 
@@ -1879,19 +1866,6 @@ app.get(["/verificar-sessao", "/api/verificar-sessao"], async (req, res) => {
 
     const payment = await getMercadoPagoPayment(sessionId);
     const session = buildSessionFromMpPayment(payment);
-
-    if (isApprovedPaymentStatus(payment.status) && !hasSaleBeenProcessed(session.id)) {
-    try {
-      await handleConfirmedSale(session);
-    } catch (emailError) {
-      console.error("❌ Erro no fallback de confirmação via /verificar-sessao:", {
-        message: emailError.message,
-        status: emailError.status,
-        data: emailError.data,
-        sessionId: session.id,
-      });
-    }
-  }
 
     return res.json({
       id: session.id,
