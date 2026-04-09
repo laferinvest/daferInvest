@@ -366,13 +366,21 @@ function verifyMercadoPagoWebhookSignature(req) {
 }
 
 function buildSessionFromMpPayment(payment) {
-  const productKey = payment.external_reference || "desconhecido";
-  const productName = products[productKey]?.productName || "Produto";
+  const productKey =
+    payment.metadata?.product_key ||
+    payment.metadata?.product ||
+    "desconhecido";
+
+  const productName =
+    payment.metadata?.product_name ||
+    products[productKey]?.productName ||
+    "Produto";
 
   return {
     id: String(payment.id),
     payment_status: payment.status || null,
     status: payment.status === "approved" ? "complete" : payment.status || null,
+    external_reference: payment.external_reference || null,
     customer_details: {
       email: payment.metadata?.customer_email || payment.payer?.email || null,
       name:
@@ -388,6 +396,8 @@ function buildSessionFromMpPayment(payment) {
     },
     customer_email: payment.metadata?.customer_email || payment.payer?.email || null,
     metadata: {
+      internal_order_id:
+        payment.metadata?.internal_order_id || payment.external_reference || null,
       product: productKey,
       product_key: productKey,
       product_name: productName,
@@ -490,16 +500,25 @@ const products = {
     unitPrice: Number(process.env.PRICE_EBOOK || 39.9),
     mode: "payment",
     productName: "Ebook Investimentos para Iniciantes",
+    itemDescription:
+      "Ebook digital sobre fundamentos de investimentos para iniciantes.",
+    categoryId: "digital_goods",
   },
   consultoria_avulsa: {
     unitPrice: Number(process.env.PRICE_CONSULTORIA_AVULSA || 397),
     mode: "payment",
     productName: "Ebook + Consultoria Individual",
+    itemDescription:
+      "Consultoria individual de investimentos com diagnóstico financeiro, reunião e plano personalizado, incluindo ebook.",
+    categoryId: "services",
   },
   consultoria_premium: {
     unitPrice: Number(process.env.PRICE_CONSULTORIA_PREMIUM || 797),
     mode: "payment",
     productName: "Ebook + Consultoria Premium",
+    itemDescription:
+      "Consultoria premium de investimentos com maior profundidade na explicação, acompanhamento ampliado e ebook incluso.",
+    categoryId: "services",
   },
 };
 
@@ -1683,6 +1702,14 @@ app.post(
   }
 );
 
+function generateExternalReference(productKey) {
+  return `dfi_${productKey}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+}
+
+function sanitizePhoneNumber(phone = "") {
+  return String(phone).replace(/\D/g, "");
+}
+
 // ─────────────────────────────────────────────────────────────
 // MERCADO PAGO CHECKOUT PRO
 // ─────────────────────────────────────────────────────────────
@@ -1695,7 +1722,15 @@ app.post(
   ],
   async (req, res) => {
     try {
-      const { product, productKey, returnTo, customerEmail, customerName, customerPhone } = req.body || {};
+      const {
+        product,
+        productKey,
+        returnTo,
+        customerEmail,
+        customerName,
+        customerPhone,
+      } = req.body || {};
+
       const selectedProductKey = productKey || product;
       const selected = products[selectedProductKey];
 
@@ -1704,6 +1739,8 @@ app.post(
       }
 
       const normalizedReturnTo = normalizeReturnPath(returnTo);
+      const externalReference = generateExternalReference(selectedProductKey);
+      const sanitizedPhone = sanitizePhoneNumber(customerPhone);
 
       const successUrl =
         `${BASE_URL}/sucesso` +
@@ -1724,6 +1761,8 @@ app.post(
           {
             id: selectedProductKey,
             title: selected.productName,
+            description: selected.itemDescription,
+            category_id: selected.categoryId,
             quantity: 1,
             unit_price: Number(selected.unitPrice),
             currency_id: "BRL",
@@ -1733,10 +1772,12 @@ app.post(
           ? {
               email: customerEmail,
               first_name: customerName || undefined,
-              phone: customerPhone ? { number: customerPhone } : undefined,
+              phone: sanitizedPhone
+                ? { number: sanitizedPhone }
+                : undefined,
             }
           : undefined,
-        external_reference: selectedProductKey,
+        external_reference: externalReference,
         notification_url: `${BASE_URL}/webhook`,
         back_urls: {
           success: successUrl,
@@ -1751,13 +1792,14 @@ app.post(
           excluded_payment_methods: [],
         },
         metadata: {
+          internal_order_id: externalReference,
           product: selectedProductKey,
           product_key: selectedProductKey,
           product_name: selected.productName,
           return_to: normalizedReturnTo,
           customer_email: customerEmail || null,
           customer_name: customerName || null,
-          customer_phone: customerPhone || null,
+          customer_phone: sanitizedPhone || null,
         },
       };
 
@@ -1771,6 +1813,7 @@ app.post(
         init_point: preference.init_point,
         sandbox_init_point: preference.sandbox_init_point || null,
         preference_id: preference.id,
+        external_reference: externalReference,
       });
     } catch (error) {
       console.error("Erro ao criar preferência do Mercado Pago:", {
